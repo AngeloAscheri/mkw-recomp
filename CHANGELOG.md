@@ -100,7 +100,7 @@ its issue, #N), `### Tested` (what was run from the packages before publishing) 
   an unset or unavailable kernel timeout uses 1 s (the documented default has been as short as 2 s), elsewhere it stays
   at 5 s, and `MKW_GPU_HANG_MS` sets it. Each stuck episode reports once, not only the first, and one the GPU finishes
   after all says so ("it was slow, not hung").
-- **The Windows setup sizes its jobs by the PC's memory** (#PR by @fraustiz): it read the memory size from
+- **The Windows setup sizes its jobs by the PC's memory** (#416 by @fraustiz): it read the memory size from
   `/proc/meminfo`, which only Linux has, so every Windows PC was taken for one with 8 GB (a 24-thread PC with 31 GB
   logged `machine: 24 threads, 8.0 GB, 9 compile and 6 generate jobs, win32`). The size now comes from Windows
   (`GlobalMemoryStatusEx`). With it alone, 24 generate workers held 26.6 GB (1.1 GB each, 0.42 on Linux) and left
