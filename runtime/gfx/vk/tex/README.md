@@ -7,6 +7,7 @@ sparse and precomputed BC7.
 |---|---|
 | `vk_texture.c`, `vk_tex_internal.h`, `vk_formats.c` | Image cache: its state, keys and statistics; the header is what the `vk_tex_*.c` parts share; NVN to Vulkan format table |
 | `vk_tex_image.c` | Image creation |
+| `vk_tex_gfx9.c`, `vk_tex_gfx9.h` | The GFX9 RADV decision on block-view COLOR_ATTACHMENT, free of Vulkan so `tests/test_gfx9_block_ca.py` builds it alone |
 | `vk_tex_evict.c` | Image destruction, freed entries, eviction under memory pressure and the list of textures the GPU wrote |
 | `vk_tex_upload.c` | Uploads with deswizzle and ASTC, and the check of whether the storage changed |
 | `vk_tex_alias.c` | Storage aliases (`MKW_TEX_ALIAS`) and GPU writes to mirrored textures |
