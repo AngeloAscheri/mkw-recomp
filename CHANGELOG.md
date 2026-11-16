@@ -102,6 +102,17 @@ and @guillo1990.
   a link to the project's GitHub page on the start screen (#420); `vkCreateInstance failed (-9)` is a
   known error with its wiki section (#426); the setup's warm-up writes `logs/warm.log`; frame captures work on Windows.
 
+### Tested
+
+From the packages Actions built for this tag, before publishing:
+
+- The whole setup from the Linux AppImage (12 threads, game 1.0.0) in about 16 minutes, its warm-up to the end without a
+  fault.
+- The whole setup from the Windows zip (the 6-thread Windows PC, game 1.0.0) in about 25 minutes, its warm-up to the
+  end without a fault.
+- #485 replayed on a race capture (RADV): 0 validation errors, the images the same as without it (largest difference
+  0.0003). The 1.0.0 SMAA cost is the author's measurement on an RTX 5090, not repeated here.
+
 ## 0.1.12
 
 A new start screen and settings by @ViniciusStanula; 20 and 15 fps at the race's real speed, Low latency and frame
