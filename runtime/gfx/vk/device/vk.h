@@ -395,7 +395,11 @@ void vk_mem_defer_idle(int on);                    // around destroying what the
 void vk_mem_defer_use(uint64_t use);               // around a deferred destruction: MKW_GPU_GUARD's last part using it
 uint64_t vk_mem_defer_fence(uint64_t fence);       // returns the previous value; around a deferred destruction: wait for that submission (0: off)
 void vk_mem_collect(void);                         // frees what has completed
-typedef struct { uint64_t imported_pools, physical_pools, virtual_pools, import_failures, upload_batches; } VkMemStats;
+// phys_host_chunks: physical pool chunks backed outside device-local memory (it was full); phys_failed_chunks: left empty.
+typedef struct {
+    uint64_t imported_pools, physical_pools, virtual_pools, import_failures, upload_batches, phys_host_chunks,
+        phys_failed_chunks;
+} VkMemStats;
 void vk_mem_stats(VkMemStats *s);
 void vk_mem_shutdown(void);                        // before vk_shutdown: waits idle, frees every memory and texture object
 
