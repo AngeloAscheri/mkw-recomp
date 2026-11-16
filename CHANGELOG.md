@@ -4,6 +4,94 @@ Each version's section is that release's notes: `tools/build/notes.py` puts it i
 updating, known issues, reporting) for the GitHub release. A section has a summary paragraph, `### Changes` (each with
 its issue, #N), `### Tested` (what was run from the packages before publishing) and optionally `### Known issues`.
 
+## 0.1.13
+
+Terrain, roads and trees that drew black on Intel Arc cards, the game's own sharpening and anti-aliasing passes now
+getting their values (#423 by @AngeloAscheri, #485 by @FIocker), Automatic frame rate picking 60 or 30 frame by frame
+again, a 4 GB card that no longer draws a dark band, a memory leak that lost the GPU in the title's demo loop, and the
+split-screen view that drew with the other player's culling. New: Vert+ for tall windows by @simonwjackson, Discord
+Rich Presence by @jony25, Classic VS by @andreknieriem, and a Windows release built on Windows itself by @Elenedeath.
+Thanks to @AngeloAscheri, @FIocker, @VictorMerk, @SavageCore, @simonwjackson, @jony25, @andreknieriem, @Elenedeath
+and @guillo1990.
+
+### Changes
+
+- **Intel Arc: ground, roads and trees no longer draw black** (#14, #64, #181, #183, #276, #337, #355, #368, #475,
+  #476): Intel's Windows driver reports the sparse block of a compressed format as 64x64 blocks, where NVIDIA and
+  Mesa report 256x256 texels (the same 64 KiB). Read as texels, every block took 16 times the tile slots: an Arc B580
+  left 1 048 576 terrain tiles without memory against 32 768 on an RTX 3050. The size is now converted to texels.
+  Not run on an Intel card here: the reports' logs are the evidence.
+- **SMAA's search steps again, 13 ms a frame less** (#485 by @FIocker): the game pushes its constants (`1/w, 1/h, w,
+  h`) once, naming the vertex stage, and 1.0.0's anti-aliasing chain (edge detection, blend weights, neighbourhood
+  blending) reads them in its fragment shaders too, which saw zeros: the blend-weight pass then searched every edge
+  pixel to its end, 13.1 ms of GPU per frame at 2560x1440 on an RTX 5090 and a game at 0.69-0.89x. A graphics push now
+  reaches every graphics stage: 0.99 ms and 1.00x, with smoothed edges as on the console. Photo mode's compute push is
+  unchanged.
+- **The upscale pass gets its constants: sharp, uncropped picture** (#423 by @AngeloAscheri): the calls with which the
+  game hands constants to the driver's bank c24 were dropped, so five programs read zeros. The fullscreen upscale pass
+  sampled a cropped region, and every docked-mode frame on 1.8.0 was enlarged and blurred; `MKW_PUSH_CONST=0` brings
+  the zeros back for comparing.
+- **Automatic frame rate picks 60 or 30 frame by frame again** (#442, #446, #436, #448, #427, discussion 432): 0.1.12
+  held one whole interval, so a PC at 40-55 fps sat at 30 and came back to 60 only after two seconds under 14.2 ms,
+  or ran slowly at a fixed 60. The game's own choice (1 or 2 per frame, as on the console and in 0.1.11) is back while
+  30 fps fits; 20 and 15 apply only below 30 and in races.
+- **Automatic keeps its interval through stalls** (#461 by @andreknieriem): a stall (a frame past 133 ms after frames
+  that fitted) sent Automatic to 15 fps for up to a minute, as on a Steam Deck with two players (interval 3 at full
+  speed); a stall now moves nothing for up to 20 s.
+- **A full 4 GB card no longer draws a dark band** (#443): a chunk of the game's physical memory that found no video
+  memory stayed empty, and what the game placed there drew wrong (a dark band on the road that follows the kart on an
+  RTX 3050). After freeing memory and retrying, it now takes any memory type, as sparse tiles do.
+- **The title's demo loop no longer loses the GPU** (#468 by @AngeloAscheri): 1.8.0 makes its shadow map again at a
+  new place in the buffer pool at each scene, and every released copy overlapped the next and was kept: 10.3 GB held
+  until amdgpu ran out of memory and the device was lost after 190 s (7.3 GB after 60 s in a two-player race with
+  default settings). A released texture a later image was written over now goes; the demo loop ran its full 415 s.
+- **Split screen: each view draws with its own culling** (#430): both players' culling blocks, which share buffers,
+  ran before the first view, so every view used the last one's: a parked player 1 lost the crowd and grass the far
+  player 2 no longer saw. The two queues' work is ordered by their event waits by default (on a GTX 1050 Ti, 14.8
+  against 13.8 fps; `MKW_QUEUE_WAITS=0` turns it off, +3.1 ms a frame on a Radeon 660M without it).
+- **Water courses bounce and trick again** (#441 by @SavageCore, #410, #163, #433): a compute pass wrote the water's
+  collision height map to the image only, never to the game's memory, so the CPU physics read a flat road while the
+  GPU showed waves. Its writes now reach the game's memory at the fence.
+- **Photo mode on game version 1.8.0**: its last step, a compute program that scales the picture to 3840x2160, read
+  zeros for its pushed constants and wrote black at 1440 lines (#384, #423 and the compute push by @AngeloAscheri);
+  and leaving photo mode in a race crashed (#440) because the second buffer pool had no room for its own shadow map,
+  which it now counts (about 96 MiB more RAM; not yet confirmed in a race).
+- **The setup survives more machines**: zig's caches go inside the game folder and are kept between setups, where a
+  `/home` on one file system still failed with a cross-device rename (#439); a generated C file with NUL bytes is
+  generated again instead of failing every retry (#434); the exefs step runs again when its copy has no `main`
+  (#419); a Windows certificate store Python cannot read no longer stops the downloads (#456); and a new patch set no
+  longer recompiles the game's 359 chunks (9 min on a 6-thread Windows PC).
+- **Window mode fills screens taller than 16:9 with Vert+** (#450 by @simonwjackson, 1.8.0 by us): the 16:9
+  horizontal field of view is kept and more shows vertically, controls fit without stretching and full-canvas
+  backdrops cover the added height. On 1.8.0, where the game's output ignored the window at original resolution, the
+  output now follows it and keeps the picture's shape.
+- **Discord Rich Presence** (#455 by @jony25): while the game runs, the player's Discord profile shows it, the time
+  played and the phase (menus, a race, Grand Prix, Time Trial, Battle...) with the course in English, through Discord's
+  local pipe with no library; without Discord the game never waits. Off by default, as the player's friends see it:
+  Settings > General.
+- **Classic VS** (#452 by @andreknieriem): Settings > Hacks, off. Every VS race laps on one course, as Classic Grand
+  Prix does for cups.
+- **Race recording on every core, and on a fast one** (#480 by @AngeloAscheri): `MKW_REPLAY_PAR` is on by default
+  with 6 or more physical cores, and the replay thread's own core is now one of the fastest on hybrid CPUs (an
+  i7-14700F pinned it to an efficiency core: +4.0 ms a frame; now -2.5 ms against unpinned).
+- **UI images without a faint box on GPUs without ASTC** (#464 by @AngeloAscheri, #397): alpha 0 comes back exact when
+  textures are re-encoded as BC7, so the lighter rectangle behind the Grand Prix "OK" banner and the cc badges is gone.
+- **Radeon RX 570 and older AMD: black paving, grass and buildings** (#458 by @VictorMerk): texture-array sampling,
+  integer image types, cube compatibility and wide-subgroup semantics fixed on the tested RX 570.
+- **Vulkan teardown and sparse mips** (#459 by @VictorMerk): private sparse mip backing starts zeroed (it showed old
+  GPU bytes), and the Vulkan objects are released in order before shutdown (zero validation errors on the RX 570).
+- **Replays keep what the screen showed** (#422 by @AngeloAscheri, #447 by @AngeloAscheri): captures saved for testing keep RGB10A2
+  presents and decoded ASTC images.
+- **The controller reaches every button of the start screen again** (#418 by @guillo1990): since the dark start
+  screen, a controller or the arrow keys only reached Play and the profile chip.
+- **Windows release built on Windows itself** (#396 by @Elenedeath): `build.py`, `windeps.py` and `dist.py --target
+  windows` run on Windows, without Linux, WSL or Wine.
+- **CI actions at their latest majors, Dependabot grouped** (#444 by @SavageCore, #453 by @app/dependabot): fewer PRs,
+  merged once every CI job is green.
+- **Spanish (Latin America) corrected by a native speaker** (#421 by @AngeloAscheri).
+- **Smaller**: a link to the project's GitHub page on the start screen (#420); `vkCreateInstance failed (-9)` is a
+  known error with its wiki section (#426); the setup's warm-up writes `logs/warm.log`; frame captures work on Windows.
+
 ## 0.1.12
 
 A new start screen and settings by @ViniciusStanula; 20 and 15 fps at the race's real speed, Low latency and frame
