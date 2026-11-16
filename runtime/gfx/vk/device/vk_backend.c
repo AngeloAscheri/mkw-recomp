@@ -283,8 +283,9 @@ static void held_wait(Held *h) {
 // chunks, the recorder, the completion and shadow threads, the render thread) on the fastest cores only
 // (plat_cpu_fast), the replay core aside; background work (pipeline builds, prewarming, video decoding:
 // plat_thread_background) keeps every processor. On an i7-14700F (8 P-cores, 12 E-cores; RX 6700 XT, RADV, game 1.8.0
-// at 2560x1440, race at a fixed 60 fps) a race frame of ~20 ms took 3.6 ms less (medians; 6.0 means) with the scene
-// balanced by an in-run A/B and its inverted twin (fc-ab1: -0.95 median, fc-ab1i: -6.28; 16/11/2026). Off on Windows
+// at 2560x1440, race at a fixed 60 fps) a race frame of ~20 ms took 3.9 ms less (medians; 6.3 means), the scene
+// balanced by two in-run A/B pairs (fc-ab1/fc-ab1i, fc-ab2/fc-ab2i, 16/11/2026; B faster in all four); most in the
+// race's heavy first seconds, 27-30 ms a frame without it against ~20 with it. Off on Windows
 // until measured there: its scheduler places threads by their activity, and its process mask would also hold the
 // background threads.
 #if defined(_WIN32)
