@@ -8,8 +8,9 @@ its issue, #N), `### Tested` (what was run from the packages before publishing) 
 
 Terrain, roads and trees that drew black on Intel Arc cards, the game's own sharpening and anti-aliasing passes now
 getting their values (#423 by @AngeloAscheri, #485 by @FIocker), Automatic frame rate picking 60 or 30 frame by frame
-again, a 4 GB card that no longer draws a dark band, a memory leak that lost the GPU in the title's demo loop, and the
-split-screen view that drew with the other player's culling. New: Vert+ for tall windows by @simonwjackson, Discord
+again, race frames recorded in parallel by default (split screen too), a 4 GB card that no longer draws a dark band, a
+memory leak that lost the GPU in the title's demo loop, and the split-screen view that drew with the other player's
+culling. New: Vert+ for tall windows by @simonwjackson, Discord
 Rich Presence by @jony25, Classic VS by @andreknieriem, and a Windows release built on Windows itself by @Elenedeath.
 Thanks to @AngeloAscheri, @FIocker, @VictorMerk, @SavageCore, @simonwjackson, @jony25, @andreknieriem, @Elenedeath
 and @guillo1990.
@@ -49,6 +50,13 @@ and @guillo1990.
   ran before the first view, so every view used the last one's: a parked player 1 lost the crowd and grass the far
   player 2 no longer saw. The two queues' work is ordered by their event waits by default (on a GTX 1050 Ti, 14.8
   against 13.8 fps; `MKW_QUEUE_WAITS=0` turns it off, +3.1 ms a frame on a Radeon 660M without it).
+- **Race frames are recorded in parallel by default, split screen included** (#449): with 6 or more physical cores
+  (`MKW_REPLAY_PAR`; `=0` turns it off, `=1` forces it) the replay records the frame's big submit in chunks on several
+  threads. The replay thread records the first 256 draws itself while the chunks are cut, so the GPU starts 1.5-2.4 ms
+  after the game's last submit, as without chunks, instead of 5.4-6.3 ms (+0.28 ms a frame left in one player on an
+  i5-8400 with a GTX 1050 Ti, within noise). Where the recording holds the frame it is about a quarter shorter, and
+  two-player frames, which used to stay serial, are chunked again: 33-40 to 25-27 ms of recording. Below 6 physical
+  cores it stays off (a Steam Deck lost 25.4 to 22 fps in two players: the chunks took the game's CPU).
 - **Water courses bounce and trick again** (#441 by @SavageCore, #410, #163, #433): a compute pass wrote the water's
   collision height map to the image only, never to the game's memory, so the CPU physics read a flat road while the
   GPU showed waves. Its writes now reach the game's memory at the fence.
@@ -66,14 +74,15 @@ and @guillo1990.
   backdrops cover the added height. On 1.8.0, where the game's output ignored the window at original resolution, the
   output now follows it and keeps the picture's shape.
 - **Discord Rich Presence** (#455 by @jony25): while the game runs, the player's Discord profile shows it, the time
-  played and the phase (menus, a race, Grand Prix, Time Trial, Battle...) with the course in English, through Discord's
-  local pipe with no library; without Discord the game never waits. Off by default, as the player's friends see it:
+  played and the phase (menus, a race, Grand Prix, Time Trial, Battle...) with the game's own course names in English,
+  through Discord's local pipe with no library; without Discord the game never waits. Off by default, as the player's friends see it:
   Settings > General.
 - **Classic VS** (#452 by @andreknieriem): Settings > Hacks, off. Every VS race laps on one course, as Classic Grand
   Prix does for cups.
-- **Race recording on every core, and on a fast one** (#480 by @AngeloAscheri): `MKW_REPLAY_PAR` is on by default
-  with 6 or more physical cores, and the replay thread's own core is now one of the fastest on hybrid CPUs (an
-  i7-14700F pinned it to an efficiency core: +4.0 ms a frame; now -2.5 ms against unpinned).
+- **The replay thread pins itself to a fast core on hybrid CPUs** (#480 by @AngeloAscheri): the thread that records the
+  race frame's big submit sat alone on the last physical core, which on an i7-14700F is an efficiency core (4.2 GHz
+  against 5.4): +4.0 ms a frame. It now takes the last of the fastest cores (-2.5 ms against unpinned), and the other
+  threads get every processor but that core's (AMD's SMT siblings are not numbered together on Linux).
 - **UI images without a faint box on GPUs without ASTC** (#464 by @AngeloAscheri, #397): alpha 0 comes back exact when
   textures are re-encoded as BC7, so the lighter rectangle behind the Grand Prix "OK" banner and the cc badges is gone.
 - **Radeon RX 570 and older AMD: black paving, grass and buildings** (#458 by @VictorMerk): texture-array sampling,
@@ -89,7 +98,8 @@ and @guillo1990.
 - **CI actions at their latest majors, Dependabot grouped** (#444 by @SavageCore, #453 by @app/dependabot): fewer PRs,
   merged once every CI job is green.
 - **Spanish (Latin America) corrected by a native speaker** (#421 by @AngeloAscheri).
-- **Smaller**: a link to the project's GitHub page on the start screen (#420); `vkCreateInstance failed (-9)` is a
+- **Smaller**: `ASTC_BC7`, `ASTC_BC1` and `QUEUE_WAITS` are no longer logged as unknown keys of `mkw.ini` (they worked);
+  a link to the project's GitHub page on the start screen (#420); `vkCreateInstance failed (-9)` is a
   known error with its wiki section (#426); the setup's warm-up writes `logs/warm.log`; frame captures work on Windows.
 
 ## 0.1.12
