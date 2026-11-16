@@ -445,3 +445,19 @@ def test_chunk_key_ignores_generated_headers_it_does_not_include(tmp_path: Path)
     layout.write_text("#define A 2\n")
     after = keys()
     assert after[0] == before[0] and after[1] != before[1]
+
+
+def test_ca_file_with_an_unreadable_windows_store(monkeypatch, tmp_path):
+    """Issue #456: the Windows store holds a certificate Python cannot parse, the context raises OSError (ASN1) and
+    the setup died before its first step; the pip bundle is used instead."""
+    pem = tmp_path / "Lib/site-packages/pip/_vendor/certifi/cacert.pem"
+    pem.parent.mkdir(parents=True)
+    pem.write_text("")
+    monkeypatch.delenv("SSL_CERT_FILE", raising=False)
+    monkeypatch.setattr(sys, "prefix", str(tmp_path))
+
+    def broken(*args, **kwargs):
+        raise OSError(-2146881269, "invalid ASN1 tag")
+
+    monkeypatch.setattr(prepare.update.ssl, "create_default_context", broken)
+    assert prepare.update.ca_file() == str(pem)
