@@ -21,6 +21,7 @@ sys.path.insert(0, str(ROOT / "tools/prepare"))
 import prepare  # noqa: E402
 import gamesource  # noqa: E402  (after prepare: it puts recomp/ on the path)
 import gamecode  # noqa: E402
+import machine  # noqa: E402
 import spec  # noqa: E402
 import update  # noqa: E402
 
@@ -473,3 +474,21 @@ def test_redo_exefs_if_missing(tmp_path: Path) -> None:
     state = {"done": {"exefs": "k"}}
     prepare.redo_exefs_if_missing(state, tmp_path)
     assert state["done"] == {"exefs": "k"}
+
+
+def test_zig_cache_inside_the_game_folder_when_tmp_and_o_are_split(monkeypatch, tmp_path: Path) -> None:
+    # #439: rename between the cache's tmp/ and o/ failed with CrossDevice
+    monkeypatch.setenv("ZIG_GLOBAL_CACHE_DIR", str(tmp_path / "cache"))
+
+    def split(src, dst):
+        raise OSError(18, "Invalid cross-device link")
+
+    monkeypatch.setattr(os, "rename", split)
+    machine.use_own_zig_cache_if_split(tmp_path / "game")
+    assert os.environ["ZIG_GLOBAL_CACHE_DIR"] == str(tmp_path / "game/setup-work/zig-cache")
+
+
+def test_zig_cache_kept_when_rename_works(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("ZIG_GLOBAL_CACHE_DIR", str(tmp_path / "cache"))
+    machine.use_own_zig_cache_if_split(tmp_path / "game")
+    assert os.environ["ZIG_GLOBAL_CACHE_DIR"] == str(tmp_path / "cache")
