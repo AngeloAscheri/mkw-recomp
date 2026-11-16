@@ -329,7 +329,9 @@ static void tab_graphics(float scale) {
         static const char *const vals[] = {"off", "auto", "2", "3", "4"};
         const char *names[5] = {menu_text(UI_MENU_PERF_OFF), menu_text(UI_MENU_FPS_AUTO), "2x", "3x", "4x"};
         opt_choice_list("MKW_FRAMEGEN", UI_MENU_FRAMEGEN, vals, names, 5, UI_MENU_FRAMEGEN_DESC);
+        if (vk_fg_uneven()) opt_text(UI_MENU_FRAMEGEN_UNEVEN, true);   // a fixed factor that judders on this screen
     }
+    opt_toggle("MKW_VRR", UI_MENU_VRR, UI_MENU_VRR_DESC);   // gfx/vk/device/vk_framegen.c fits, live
     opt_toggle("MKW_LOW_LATENCY", UI_MENU_LOW_LATENCY, UI_MENU_LOW_LATENCY_DESC);   // core/boot/frame_jit.c, live
     static const UiTextId perf[] = {UI_MENU_PERF_OFF, UI_MENU_PERF_FPS, UI_MENU_PERF_FULL};
     opt_choice("MKW_PERF_OVERLAY", UI_MENU_PERF_OVERLAY, perf, 3, UI_MENU_PERF_OVERLAY_DESC);
@@ -404,6 +406,7 @@ static void tab_general(float scale) {
     opt_choice("MKW_MENU_LANG", UI_MENU_MENU_LANG, langs, sizeof langs / sizeof *langs, UI_MENU_MENU_LANG_DESC);
     opt_toggle("MKW_LAN", UI_MENU_LAN, UI_MENU_LAN_DESC);   // sdk/ov/ov_socket.c, the lan set of recomp/patches-mkw.txt
     opt_toggle("MKW_UPDATE_CHECK", UI_MENU_UPDATE_CHECK, UI_MENU_UPDATE_CHECK_DESC);   // ui/launcher/launcher_update.cpp
+    opt_toggle("MKW_DISCORD", UI_MENU_DISCORD, UI_MENU_DISCORD_DESC);   // core/presence/presence.c
     opt_end();
 }
 
@@ -571,6 +574,7 @@ static void tab_hacks(float scale) {
     opt_choice("MKW_QUICK_RACE", UI_MENU_QUICK_RACE, quick, 4, UI_MENU_QUICK_RACE_DESC);
     opt_toggle("MKW_FREEZE_KEYS", UI_MENU_FREEZE_KEYS, UI_MENU_FREEZE_KEYS_DESC);
     opt_toggle("MKW_CLASSIC_GP", UI_MENU_CLASSIC_GP, UI_MENU_CLASSIC_GP_DESC);
+    opt_toggle("MKW_CLASSIC_VS", UI_MENU_CLASSIC_VS, UI_MENU_CLASSIC_VS_DESC);
     opt_end();
 }
 
