@@ -257,7 +257,30 @@ static int test_astc(void) {
 // ---- formats ----
 static unsigned n_mapped, n_supported, n_unmapped, n_unsupported, n_fallback;
 
+// imageGranularity in texels (NVIDIA) or in 4x4 blocks (Intel's Windows driver, #476): both come out in texels.
+static int test_granularity(void) {
+    static const struct { VkFormat f; uint32_t gw, gh, want_w, want_h; } c[] = {
+        {VK_FORMAT_BC7_SRGB_BLOCK, 256, 256, 256, 256},   // NVIDIA, RTX 3050 (#443's log)
+        {VK_FORMAT_BC7_SRGB_BLOCK, 64, 64, 256, 256},     // Intel Arc B580 (#476's log)
+        {VK_FORMAT_BC6H_UFLOAT_BLOCK, 64, 64, 256, 256},
+        {VK_FORMAT_BC1_RGBA_UNORM_BLOCK, 512, 256, 512, 256},
+        {VK_FORMAT_BC1_RGBA_UNORM_BLOCK, 128, 64, 512, 256},
+        {VK_FORMAT_R8G8B8A8_UNORM, 128, 128, 128, 128},
+    };
+    for (size_t i = 0; i < sizeof c / sizeof *c; i++) {
+        uint32_t w = c[i].gw, h = c[i].gh;
+        vk_sparse_granularity_texels(c[i].f, &w, &h);
+        if (w != c[i].want_w || h != c[i].want_h) {
+            printf("probe-vkmem: FAIL sparse granularity %ux%u of VkFormat %d -> %ux%u, want %ux%u\n", c[i].gw, c[i].gh,
+                   (int)c[i].f, w, h, c[i].want_w, c[i].want_h);
+            return 1;
+        }
+    }
+    return 0;
+}
+
 static int test_formats(void) {
+    if (test_granularity()) return 1;
     if (!vk_init()) { printf("probe-vkmem: FAIL vk_init\n"); return 1; }
     printf("probe-vkmem: GPU %s\n", vk_ctx()->props.deviceName);
     for (int f = 0; f <= 0x9C; f++) {

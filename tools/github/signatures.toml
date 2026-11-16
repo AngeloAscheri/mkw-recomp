@@ -171,3 +171,10 @@ issue = 426
 wiki = "vkcreateinstance-failed--9-no-vulkan-driver"
 all = ["vkCreateInstance failed (-9)"]
 what = "no Vulkan driver that can draw to a window is installed (the video driver is missing or Windows' basic one)"
+
+[[signature]]
+issue = 14
+wiki = "black-ground-or-terrain"
+all = ["Intel Corporation", "Vulkan block 64x64", "tile slots over MKW_SPARSE_MIB"]
+fixed = "v0.1.13"
+what = "Intel Arc on Windows: the terrain's sparse blocks read in the wrong unit, ground, roads and trees black or missing"
