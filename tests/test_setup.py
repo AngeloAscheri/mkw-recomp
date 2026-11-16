@@ -492,3 +492,16 @@ def test_zig_cache_kept_when_rename_works(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setenv("ZIG_GLOBAL_CACHE_DIR", str(tmp_path / "cache"))
     machine.use_own_zig_cache_if_split(tmp_path / "game")
     assert os.environ["ZIG_GLOBAL_CACHE_DIR"] == str(tmp_path / "cache")
+
+
+@pytest.mark.skipif(not shutil.which("cc"), reason="no C compiler")
+def test_damaged_generated_c_raises_to_regenerate(tmp_path: Path) -> None:
+    # #434: `uint6<NUL>_t` in a generated chunk; generate was skipped by its key, so every retry failed the same
+    src, out, stamp = tmp_path / "main_0203.c", tmp_path / "a.o", tmp_path / "a.key"
+    src.write_bytes(b"typedef unsigned long long uint64_t;\nuint6\0_t x;\n")
+    with pytest.raises(gamecode.DamagedSource, match="NUL bytes"):
+        gamecode.compile_one(["cc"], [], src, out, stamp, "k")
+    src.write_text("int x = ;\n")  # an ordinary error stays a message
+    assert gamecode.compile_one(["cc"], [], src, out, stamp, "k").startswith("main_0203.c: ")
+    src.write_text("int x = 1;\n")
+    assert gamecode.compile_one(["cc"], [], src, out, stamp, "k") == "" and stamp.read_text() == "k"

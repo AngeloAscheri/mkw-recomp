@@ -70,7 +70,7 @@ import build  # (GEN_FLAGS, module_glue, game_id: the same game code as build.py
 import game_texts  # (build_all: the game's texts in ca, gl, eu)
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from gamecode import compile_game
+from gamecode import DamagedSource, compile_game
 from gamesource import check, is_nx, loose_romfs, unpack
 from gamecopy import clear_dir, copy_tree, remove_stale
 from nup import Nup
@@ -376,7 +376,14 @@ def main() -> None:
             elif step == "generate":
                 generate(game / "exefs", work, gen_jobs, version, image)
             elif step == "compile":
-                compile_game(game, game / "exefs", work, cc, args.target, jobs)
+                try:
+                    compile_game(game, game / "exefs", work, cc, args.target, jobs)
+                except DamagedSource as e:  # once: a second damaged write is the disk or the memory, not chance
+                    print(f"{e}: generating again", file=sys.stderr)
+                    emit("step", "generate")
+                    generate(game / "exefs", work, gen_jobs, version, image)
+                    emit("step", "compile")
+                    compile_game(game, game / "exefs", work, cc, args.target, jobs)
             elif step == "shaders":
                 # extract.py reads a .nup itself; a .nx's shader archives are unpacked first
                 src_romfs = loose_romfs(runtime, romfs, work, "Shader", *SHADER_DIRS) if is_nx(romfs) else romfs
