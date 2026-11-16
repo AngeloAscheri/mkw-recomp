@@ -348,6 +348,7 @@ static void guest_main(Cpu *c) {
 }
 
 static void prewarm_main(void *arg) {
+    plat_thread_background();   // off the frame's fast cores (MKW_FAST_CORES)
     (void)arg;
     vk_pipeline_prewarm();
     return;
