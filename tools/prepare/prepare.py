@@ -172,6 +172,13 @@ def regenerate_if_cleaned(state: dict, keys: dict[str, str], work: Path) -> None
         state["done"].pop("generate", None)
 
 
+def redo_exefs_if_missing(state: dict, game: Path) -> None:
+    """Undoes the exefs step when its copy is gone: the step is skipped by its key (source and version), and a folder
+    emptied or moved since made generate stop on "module main not in the layout" (#419), which names no cause."""
+    if "exefs" in state["done"] and not (game / "exefs/main").is_file():
+        state["done"].pop("exefs")
+
+
 GENERATOR = [
     *sorted((ROOT / "recomp").glob("*.py")),
     *sorted((ROOT / "recomp").glob("patches-mkw*.txt")),
@@ -325,6 +332,7 @@ def main() -> None:
             "warm": f"{build.game_id()} {romfs_src}",
         })  # fmt: skip
         regenerate_if_cleaned(state, keys, work)
+        redo_exefs_if_missing(state, game)
         for step in STEPS[1:]:
             # The start screen sets up again when its version differs (launcher.cpp): an update by hand (a new
             # AppImage or zip over the old) kept the old steps (#50: 0.1.8 played with 0.1.7's shaders). Kept once the

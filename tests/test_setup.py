@@ -461,3 +461,15 @@ def test_ca_file_with_an_unreadable_windows_store(monkeypatch, tmp_path):
 
     monkeypatch.setattr(prepare.update.ssl, "create_default_context", broken)
     assert prepare.update.ca_file() == str(pem)
+
+
+def test_redo_exefs_if_missing(tmp_path: Path) -> None:
+    # #419: the exefs step was skipped by its key while game/exefs had no main, and generate stopped on the layout
+    state = {"done": {"exefs": "k", "romfs": "r"}}
+    prepare.redo_exefs_if_missing(state, tmp_path)
+    assert state["done"] == {"romfs": "r"}
+    (tmp_path / "exefs").mkdir()
+    (tmp_path / "exefs/main").write_text("x")
+    state = {"done": {"exefs": "k"}}
+    prepare.redo_exefs_if_missing(state, tmp_path)
+    assert state["done"] == {"exefs": "k"}
