@@ -2725,3 +2725,15 @@ msgid ""
 msgstr ""
 "La preparación dejó los archivos del juego en %s y ya no están ahí. Si están en una tarjeta o un "
 "disco, conéctalo; si los moviste, prepara el juego de nuevo aquí abajo y elige dónde están ahora."
+
+msgctxt "UI_LAUNCH_FOUND"
+msgid "Found on this device"
+msgstr "Encontradas en este equipo"
+
+msgctxt "UI_LAUNCH_FOUND_SEARCHING"
+msgid "Looking for your copy in the usual places..."
+msgstr "Buscando tu copia en los lugares habituales..."
+
+msgctxt "UI_LAUNCH_FOUND_FOLDER"
+msgid "folder"
+msgstr "carpeta"
