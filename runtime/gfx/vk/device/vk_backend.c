@@ -279,18 +279,20 @@ static void held_wait(Held *h) {
 // unpinned. The others are every processor but those of that core (plat_cpu_core_of): taking the lower-numbered ones
 // assumed SMT siblings numbered together, which AMD's are not on Linux (0 and 16 on 16 cores), and left the game's
 // threads half the processors there. Applied at each present, on the replay thread.
-// MKW_FAST_CORES (default 1 on Linux with a hybrid CPU and FAST_CORES_MIN fast processors to spare, else 0; "ab"): the frame's threads (the game's, the recording
-// chunks, the recorder, the completion and shadow threads, the render thread) on the fastest cores only
-// (plat_cpu_fast), the replay core aside; background work (pipeline builds, prewarming, video decoding:
-// plat_thread_background) keeps every processor. On an i7-14700F (8 P-cores, 12 E-cores; RX 6700 XT, RADV, game 1.8.0
-// at 2560x1440, race at a fixed 60 fps) a race frame of ~20 ms took 3.9 ms less (medians; 6.3 means), the scene
-// balanced by two in-run A/B pairs (fc-ab1/fc-ab1i, fc-ab2/fc-ab2i, 16/11/2026; B faster in all four); most in the
-// race's heavy first seconds, 27-30 ms a frame without it against ~20 with it. By default only when at least
-// FAST_CORES_MIN fast processors are left besides the replay core: 14 on that i7, but 2 on an i5-1235U (2 P-cores),
-// 3 on Lunar Lake (4 P-cores without SMT), 6 on a Ryzen AI 9 HX 370 (4 Zen 5 cores), where the game's ~95 threads
-// and the recording would most likely lose more than the E-cores' slower clock costs them. 8 is a hypothesis, not
-// a measurement: no CPU with few P-cores was tried. Off on Windows until measured there: its scheduler places threads
-// by their activity, and its process mask would also hold the background threads.
+// MKW_FAST_CORES (default 1 on Linux with a hybrid CPU and FAST_CORES_MIN fast processors to spare, else 0; "ab"): the
+// frame's threads (the game's, the recording chunks, the recorder, the completion and shadow threads, the render
+// thread) on the fastest cores only (plat_cpu_fast), the replay core aside; background work (pipeline builds,
+// prewarming, video decoding: plat_thread_background) keeps every processor. On an i7-14700F (8 P-cores, 12 E-cores; RX
+// 6700 XT, RADV with the clock held at peak by MKW_GPU_CLOCKS, game 1.8.0 at 1280x720, race at a fixed 60 fps, no GPU
+// memory cap; fc-gc2 and its inverted twin, 17/11/2026) every window with it ran at the 16.67 ms cap, against 12 of 34
+// over 17.5 ms without it; the slowest frame of a 60-frame window 20.0 ms against 26.7 (means), the replay thread's
+// recording -1.6 ms, the frame -0.68 ms (means, scene balanced; -0.16 medians, most windows being at the cap both
+// ways). Before the clock was held (fc-ab1/fc-ab2 and twins, 16/11) the frame was ~20 ms and took 3.9 ms less (medians;
+// 6.3 means). By default only when at least FAST_CORES_MIN fast processors are left besides the replay core: 14 on that
+// i7, but 2 on an i5-1235U (2 P-cores), 3 on Lunar Lake (4 P-cores without SMT), 6 on a Ryzen AI 9 HX 370 (4 Zen 5
+// cores), where the game's ~95 threads and the recording would most likely lose more than the E-cores' slower clock
+// costs them. 8 is a hypothesis, not a measurement: no CPU with few P-cores was tried. Off on Windows until measured
+// there: its scheduler places threads by their activity, and its process mask would also hold the background threads.
 #define FAST_CORES_MIN 8
 static void replay_core(void) {
     static int mode = -1, fmode = 0, applied = 0, c = -1;
