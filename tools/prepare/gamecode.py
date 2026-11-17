@@ -47,7 +47,11 @@ def write_link_response(rsp: Path, objects: list[Path], windows_quoting: bool) -
     rsp.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def compile_game(game: Path, exefs: Path, work: Path, cc: list[str], target: str, jobs: int) -> None:
+def compile_game(
+    game: Path, exefs: Path, work: Path, cc: list[str], target: str, jobs: int, dest: Path | None = None
+) -> None:
+    """The game code library and its id into dest (default the game folder; prepare.py --next: setup-next/)."""
+    dest = dest or game
     gen, obj = work / "generated", work / "obj"
     windows = target == "windows"
     flags = [*build.GEN_FLAGS, *([] if windows else ["-fPIC"])]
@@ -94,7 +98,7 @@ def compile_game(game: Path, exefs: Path, work: Path, cc: list[str], target: str
         stamp.unlink(missing_ok=True)
         return compile_one(cc, f, src, out, stamp, key)
 
-    lib = game / ("mkwgame.dll" if windows else "mkwgame.so")
+    lib = dest / ("mkwgame.dll" if windows else "mkwgame.so")
     part = lib.with_name(lib.name + ".part")
     rsp = obj / "link.rsp"  # ~360 objects: past the Windows command line limit
     link = crt_link(game, cc, lib, part, obj, [f"@{rsp}", *extra]) if windows else None
@@ -126,7 +130,7 @@ def compile_game(game: Path, exefs: Path, work: Path, cc: list[str], target: str
         raise Failed(f"linking the game code failed: {r.stderr.strip()[-300:]}")
     part.replace(lib)
     emit("progress", total, total)
-    (game / "mkwgame.id").write_text(build.game_id())  # runtime/core/boot/gamelib.c rt_game_present
+    (dest / "mkwgame.id").write_text(build.game_id())  # runtime/core/boot/gamelib.c rt_game_present
 
 
 def compile_one(cc: list[str], flags: list[str], src: Path, out: Path, stamp: Path, key: str) -> str:
