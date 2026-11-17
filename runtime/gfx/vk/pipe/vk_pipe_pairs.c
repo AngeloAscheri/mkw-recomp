@@ -30,7 +30,8 @@ typedef struct { char magic[8]; uint32_t version, count; } PairsHeader;
 typedef struct { uint8_t vs[32], fs[32]; uint32_t flags; } PairRec;
 typedef struct { int kind; Lib *b; Layout *l; VkPipeState s; GKey k; } PairJob;
 
-static struct { PairJob *j; size_t n; volatile int64_t next, done; int no_stall; } PJ;
+// finished: every library built, no thread left reading SPIR-V (vk_pipeline_prewarm releases it then)
+static struct { PairJob *j; size_t n; volatile int64_t next, done; int no_stall, finished; } PJ;
 
 // The alpha test functions the game draws with (pipeline_pairs.py: GREATER and GEQUAL in every recorded pipeline with
 // the test on), as GKey.alpha_func: VkCompareOp + 1. The reference is no part of a pipeline (spirv_alpha_test).
@@ -41,6 +42,7 @@ static int id_cmp(const void *x, const void *y) { return memcmp(x, y, 32); }
 static void pairs_worker(void *arg) {
     plat_thread_background();   // off the frame's fast cores (MKW_FAST_CORES)
     (void)arg;
+    gfx_shader_spirv_quiet(1);   // not a draw's use: the SPIR-V may be released after the prewarm
     plat_mutex_lock(&P.lock);
     for (int64_t i; (i = plat_inc64(&PJ.next) - 1) < (int64_t)PJ.n;) {
         PairJob *j = &PJ.j[i];
@@ -185,6 +187,7 @@ void pairs_prewarm(void) {
         free(r), free(ids), free(sh), free(var), free(jobs);
         return;
     }
+    gfx_shader_spirv_quiet(1);   // the variants, unions and layouts below read SPIR-V as the workers do
     uint32_t used = 0, dropped = 0, variants = 0;
     for (size_t i = 0; i < u; i++) {
         int st = sh[i] ? gfx_shader_stage(sh[i]) : -1;
@@ -267,6 +270,8 @@ void pairs_prewarm(void) {
             rt_log("vk_pipeline: pairs prewarm: %lld of %zu shader libraries, %.0f ms", (long long)PJ.done, nj, now - t1);
             if ((stalled = !PJ.no_stall && now - last_t >= PAIRS_STALL_MS)) break;
         }
+    gfx_shader_spirv_quiet(0);
+    PJ.finished = !stalled;
     if (stalled) {
         for (i--; i < nt; i++) plat_thread_detach(t[i]);
         rt_log("vk_pipeline: pairs prewarm: no library finished in %u ms; the game starts, %lld of %zu still building",
@@ -277,6 +282,13 @@ void pairs_prewarm(void) {
     rt_log("vk_pipeline: pairs prewarm: %zu records in %s (%u used, %u dropped), %zu shaders and %u integer "
            "variants; %zu shader libraries on %d threads; shaders %.0f ms, libraries %.0f ms",
            n, path, used, dropped, u, variants, nj, nt, t1 - t0, (double)plat_now_ns() / 1e6 - t1);
+}
+
+// After the whole prewarm: the SPIR-V only the pairs prewarm read is freed (gfx_shader_spirv_release), unless its
+// threads were left building.
+void pairs_release(void) {
+    if (PJ.finished) gfx_shader_spirv_release();
+    PJ.finished = 0;
 }
 
 // mkw --prewarm: the boot's prewarm without the game, for the setup's warm step: every library and recorded pipeline

@@ -22,7 +22,7 @@ static const GfxShader *int_io_variant(GfxShader *s, uint32_t um, uint32_t sm, i
     GfxShader *v = gfx_shader_find(key);
     if (v) return v;
     uint64_t nw = 0;
-    uint32_t *code = spirv_int_io(s->spirv, s->words, um, sm, out ? 3 : 1, &nw);
+    uint32_t *code = spirv_int_io(gfx_shader_spirv(s, NULL), s->words, um, sm, out ? 3 : 1, &nw);
     if (!code) {
         static volatile int32_t n_fail;
         if (plat_inc32(&n_fail) <= 8)
@@ -99,7 +99,7 @@ static const GfxShader *int_image_variant(GfxShader *s, const GfxShaderAnswers *
     if (v) return v;
     uint64_t nw = 0;
     const char *why = NULL;
-    uint32_t *code = spirv_int_images(s->spirv, s->words, a->img_uint, a->img_sint, &nw, &why);
+    uint32_t *code = spirv_int_images(gfx_shader_spirv(s, NULL), s->words, a->img_uint, a->img_sint, &nw, &why);
     if (!code) {
         static volatile int32_t n_fail;
         if (plat_inc32(&n_fail) <= 8) {
@@ -114,7 +114,7 @@ static const GfxShader *int_image_variant(GfxShader *s, const GfxShaderAnswers *
                 plat_file_mkdir_p(dd);
                 snprintf(path, sizeof path, "%s/%s-u%llx-s%llx.failed.spv", dd, hex,
                          (unsigned long long)a->img_uint, (unsigned long long)a->img_sint);
-                plat_file_write(path, s->spirv, s->words * 4);
+                plat_file_write(path, gfx_shader_spirv(s, NULL), s->words * 4);
             }
         }
         return s;

@@ -252,3 +252,4 @@ VkPipeline pipe_graphics(const VkPipeState *s, const VkPipeInfo **info, int asyn
 void prebuild_start(void);
 // vk_pipe_pairs.c: the shader libraries of every program pair in pipeline-pairs.bin, at boot
 void pairs_prewarm(void);
+void pairs_release(void);   // after vk_pipeline_prewarm: the SPIR-V only the pairs prewarm read

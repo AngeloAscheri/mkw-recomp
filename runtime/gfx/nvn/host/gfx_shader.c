@@ -151,6 +151,7 @@ static GfxShader *prepared_load(const uint8_t key[32], const uint8_t *control) {
         }
     }
     gfx_shader_reflect(s);
+    s->spirv_state = SPIRV_PREPARED;
     return gfx_shader_insert(s);
 }
 
@@ -233,9 +234,60 @@ void gfx_shader_prewarm(const uint8_t (*iids)[32], size_t n, const GfxShader **o
            (long long)PW.miss, nt + 1);
 }
 
-const uint32_t *gfx_shader_spirv(const GfxShader *s, uint64_t *words) {
+// ---- SPIR-V released after the prewarm
+// The pairs prewarm (vk_pipe_pairs.c) loads every program of the copy, 306 MiB of SPIR-V on the 660M (pk-mem,
+// 17/11/2026), to build their libraries; most are never drawn in a session. Those the prewarm alone read are freed
+// after it and read again from their file if a draw asks for one.
+static PlatMutex spirv_lock = PLAT_MUTEX_INIT;   // a release against a read back
+static _Thread_local int spirv_quiet;
+
+void gfx_shader_spirv_quiet(int on) { spirv_quiet = on; }
+
+static void spirv_reload(GfxShader *s) {
+    plat_mutex_lock(&spirv_lock);
+    if (__atomic_load_n(&s->spirv_state, __ATOMIC_ACQUIRE) == SPIRV_RELEASED) {
+        char hex[65], p[PATH_CAP + 80];
+        gfx_shader_key_hex(s->key, hex);
+        snprintf(p, sizeof p, "%s/%s.spv", prepared_dir, hex);
+        uint64_t n = 0;
+        uint8_t *spv = read_file(p, &n);
+        if (!spv || n != s->words * 4) rt_fatal("gfx_shader: %s changed or went missing since it was loaded", p);
+        s->spirv = (uint32_t *)spv;
+        __atomic_store_n(&s->spirv_state, SPIRV_KEPT, __ATOMIC_RELEASE);
+    }
+    plat_mutex_unlock(&spirv_lock);
+}
+
+const uint32_t *gfx_shader_spirv(const GfxShader *cs, uint64_t *words) {
+    GfxShader *s = (GfxShader *)cs;
     if (words) *words = s->words;
+    int32_t st = __atomic_load_n(&s->spirv_state, __ATOMIC_ACQUIRE);
+    if (st == SPIRV_PREPARED && !spirv_quiet) st = plat_cas32(&s->spirv_state, SPIRV_KEPT, SPIRV_PREPARED);
+    if (st == SPIRV_RELEASED) spirv_reload(s);
     return s->spirv;
+}
+
+// Frees the SPIR-V of every prepared shader nothing but the prewarm has read. The caller has joined the prewarm's
+// threads: a quiet read never takes the state, so one running now could read freed memory.
+uint64_t gfx_shader_spirv_release(void) {
+    uint64_t bytes = 0, before = 0, after = 0, priv = 0;
+    plat_process_memory(&before, &priv);
+    plat_mutex_lock(&spirv_lock);
+    plat_mutex_lock_shared(&cache_lock);
+    for (int b = 0; b < BUCKETS; b++)
+        for (GfxShader *s = buckets[b]; s; s = s->next)
+            if (plat_cas32(&s->spirv_state, SPIRV_RELEASED, SPIRV_PREPARED) == SPIRV_PREPARED) {
+                bytes += s->words * 4;
+                free(s->spirv);
+                s->spirv = NULL;
+            }
+    plat_mutex_unlock_shared(&cache_lock);
+    plat_mutex_unlock(&spirv_lock);
+    plat_heap_trim();   // ~28 KiB blocks: without it the C heap keeps the pages
+    plat_process_memory(&after, &priv);
+    rt_log("gfx_shader: released %.0f MiB of SPIR-V only the prewarm read; resident %.0f -> %.0f MiB",
+           (double)bytes / (1 << 20), (double)before / (1 << 20), (double)after / (1 << 20));
+    return bytes;
 }
 
 int gfx_shader_stage(const GfxShader *s) { return s->stage; }
@@ -253,10 +305,11 @@ uint32_t gfx_shader_raw_outputs(const GfxShader *s) { return s->raw_outputs; }
 const GfxShader *gfx_shader_variant(const GfxShader *s, const uint32_t *val, const uint8_t *fix) {
     enum { OP_SPEC_TRUE = 48, OP_SPEC_FALSE = 49, OP_SPEC = 50, OP_DECORATE = 71, DEC_SPEC_ID = 1 };
     if (s->words < 5) return NULL;
-    uint32_t bound = s->spirv[3], *w = malloc(sizeof *w * s->words);
+    const uint32_t *src = gfx_shader_spirv(s, NULL);
+    uint32_t bound = src[3], *w = malloc(sizeof *w * s->words);
     int32_t *sid = malloc(sizeof *sid * (bound ? bound : 1));
     if (!w || !sid) rt_fatal("gfx_shader: out of memory");
-    memcpy(w, s->spirv, sizeof *w * s->words);
+    memcpy(w, src, sizeof *w * s->words);
     memset(sid, 0xff, sizeof *sid * bound);
     for (uint64_t i = 5; i < s->words;) {
         uint32_t op = w[i] & 0xffff, len = w[i] >> 16;
@@ -286,7 +339,7 @@ const GfxShader *gfx_shader_variant(const GfxShader *s, const uint32_t *val, con
     GfxShader *v = malloc(sizeof *v);
     if (!v) rt_fatal("gfx_shader: out of memory");
     *v = *s;
-    v->next = NULL, v->spirv = w, v->variant_of = s;
+    v->next = NULL, v->spirv = w, v->spirv_state = SPIRV_KEPT, v->variant_of = s;
     size_t n = 32 + (size_t)s->nspec * 5;
     uint8_t *buf = malloc(n);
     if (!buf) rt_fatal("gfx_shader: out of memory");

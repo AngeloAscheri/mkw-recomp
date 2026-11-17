@@ -9,8 +9,9 @@ struct GfxShader {
     struct GfxShader *next;
     uint8_t key[32];
     uint8_t iid[32];                                       // the id in pipeline key records: the program key
-    uint32_t *spirv;
+    uint32_t *spirv;                                       // read it through gfx_shader_spirv: it may be released
     uint64_t words;
+    volatile int32_t spirv_state;                          // SPIRV_*: whether spirv may be released after the prewarm
     char *reflection;                                      // the service's .res.json text, parsed into the fields below
     uint64_t reflection_size;
     // Reflection (reflect(), once per shader before it enters the cache)
@@ -35,6 +36,10 @@ struct GfxShader {
 };
 
 #define PATH_CAP 1024                                      // bytes of a UTF-8 path
+
+// GfxShader.spirv_state. A prepared shader read from its file starts PREPARED; the first read of its SPIR-V outside
+// the prewarm keeps it, and gfx_shader_spirv_release frees the rest, read again from the file if a draw asks later.
+enum { SPIRV_KEPT, SPIRV_PREPARED, SPIRV_RELEASED };
 
 // Parses s->reflection (.res.json) and scans s->spirv into the reflection fields, once before s enters the cache.
 void gfx_shader_reflect(GfxShader *s);
