@@ -47,6 +47,7 @@ struct PlatThread {
     void *arg;
     volatile int32_t tid;   // the kernel's id once the thread runs, for plat_thread_set_priority
     char name[16];          // the kernel keeps 15 characters
+    int bg;                 // started by a background thread (plat_thread_background): one too
 };
 
 // A signal stack for the calling thread, so the fault and crash handlers still run when its own stack is exhausted.
@@ -61,6 +62,7 @@ void alt_stack(void) {
     sigaltstack(&ss, NULL);
 }
 
+static __thread int bg_self;
 static void background_end(void);
 
 static void *thread_main(void *p) {
@@ -68,6 +70,7 @@ static void *thread_main(void *p) {
     alt_stack();
     __atomic_store_n(&t->tid, (int32_t)syscall(SYS_gettid), __ATOMIC_RELEASE);
     if (t->name[0]) pthread_setname_np(pthread_self(), t->name);
+    if (t->bg) plat_thread_background();
     t->fn(t->arg);
     background_end();
     return NULL;
@@ -82,6 +85,7 @@ PlatThread *plat_thread_new_ex(PlatThreadFn fn, void *arg, const char *name, siz
     if (!t) return NULL;
     t->fn = fn;
     t->arg = arg;
+    t->bg = bg_self;
     if (name) snprintf(t->name, sizeof t->name, "%s", name);
     pthread_attr_t a;
     pthread_attr_init(&a);
@@ -167,7 +171,6 @@ static pid_t bg_tid[BG_MAX];
 static int bg_n;
 static cpu_set_t bg_set;   // the process's processors at the first plat_process_affinity or plat_thread_background
 static int bg_set_known;
-static __thread int bg_self;
 
 static void bg_set_once(void) {   // under bg_lock
     if (bg_set_known) return;
