@@ -3,7 +3,9 @@
 Why: the README is read in the languages of most of the players who report here; a translation is written by hand once
 (docs/i18n/<lang>.body.md) and this keeps the parts every language repeats in step: the centred title, the download
 buttons, the link row and the language bar (the same as README.md's, its own language in bold), the body's relative
-links moved two folders up, and a "translated from" line with the hash of the README.md it follows. check.py runs the
+links moved two folders up, and a "translated from" line with the hash of the README.md it follows and of the body.
+A rebuild keeps a language's README.md hash while its body is unchanged, so that adding a language or changing the
+bar does not mark every old translation as current; an edited body takes the current one. check.py runs the
 check and warns, without refusing the commit, when README.md changed after a translation (Adrià 13/11/2026).
 
 Usage: uv run tools/docs/i18n_readme.py            (writes every docs/i18n/README.<lang>.md)
@@ -68,13 +70,23 @@ LINKS = [
 ]  # fmt: skip
 # Scripts whose letters join (Arabic) or stack (Devanagari): their buttons stay in English (13/11/2026, seen on GitHub)
 LATIN_BUTTONS = {"ar", "hi"}
-SOURCE = re.compile(r"<!-- translated from README.md ([0-9a-f]{12}) -->")
+SOURCE = re.compile(r"<!-- translated from README.md ([0-9a-f]{12})(?: body ([0-9a-f]{12}))? -->")
 REL_MD = re.compile(r"(\]\()(?!https?:|#|mailto:|\.\./)([^)\s]+)")
 REL_HTML = re.compile(r'((?:href|src)=")(?!https?:|#|mailto:|\.\./)([^"]+)')
 
 
 def readme_hash() -> str:
     return hashlib.sha256((ROOT / "README.md").read_bytes()).hexdigest()[:12]
+
+
+def source_stamp(code: str, body: str) -> str:
+    """The "translated from" line: the README.md hash the built file already names while its body is unchanged (a
+    file stamped before the body hash existed counts as unchanged), the current one for a new or edited body."""
+    body_hash = hashlib.sha256(body.encode("utf-8")).hexdigest()[:12]
+    built = I18N / f"README.{code}.md"
+    m = SOURCE.search(built.read_text(encoding="utf-8")) if built.is_file() else None
+    source = m.group(1) if m and m.group(2) in (None, body_hash) else readme_hash()
+    return f"<!-- translated from README.md {source} body {body_hash} -->"
 
 
 def badge(text: str) -> str:
@@ -102,11 +114,12 @@ def build(code: str, rtl: bool) -> str:
     links = " ·\n  ".join(f'<a href="{u}">{n}</a>' if i > 2 else f'<b><a href="{u}">{n}</a></b>'
                           for i, (u, n) in enumerate(zip(LINKS, names)))  # fmt: skip
     body = (I18N / f"{code}.body.md").read_text(encoding="utf-8").strip()
+    stamp = source_stamp(code, body)
     body = REL_HTML.sub(r"\1../../\2", REL_MD.sub(r"\1../../\2", body))
     if rtl:
         body = f'<div dir="rtl">\n\n{body}\n\n</div>'
     head = "\n\n".join([
-        f"<!-- translated from README.md {readme_hash()} -->",
+        stamp,
         '<p align="center"><img src="../images/logo.svg" width="128" alt="mkw-recomp logo"></p>',
         '<h1 align="center">mkw-recomp</h1>',
         f'<p align="center">\n  <b>{tag}</b>\n</p>',

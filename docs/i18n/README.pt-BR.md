@@ -1,4 +1,4 @@
-<!-- translated from README.md dae9dd5efeb2 -->
+<!-- translated from README.md dae9dd5efeb2 body 4b3bb4d2c1cd -->
 
 <p align="center"><img src="../images/logo.svg" width="128" alt="mkw-recomp logo"></p>
 
