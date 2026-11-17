@@ -1,7 +1,7 @@
 # Roadmap
 
 What is being worked on, in order of priority: nothing may hang the GPU, then the picture as on the console (menus
-before races), then the frame rate, then the player's side. Updated 09/11/2026.
+before races), then the frame rate, then the player's side. Updated 17/11/2026.
 
 ## 1. 60 fps in races: the serial frame
 
@@ -34,6 +34,16 @@ totk-pc-recomp, MIT; −10.6 % recorder instructions on Steam Deck; no measurabl
 - **Recording in parallel**: chunks of a submit on several threads; today they fight over the texture lock, which has
   to be split first.
 - **The kernel's global lock**: waits by address are done (−1.3 ms\*); the rest of the lock remains.
+- **Hybrid CPUs** (`MKW_FAST_CORES`, #490 by @AngeloAscheri): on Linux the frame's threads stay on the fast cores
+  and background work (pipeline builds, prewarming, video) on all of them; on an i7-14700F at a fixed 60 fps, races
+  went from 12 of 34 windows over 17.5 ms to none (in-run A/B and its inverted twin, 17/11/2026). Still to do:
+  - **Windows**: off by default, never measured there. `SetProcessAffinityMask` bounds every thread, so the
+    background threads would lose the efficiency cores too (`plat_thread_background` does nothing there); it needs a
+    per-thread placement (CPU Sets, or each frame thread's own mask) and then the same A/B on a hybrid CPU.
+  - **Few P-cores**: on by default only with 8 fast processors left besides the replay core, a hypothesis; no CPU
+    with 2-4 P-cores (i5-1235U, Lunar Lake, Ryzen AI 9 HX 370) has been measured either way.
+  - `vk submit` and `vk present` start on the replay thread after it pins itself and share its processor: their own
+    A/B.
 - **The game thread**: the generated C at `-O1`, with profile-guided optimization next (12-15 % in totk-pc-recomp).
 
 \* Our numbers (not the ones said to come from totk-pc-recomp) were measured on 07-09/11/2026 on our test machine:
