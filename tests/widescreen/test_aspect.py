@@ -1,4 +1,4 @@
-"""Compile the production Window math without a game or GPU: pytest tests/test_aspect.py.
+"""Compile the production Window math without a game or GPU: pytest tests/widescreen/test_aspect.py.
 
 The functions come from patches.c, so the fixture checks the implementation, not a second formula in C.
 """
@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 LIBM = [] if os.name == "nt" else ["-lm"]  # Windows has no separate libm (LNK1181: cannot open m.lib)
 
 

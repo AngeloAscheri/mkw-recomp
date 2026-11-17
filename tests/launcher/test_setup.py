@@ -15,7 +15,7 @@ from types import SimpleNamespace
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "sm86/spec"))
 sys.path.insert(0, str(ROOT / "tools/prepare"))
 import prepare  # noqa: E402

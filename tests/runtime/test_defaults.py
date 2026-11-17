@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "runtime/gfx/vk/device/vk_defaults.c"
 
 # (name, discrete, VRAM MiB as the driver reports the largest device-local heap, RAM MiB) from players' logs and ours

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "sm86/translate"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "sm86/translate"))
 import flow  # noqa: E402
 import flow_sim  # noqa: E402
 from glsl import subroutines  # noqa: E402

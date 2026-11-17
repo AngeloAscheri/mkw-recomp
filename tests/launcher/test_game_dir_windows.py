@@ -3,7 +3,7 @@
 Build the actual _WIN32 cfg.c and discovery code with Clang and MinGW. Run natively in Windows CI, or through Wine on Linux
 when both tools are installed, without the game or a GPU. UTF-8 argv is converted through wmain so Unicode boundary
 cases exercise the production UTF-16 length check rather than the test process's ANSI code page.
-Usage: uv run pytest tests/test_game_dir_windows.py
+Usage: uv run pytest tests/launcher/test_game_dir_windows.py
 """
 
 import os
@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 WINDOWS_LIMIT = 131  # MAX_PATH (260), less the NUL and 128 UTF-16 units for derived runtime filenames
 
 
@@ -66,7 +66,7 @@ def windows_build(tmp_path_factory: pytest.TempPathFactory) -> WindowsProbe:
     kernel32 = Path(subprocess.check_output([mingw, "-print-file-name=libkernel32.a"], text=True).strip()).resolve()
     exe = tmp_path_factory.mktemp("windows-selector") / "probe.exe"
     includes = [ROOT / "runtime", ROOT / "runtime/cpu", ROOT / "runtime/core/base", ROOT / "runtime/core/boot"]
-    sources = [ROOT / "tests/c/t_game_dir.c", ROOT / "runtime/core/base/cfg.c",
+    sources = [ROOT / "tests/launcher/t_game_dir.c", ROOT / "runtime/core/base/cfg.c",
                ROOT / "runtime/core/base/sysinfo_log.c", ROOT / "runtime/core/boot/gamelib.c"]
     subprocess.run([cc, "--target=x86_64-w64-windows-gnu", f"--sysroot={kernel32.parent.parent}",
                     f"-L{libgcc.parent}", "-fuse-ld=lld", "-municode",

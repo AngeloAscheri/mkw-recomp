@@ -1,7 +1,7 @@
 """Integer-image shader variants: synthetic SPIR-V, production C, no game or GPU.
 
 Exercise storage and separate sampled images, signed/unsigned views and failure diagnostics. When spirv-val is on
-PATH, validate both the original and patched modules as well. Usage: uv run pytest tests/test_spirv_images.py
+PATH, validate both the original and patched modules as well. Usage: uv run pytest tests/translator/test_spirv_images.py
 """
 
 import shutil
@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def op(code: int, *args: int) -> list[int]:
@@ -61,7 +61,7 @@ def patcher(tmp_path_factory: pytest.TempPathFactory) -> Path:
     exe = tmp_path_factory.mktemp("spirv-images") / "patch.exe"
     includes = [ROOT / "runtime", ROOT / "runtime/cpu", ROOT / "runtime/core/base",
                 ROOT / "runtime/gfx/nvn/host", ROOT / "runtime/gfx/nvn/api", ROOT / "runtime/gfx/nvn/procs"]
-    subprocess.run([cc, "-O1", *[f"-I{p}" for p in includes], str(ROOT / "tests/c/t_spirv_images.c"),
+    subprocess.run([cc, "-O1", *[f"-I{p}" for p in includes], str(ROOT / "tests/translator/t_spirv_images.c"),
                     str(ROOT / "runtime/gfx/nvn/host/gfx_spirv_img.c"), "-o", str(exe)], check=True)
     return exe
 

@@ -1,7 +1,7 @@
 """Run the translator's GLSL warp helpers as C++ with synthetic 32/64/128-lane subgroups, without a GPU or game.
 
 Each logical warp has different values and ballot bits, so accidentally reading a neighbouring warp is observable.
-Usage: uv run pytest tests/test_warp32.py
+Usage: uv run pytest tests/translator/test_warp32.py
 """
 
 import shutil
@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "sm86/translate"))
 from glsl import common  # noqa: E402
 from glsl.thread import ThreadOps  # noqa: E402

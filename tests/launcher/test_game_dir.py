@@ -2,7 +2,7 @@
 
 Why: the game library is found before mem_init, and selecting a directory must save only the selector beside the
 launcher. Compile cfg.c and gamelib.c with a small POSIX file harness; no game, SDL or GPU is needed.
-Usage: uv run pytest tests/test_game_dir.py
+Usage: uv run pytest tests/launcher/test_game_dir.py
 """
 
 import os
@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 pytestmark = pytest.mark.skipif(os.name == "nt", reason="POSIX file harness; setup tests also run on Windows")
 
 
@@ -24,7 +24,7 @@ def game_dir_probe(tmp_path_factory: pytest.TempPathFactory) -> Path:
     exe = tmp_path_factory.mktemp("game-dir") / "probe"
     inc = [f"-I{ROOT / 'runtime'}", f"-I{ROOT / 'runtime/cpu'}", f"-I{ROOT / 'runtime/core/base'}",
            f"-I{ROOT / 'runtime/core/boot'}"]
-    subprocess.run([cc, *inc, str(ROOT / "tests/c/t_game_dir.c"), str(ROOT / "runtime/core/base/cfg.c"),
+    subprocess.run([cc, *inc, str(ROOT / "tests/launcher/t_game_dir.c"), str(ROOT / "runtime/core/base/cfg.c"),
                     str(ROOT / "runtime/core/base/sysinfo_log.c"),
                     str(ROOT / "runtime/core/boot/gamelib.c"), "-o", str(exe)], check=True)  # fmt: skip
     return exe

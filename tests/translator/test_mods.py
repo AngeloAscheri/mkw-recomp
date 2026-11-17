@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "recomp"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "recomp"))
 import patches  # noqa: E402
 
 BASES = {"main": (0x7000000000, 0x3410000)}

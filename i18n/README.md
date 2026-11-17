@@ -15,5 +15,5 @@ The first translation of each language is ours, with the game's own words for it
 
 `tools/build/build.py` compiles them into the runtime (`tools/i18n/catalog.py`). An empty or fuzzy entry shows the
 English. To fix a translation, edit its `msgstr` (Poedit or any text editor) and open a pull request; keep every
-`%s`, `%d`, `%.1f`... in the same order (`tests/test_ui_text.py` checks it). A new or changed English text goes into
+`%s`, `%d`, `%.1f`... in the same order (`tests/runtime/test_ui_text.py` checks it). A new or changed English text goes into
 `mkw.pot` and then `uv run tools/i18n/catalog.py update`.
