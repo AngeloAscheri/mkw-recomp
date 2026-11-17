@@ -111,7 +111,9 @@ def check_readme() -> list[str]:
 
 def check_progress(staged: set[str]) -> list[str]:
     spirv = ROOT / "build" / "spirv"
-    if not any(f.startswith("sm86/") for f in staged) or not (spirv / "failed.tsv").exists():
+    # Docs and licences under sm86/ cannot change which programs translate (PR #529 note).
+    code = {f for f in staged if f.startswith("sm86/") and not f.endswith(".md") and "/LICENSE" not in f}
+    if not code or not (spirv / "failed.tsv").exists():
         return []
     results = list(spirv.glob("*.result"))
     newest = max((r.stat().st_mtime for r in results), default=0)
