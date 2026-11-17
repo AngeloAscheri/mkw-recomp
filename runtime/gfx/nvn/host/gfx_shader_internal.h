@@ -34,6 +34,13 @@ struct GfxShader {
     int cs_of_mesh;                                        // this is the compute form of a task or mesh program
 };
 
+#define PATH_CAP 1024                                      // bytes of a UTF-8 path
+
 // Parses s->reflection (.res.json) and scans s->spirv into the reflection fields, once before s enters the cache.
 void gfx_shader_reflect(GfxShader *s);
+
+// The memory cache by key (gfx_shader.c): find, and insert s or free it and return the entry another thread put first.
+GfxShader *gfx_shader_find(const uint8_t key[32]);
+GfxShader *gfx_shader_insert(GfxShader *s);
+void gfx_shader_key_hex(const uint8_t key[32], char out[65]);
 #endif
