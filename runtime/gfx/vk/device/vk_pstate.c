@@ -15,9 +15,11 @@
 // and its inverted twin, one player: +15.3 ms a frame (medians) with amdgpu choosing the clock (qw-auto, qw-autoi:
 // 18-19 against 33-34 ms), +0.01 ms with the clock held (qw-pk, qw-pki: 16.7-16.8 both), 17/11/2026.
 //
-// Off by default on integrated GPUs (a Steam Deck, Ryzen APUs) until measured there: their GPU shares the chip's
-// power budget with the CPU, and a peak GPU clock may take it from the game's threads. "ab" holds the peak pstate in
-// the B blocks only (MKW_AB), to measure it.
+// Off by default on integrated GPUs (a Steam Deck, Ryzen APUs): their GPU shares the chip's power budget with the CPU,
+// and the peak GPU clock takes it from the game's threads. Radeon 660M (Ryzen 5 6600H, RADV, 1280x720), in-run A/B
+// with MKW_FPS=60 and its inverted twin over 40 s of race: +1.9 ms a frame with the peak held (scene balanced), the
+// GPU 2.2-3.1 ms faster and the recording CPU 1.1-1.4 ms slower (gc-ab3, gc-ab3i, 17/11/2026); at the game's own
+// pace the race stayed at 15 fps either way (gc-ab1). "ab" holds the peak pstate in the B blocks only (MKW_AB).
 //
 // Only from amdgpu's automatic level: the kernel counts a manual or high level (sysfs power_dpm_force_performance_level,
 // set by LACT, CoreCtrl or SteamOS's GPU clock slider) as no stable pstate, and when our context ends it puts back
@@ -147,7 +149,7 @@ void vk_pstate_init(VkPhysicalDevice phys) {
     S.mode = mode_from_cfg(e, discrete);
     if (S.mode == PSTATE_NONE) {
         rt_log("vk: GPU clocks chosen by amdgpu (MKW_GPU_CLOCKS=%s%s)", e && *e ? e : "auto",
-               discrete ? "" : ": off on an integrated GPU until measured there");
+               discrete ? "" : ": off on an integrated GPU, whose CPU loses power to it");
         return;
     }
     char slot[32] = "", node[64], level[32];
