@@ -704,18 +704,23 @@ static char g_romfs[PLAT_PATH_MAX * 2], g_exefs[PLAT_PATH_MAX * 2];
 // The game files the setup left that are not there now, or NULL: a RomFS package or folder (the "link" mode keeps the
 // player's own copy where it was) or the exefs/ folder. Issue #486: a Steam Deck whose package had gone from where the
 // setup found it booted from Play into a fatal error, and in Gaming Mode the game just closed. Checked at most once a
-// second, so a card or drive connected while the start screen is open is seen.
+// second, so a card or drive connected while the start screen is open is seen; the log says it when it changes, not on
+// every check.
 static const char *files_gone(void) {
     static uint64_t at;
     static const char *gone;
     uint64_t now = SDL_GetTicks();
     if (at && now - at < 1000) return gone;
     at = now;
+    const char *was = gone;
     gone = NULL;
     if (!rt_game_present()) return gone;   // not set up: the files page says that already
     if (g_romfs[0] && !plat_dir_exists(g_romfs) && !plat_file_exists(g_romfs)) gone = g_romfs;
     else if (g_exefs[0] && !plat_dir_exists(g_exefs)) gone = g_exefs;
-    if (gone) rt_log("launcher: the game files are not at %s", gone);
+    if (gone != was) {
+        if (gone) rt_log("launcher: the game files are not at %s", gone);
+        else rt_log("launcher: the game files are back");
+    }
     return gone;
 }
 
@@ -1865,7 +1870,8 @@ static int start_screen_asked(void) {
 
 // MKW_START_SCREEN (General tab): auto skips the start screen when Steam's Big Picture or Gaming Mode started the game,
 // as a console starts a game from its own menu (a controller-only player on Bazzite or a Steam Deck), skip always,
-// always never. It opens anyway when it has something to do or say: the game files not set up, a setup to
+// always never. It opens anyway when it has something to do or say: the game files not set up or gone from where the
+// setup left them (issue #486: a Steam Deck in Gaming Mode whose .nup was not there any more), a setup to
 // run again after an update, a code mod to build, the last run's fatal error, or View / Select held at start. Skipped,
 // it does what Play does (the mods merged, the player's profile) and the game starts.
 static int console_start(int updated, int other) {
@@ -1876,6 +1882,7 @@ static int console_start(int updated, int other) {
     char state[PLAT_PATH_MAX * 3];
     snprintf(state, sizeof state, "%s/setup-state.json", cfg_game_dir());
     const char *why = !rt_game_present()                                   ? "the game files are not set up"
+                    : files_gone()                                         ? "the game files are not where the setup left them"
                     : updated || other                                     ? "the game files are to be set up again"
                     : mods_code_changed() && plat_file_exists(state)       ? "a code mod is to be built"
                     : last_run_fatal()                                     ? "the last run ended in an error"
