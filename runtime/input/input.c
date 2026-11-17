@@ -36,6 +36,7 @@ static volatile int32_t pad_labels[4];  // ... and the labels of its south, east
 static int pad_east_a;               // ... and labels its east face button A (Nintendo layout under MKW_PAD_LAYOUT=auto)
 static int pad_layout = -1;          // PAD_LAYOUT_* in effect for the open gamepad, -1 to pick again; live (cfg_version)
 static unsigned pad_layout_seen;
+static volatile int32_t pad_dz_shown = -1;       // the open gamepad's default left dead zone in tenths of a %, for the menu (any thread), -1 none
 static volatile int32_t pad_layout_shown = -1;   // pad_layout for the menu (any thread), -1 without a gamepad
 static volatile int32_t last_device;           // INPUT_DEVICE_* the player used last, 0 none yet (input_last_device)
 static SDL_JoystickID sensor_pad[8]; // by player: the gamepad whose sensors the motion thread set up, 0 none
@@ -155,6 +156,7 @@ static void scan_pads(void) {
     if (pad && !SDL_GamepadConnected(pad)) {
         SDL_CloseGamepad(pad); pad = NULL; sensor_pad[0] = 0; sensor_ok[0] = 0;
         plat_xchg32(&pad_layout_shown, -1);
+        plat_xchg32(&pad_dz_shown, -1);
         for (int i = 0; i < 4; i++) plat_xchg32(&pad_labels[i], PAD_LABEL_NONE);
         rt_log("input: gamepad disconnected");
     }
@@ -203,6 +205,7 @@ static void pad_adopt(void) {
     rt_log("input: gamepad \"%s\" (%s, %s, east button %s)", SDL_GetGamepadName(pad), pad_rumble ? "rumble" : "no rumble",
            motion ? "gyro and accelerometer" : "no motion sensors", pad_east_a ? "labelled A" : "not labelled A");
     const char *set = cfg_get("MKW_STICK_DEADZONE");
+    plat_xchg32(&pad_dz_shown, (int32_t)lroundf(dead_zone_for(pad, 0) * 1000));
     rt_log("input: stick dead zones %.1f %% left, %.1f %% right (%s)", dead_zone_for(pad, 0) * 100,
            dead_zone_for(pad, 1) * 100, set && *set ? "MKW_STICK_DEADZONE" : "this controller's default; MKW_STICK_DEADZONE sets one");
 }
@@ -490,6 +493,11 @@ int input_last_device(void) {
     int d = (int)plat_cas32(&last_device, 0, 0);
     if (d) return d;
     return (int32_t)plat_cas32(&pad_layout_shown, -1, -1) >= 0 ? INPUT_DEVICE_PAD : INPUT_DEVICE_KEYBOARD;
+}
+
+double input_stick_deadzone_default(void) {
+    int32_t v = (int32_t)plat_cas32(&pad_dz_shown, -1, -1);
+    return v < 0 ? -1 : v / 10.0;
 }
 
 int input_pad_layout(void) {
