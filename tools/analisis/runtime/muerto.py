@@ -15,7 +15,7 @@ on 05/11/2026; this repeats them after more code is brought over. Each prints a 
   (UI_MENU_FIRST...) and families read by offset from their first member (UI_BIND_A + action) are left out.
 Static functions and variables come from the compiler's -Wunused-* warnings instead (the build prints them).
 
-Usage: uv run tools/analisis/muerto.py [funcs|keys|ifdefs|files|texts]...   (all without arguments; funcs needs a
+Usage: uv run tools/analisis/runtime/muerto.py [funcs|keys|ifdefs|files|texts]...   (all without arguments; funcs needs a
 build, keys its build/generated/patches.h, or it lists the patch switches too)
 """
 
@@ -26,7 +26,7 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 RT = ROOT / "runtime"
 OBJ = ROOT / "build/obj"
 SOURCES = [p for ext in ("*.c", "*.cpp", "*.inc") for p in RT.rglob(ext) if "third_party" not in p.parts]

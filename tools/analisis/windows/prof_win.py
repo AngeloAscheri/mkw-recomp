@@ -6,8 +6,8 @@ Slow-frame dumps (MKW_PROFILE_SLOW=<ms>: PROFILE.f<frame>, `tstack` lines with t
 instead: for each thread its samples, the functions it was in (leaf) and the first frame of ours under a driver or
 system call, over every dump given.
 
-Usage: uv run tools/analisis/prof_win.py PROFILE [--top 40] [--bin-dir build/dist/windows]
-       uv run tools/analisis/prof_win.py PROFILE.f* [--top 8]
+Usage: uv run tools/analisis/windows/prof_win.py PROFILE [--top 40] [--bin-dir build/dist/windows]
+       uv run tools/analisis/windows/prof_win.py PROFILE.f* [--top 8]
 """
 
 import argparse
@@ -16,7 +16,7 @@ import subprocess
 from collections import Counter
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 ROLES = {1: "main", 2: "render", 3: "replay", 0: "other"}
 SYMBOLIZER = ROOT / "build/win/llvm-mingw/bin/llvm-symbolizer"
 OBJDUMP = ROOT / "build/win/llvm-mingw/bin/llvm-objdump"

@@ -10,7 +10,7 @@ With --census (the file of a run with MKW_IMPORT_CENSUS, runtime/core/diag/impce
 game called in that run and how often; SDK functions reached from main only through a function pointer are listed
 apart.
 
-Usage: uv run tools/analisis/sdk_gaps.py [--db build/bindb.sqlite] [--all] [--namespace nn::account]
+Usage: uv run tools/analisis/runtime/sdk_gaps.py [--db build/bindb.sqlite] [--all] [--namespace nn::account]
        [--census build/run/NAME.imports]
 """
 
@@ -20,7 +20,7 @@ import sqlite3
 from collections import defaultdict
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 OVERRIDE = re.compile(r'HOST_(?:OVERRIDE|OBSERVER)\("([^"]+)"')
 # Namespaces whose SDK code ends in a console service session (service names from main.npdm).
 SERVICE_NS = {

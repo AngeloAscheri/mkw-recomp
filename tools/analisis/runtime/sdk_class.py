@@ -17,9 +17,9 @@ by name (their system calls never run) and at the error paths (STOP: abort,
 log, unexpected result, C++ throw), which reach Break, OutputDebugString, the lm service and a kernel mutex from
 nearly every function (VSNPrintf through nn::detail::UnexpectedDefaultImpl, std::__next_prime through __cxa_throw).
 
-Usage: uv run tools/analisis/sdk_class.py [--db build/bindb.sqlite] [--census build/run/NAME.imports] [--class kernel]
+Usage: uv run tools/analisis/runtime/sdk_class.py [--db build/bindb.sqlite] [--census build/run/NAME.imports] [--class kernel]
        [--namespace nn::os]
-       (needs the svc table of tools/analisis/bindb.py)
+       (needs the svc table of tools/analisis/bin/bindb.py)
 """
 
 import argparse
@@ -29,7 +29,7 @@ from pathlib import Path
 
 from sdk_gaps import SERVICE_NS, namespace, overrides, read_census
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 IPC_SVC = {0x1F, 0x21, 0x22, 0x23}  # ConnectToNamedPort, SendSyncRequest(WithUserBuffer), SendAsyncRequest...
 STOP = ("nn::diag::", "nn::detail::UnexpectedDefault", "__cxa_throw", "abort", "std::terminate",
         "std::__1::__libcpp_verbose_abort")  # fmt: skip

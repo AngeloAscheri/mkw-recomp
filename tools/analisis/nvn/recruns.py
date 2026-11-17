@@ -8,7 +8,7 @@ prints the share of B's draws in passes identical to one of A's, and in runs of 
 (difflib) by run length.
 The recordings come from mkw --replay with MKW_CAP_RECS=<dir> (runtime/gfx/cap/cap_replay.c).
 
-Usage: uv run tools/analisis/recruns.py A.bin B.bin
+Usage: uv run tools/analisis/nvn/recruns.py A.bin B.bin
 """
 
 import argparse

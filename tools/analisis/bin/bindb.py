@@ -12,8 +12,8 @@ to a function start (fptr: vtable slots and other function pointers, the indirec
 recomp/module.py (.eh_frame_hdr, symbols, relocations); a function ends where the next one starts. The NVN2 driver functions of sdk are named from its proc table
 (tools/gpu/nvn2_procs.py).
 
-Usage: uv run tools/analisis/bindb.py [--exefs DIR] [--out build/bindb.sqlite]   (~1 min)
-Query it with tools/analisis/q.py.
+Usage: uv run tools/analisis/bin/bindb.py [--exefs DIR] [--out build/bindb.sqlite]   (~1 min)
+Query it with tools/analisis/bin/q.py.
 """
 
 import argparse
@@ -27,7 +27,7 @@ from pathlib import Path
 
 import numpy as np
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "recomp"))
 sys.path.insert(0, str(ROOT / "tools/gpu"))
 

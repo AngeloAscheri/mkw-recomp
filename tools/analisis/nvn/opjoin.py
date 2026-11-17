@@ -10,7 +10,7 @@ The files come from `build/mkw --replay` with MKW_TRACE=draw MKW_OP_DUMP=FILE (r
 line per draw or dispatch, "submission op-position kind ticks". Kinds above the NVN ops are vk_exec.c's OPX_* (the
 reused and captured ones by default 54 and 55: OP_COUNT_ + 3 and + 4).
 
-Usage: uv run tools/analisis/opjoin.py A.txt B.txt [--hit 54] [--cap 55] [--tsc 3293.8]
+Usage: uv run tools/analisis/nvn/opjoin.py A.txt B.txt [--hit 54] [--cap 55] [--tsc 3293.8]
 """
 
 import argparse

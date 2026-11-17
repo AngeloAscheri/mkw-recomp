@@ -7,7 +7,7 @@ The recordings come from mkw --replay with MKW_CAP_RECS=<dir> (runtime/gfx/cap/c
 (difflib); of the aligned pairs it counts the identical ones and, for the others, which 8-byte words of the payload
 changed, per op type.
 
-Usage: uv run tools/analisis/recdiff.py A.bin B.bin [--words N]
+Usage: uv run tools/analisis/nvn/recdiff.py A.bin B.bin [--words N]
 """
 
 import argparse
@@ -17,7 +17,7 @@ import struct
 from collections import Counter, defaultdict
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 
 
 def op_names() -> list[str]:

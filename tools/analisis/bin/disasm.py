@@ -3,7 +3,7 @@
 Why: the last resort when q.py is not enough (argument meaning, a field offset). One function at a time, with names,
 so it costs few tokens.
 
-Usage: uv run tools/analisis/disasm.py MODULE+0xOFFSET [--count N] [--exefs DIR]
+Usage: uv run tools/analisis/bin/disasm.py MODULE+0xOFFSET [--count N] [--exefs DIR]
 The function is the one containing the address (build/bindb.sqlite); --count disassembles N instructions from the
 address instead.
 """
@@ -17,7 +17,7 @@ from pathlib import Path
 
 from capstone import CS_ARCH_ARM64, CS_MODE_ARM, Cs
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "recomp"))
 from nso import Nso
 

@@ -28,8 +28,8 @@ folder has a README that names each file: read it before opening the code. The o
 ## Before you guess, look
 
 - The executable database answers most questions about the game's code in one line:
-  `uv run tools/analisis/bindb.py` once, then `uv run tools/analisis/q.py fn main+0x19e5860` (callers, callees,
-  strings, vtables). Disassemble a single function only when that is not enough (`tools/analisis/disasm.py`).
+  `uv run tools/analisis/bin/bindb.py` once, then `uv run tools/analisis/bin/q.py fn main+0x19e5860` (callers, callees,
+  strings, vtables). Disassemble a single function only when that is not enough (`tools/analisis/bin/disasm.py`).
 - Check how other projects solved the same thing before inventing: the sources table in
   [docs/research.md](docs/research.md#sources) says what each one is good for.
 - `uv run tools/run/envs.py [REGEX]` lists every `MKW_*` switch the runtime reads, with its comment.

@@ -5,8 +5,8 @@ relocations), and the methods every node vtable shares (inherited from the base 
 (build/seq_nodes-180.tsv for 1.8.0) to name the node a game thread is in. The name getter is adrp/add/ret: 12 bytes
 in 1.0.0, 16 in 1.8.0 (padded with an udf), so both sizes count.
 
-Usage: uv run tools/analisis/seq_nodes.py [--shared]   (1.0.0: game/, build/bindb.sqlite -> build/seq_nodes.tsv)
-       uv run tools/analisis/seq_nodes.py --game ~/Juegos/mkw-copias/1.8.0 --db build/bindb-180.sqlite \
+Usage: uv run tools/analisis/bin/seq_nodes.py [--shared]   (1.0.0: game/, build/bindb.sqlite -> build/seq_nodes.tsv)
+       uv run tools/analisis/bin/seq_nodes.py --game ~/Juegos/mkw-copias/1.8.0 --db build/bindb-180.sqlite \
            --out build/seq_nodes-180.tsv
        --shared prints the vtable slots every node shares (seqwatch.c's SLOT_* must match them)
 """
@@ -41,7 +41,7 @@ def main() -> None:
     m = Module("main", args.game / "exefs/main", 0)
     rel = {off: add for off, typ, _, add in m.nso.relocs if typ == R_AARCH64_RELATIVE}
     slot_of = {add: off for off, add in rel.items() if add in getters}
-    out = ["# getter_off\tname_slot_off\tname (main offsets; tools/analisis/seq_nodes.py)"]
+    out = ["# getter_off\tname_slot_off\tname (main offsets; tools/analisis/bin/seq_nodes.py)"]
     shared = Counter()
     for g, name in sorted(getters.items(), key=lambda kv: kv[1]):
         s = slot_of.get(g)

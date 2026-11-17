@@ -1,11 +1,11 @@
-"""Short answers from build/bindb.sqlite (built by tools/analisis/bindb.py).
+"""Short answers from build/bindb.sqlite (built by tools/analisis/bin/bindb.py).
 
 Why: a question about the executable should cost a few lines of output, not a disassembly listing. Every address is
 printed as module+offset with the function's name when it has one.
 
 Addresses: absolute hex (0x7000123456), module+offset (main+0x19e5df0) or a symbol name (exact or demangled).
 
-Usage: uv run tools/analisis/q.py <command> <arg> [--limit N]
+Usage: uv run tools/analisis/bin/q.py <command> <arg> [--limit N]
   at ADDR         function containing ADDR, its size and name
   fn ADDR         function summary: callers, callees (named first), strings and data it references
   callers ADDR    who calls the function at ADDR (BL and tail B)
@@ -24,14 +24,14 @@ import sqlite3
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 DB = ROOT / "build/bindb.sqlite"
 
 
 class Bin:
     def __init__(self, path: Path) -> None:
         if not path.exists():
-            sys.exit(f"{path} missing: run uv run tools/analisis/bindb.py first")
+            sys.exit(f"{path} missing: run uv run tools/analisis/bin/bindb.py first")
         self.db = sqlite3.connect(path)
         self.mods = self.db.execute("SELECT name, base, size FROM module ORDER BY base").fetchall()
 
