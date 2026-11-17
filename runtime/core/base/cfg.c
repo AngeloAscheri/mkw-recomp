@@ -51,10 +51,10 @@ static const char *const known[] = {
     "BIND_XF", "REG_LATE", "REG_QUEUED", "REPLAY_ASYNC", "USNAP_CMP",
     "REPLAY_CHECK", "RESOLUTION", "RESOLVE_CHECK", "ROMFS", "RTSTATS", "ROMFS_MODS", "ROMFS_PATCHES",
     "RUMBLE", "RUMBLE_CURVE", "RUMBLE_STRENGTH", "RUMBLE_TRIGGERS",
-    "SHADER_MEMO", "SHADOW_SIZE", "SHARED_FONTS", "SHARPNESS", "SHORTCUT_ASKED", "SHOTS", "SHOTS_DIR", "SHOTS_FULL", "SPARSE_IMAGES", "SPARSE_MIB", "SPARSE_NO_BUFFER", "SPIN", "SPIN_HANDOFF_US", "SPLIT_DRAWS", "SPLIT_US", "STICK_DEADZONE", "SWITCH2", "SWKBD_ANSWER",
+    "SHADER_MEMO", "SHADOW_SIZE", "SHARED_FONTS", "SHARPNESS", "SHORTCUT_ASKED", "SHOTS", "SHOTS_DIR", "SHOTS_FULL", "SPARSE_IMAGES", "SPARSE_MIB", "SPARSE_NO_BUFFER", "SPIN", "SPIN_HANDOFF_US", "SPLIT_DRAWS", "SPLIT_US", "STEAM_X11", "STICK_DEADZONE", "SWITCH2", "SWKBD_ANSWER",
     "SKIP_PROGRAMS", "SWKBD_TEST", "TEX_ALIAS", "TEX_MEMO", "TEX_QUALITY", "TEX_OVERWRITTEN", "TEX_RELEASED_MIB", "TIMER_1MS", "TRACE", "TURBO", "TURBO_SPEED", "SKIP_MOVIES", "SEED", "UNLOCK_ALL", "QUICK_RACE", "FREEZE_KEYS", "QUALITY", "TRACE_UBO", "TRACE_UBO_OUT", "UBO_SNAPSHOT", "UPSCALER", "VRR", "VK_DYN_VERTEX", "VK_NO_FLOAT64",
     "VK_PRESENT", "VK_RECORDER", "VK_SSBO_ALIGN", "VK_SUBGROUP", "VK_SUBGROUP_PIN", "VK_TEX_POOL_MIN", "VK_VALIDATION", "VOLUME", "VRAM_HEADROOM", "VRAM_LOG", "VRAM_MARGIN", "VS_OUTS",
-    "UPDATE_AS", "UPDATE_CHECK", "UPDATE_REPO", "WINDOW_SIZE", "ZSTD_CHECK", "ZSTD_NATIVE",
+    "UPDATE_AS", "UPDATE_CHECK", "UPDATE_REPO", "START_SCREEN", "WINDOW_SIZE", "ZSTD_CHECK", "ZSTD_NATIVE",
 };
 
 // The mkw.ini section a key cfg_set may write goes to when the file lacks it (mkw.ini.example's sections).
@@ -84,7 +84,7 @@ static const struct { const char *key, *section; } sections[] = {
     {"TRACE", "diagnostics"}, {"FLIGHT", "diagnostics"}, {"FLIGHT_SPIKE_MS", "diagnostics"},
     {"TURBO", "hacks"}, {"TURBO_SPEED", "hacks"}, {"SKIP_MOVIES", "hacks"}, {"SEED", "hacks"}, {"UNLOCK_ALL", "hacks"}, {"FREEZE_KEYS", "hacks"},
     {"QUICK_RACE", "hacks"}, {"CLASSIC_GP", "hacks"}, {"CLASSIC_VS", "hacks"}, {"MODS", "launcher"}, {"MODS_ACK", "launcher"}, {"MODS_PLAYED", "launcher"},
-    {"UPDATE_CHECK", "launcher"}, {"DISCORD", "launcher"}, {"GAME_DIR", "launcher"}, {"PLAYER", "launcher"},
+    {"UPDATE_CHECK", "launcher"}, {"START_SCREEN", "launcher"}, {"DISCORD", "launcher"}, {"GAME_DIR", "launcher"}, {"PLAYER", "launcher"},
     {"SHORTCUT_ASKED", "launcher"},
 };
 
@@ -126,6 +126,7 @@ static const CfgMeta metas[] = {
     // server's address (26760 is the port every DSU server uses) and its slot for player 1 have no menu row
     {"DSU", "0", "0|1", LIVE}, {"DSU_SERVER", "127.0.0.1:26760", NULL, LIVE}, {"DSU_SLOT", "0", "0..3", LIVE},
     {"MENU_LANG", "", "en|ja|fr|de|it|es|nl|pt|pt-BR|ru|zh-Hans|zh-Hant|ko|es-419|ca|gl|eu|pl|tr|uk|th", LIVE}, {"UPDATE_CHECK", "1", "0|1", LIVE},
+    {"START_SCREEN", "auto", "auto|always|skip", LIVE},   // ui/launcher/launcher.cpp console_start
     {"DISCORD", "0", "0|1", LIVE},   // Discord Rich Presence (core/presence): off by default, the player's friends see it
     {"MODS", "", NULL, RESTART},   // the Mods page's enabled mods, comma-separated in load order; not a menu row
     {"MODS_ACK", "0", "0|1", LIVE},   // the player ticked the Mods page's "I understand" once
@@ -284,11 +285,37 @@ static const char *raw_get(const char *name) {
     return NULL;
 }
 
+// Started from Steam's Big Picture or Gaming Mode (cfg.h): fullscreen, as a console shows its game; Big Picture stayed
+// visible around a window before.
+static const struct { const char *key, *value; } CONSOLE[] = {{"FULLSCREEN", "1"}};
+
+int cfg_steam_started(void) {
+    const char *id = getenv("SteamGameId"), *app = getenv("SteamAppId");
+    return (id && *id) || (app && *app);
+}
+
+int cfg_steam_console(void) {
+    const char *ui = getenv("SteamGamepadUI"), *tenfoot = getenv("SteamTenfoot"), *gs = getenv("GAMESCOPE_WAYLAND_DISPLAY");
+    return (ui && !strcmp(ui, "1")) || (tenfoot && !strcmp(tenfoot, "1")) || (gs && *gs);
+}
+
+const char *cfg_steam_video_driver(void) {
+    const char *own = getenv("SDL_VIDEODRIVER"), *wl = getenv("WAYLAND_DISPLAY"), *x = getenv("DISPLAY"),
+               *gs = getenv("GAMESCOPE_WAYLAND_DISPLAY"), *off = cfg_get("MKW_STEAM_X11");
+    if ((own && *own) || (gs && *gs) || (off && !strcmp(off, "0")) || !cfg_steam_started()) return NULL;
+    return wl && *wl && x && *x ? "x11" : NULL;
+}
+
 const char *cfg_get(const char *name) {
     const char *v = raw_get(name);
-    if (v || strncmp(name, PREFIX, PREFIX_LEN) || !profile_of()) return v;
-    for (size_t i = 0; i < sizeof DECK / sizeof *DECK; i++)
-        if (!strcasecmp(DECK[i].key, name + PREFIX_LEN)) return DECK[i].value;
+    if (v || strncmp(name, PREFIX, PREFIX_LEN)) return v;
+    if (profile_of()) {
+        for (size_t i = 0; i < sizeof DECK / sizeof *DECK; i++)
+            if (!strcasecmp(DECK[i].key, name + PREFIX_LEN)) return DECK[i].value;
+    } else if (cfg_steam_console()) {
+        for (size_t i = 0; i < sizeof CONSOLE / sizeof *CONSOLE; i++)
+            if (!strcasecmp(CONSOLE[i].key, name + PREFIX_LEN)) return CONSOLE[i].value;
+    }
     return NULL;
 }
 

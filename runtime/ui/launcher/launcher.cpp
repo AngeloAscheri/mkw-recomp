@@ -1733,16 +1733,18 @@ static bool open_window(void) {
     bool background = bg && *bg && strcmp(bg, "0");
     SDL_SetHint(SDL_HINT_APP_ID, background ? "mkw-recomp-run" : "mkw-recomp");
     if (background) SDL_SetHint(SDL_HINT_WINDOW_ACTIVATE_WHEN_SHOWN, "0");
+    if (const char *drv = cfg_steam_video_driver()) SDL_SetHint(SDL_HINT_VIDEO_DRIVER, drv);   // as the game's window (cfg.h)
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD)) {
         rt_log("launcher: SDL_Init failed: %s", SDL_GetError());
         return false;
     }
     float ds = SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
     if (!(ds > 0)) ds = 1;
-    // Always a window: the game's MKW_FULLSCREEN is the game's; the start screen goes fullscreen only by its own F11.
+    // A window: the game's MKW_FULLSCREEN is the game's; the start screen goes fullscreen by its own F11, and from
+    // Steam's Big Picture or Gaming Mode (it opened there: a setup to run, a notice), as Big Picture is.
     // Hidden until its first frame is drawn (launcher_run): shown at once, it is black while the first frame is made.
     SDL_WindowFlags f = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_HIDDEN |
-                        (background ? SDL_WINDOW_NOT_FOCUSABLE : 0);
+                        (background ? SDL_WINDOW_NOT_FOCUSABLE : 0) | (cfg_steam_console() && !L.shot_at ? SDL_WINDOW_FULLSCREEN : 0);
     L.win = SDL_CreateWindow("Mario Kart World", (int)(1280 * ds), (int)(720 * ds), f);
     if (L.win) app_icon_set(L.win);
     L.ren = L.win ? SDL_CreateRenderer(L.win, nullptr) : nullptr;
@@ -1783,11 +1785,85 @@ extern "C" void launcher_gb_install(const char *url) {
     }
 }
 
+// Started by Steam's Big Picture or Gaming Mode (on a Steam Deck, Bazzite): Steam marks the games it starts there with
+// SteamGamepadUI=1 (SteamTenfoot=1 before 2023), and Gaming Mode runs them under gamescope.
+static int steam_console(void) { return cfg_steam_console(); }
+
+// The last game run ended in a fatal error (logs/mkw.log, the previous run's until the next Play moves it): the start
+// screen shows its notice (launcher_lastrun.h) instead of starting a game that may stop the same way.
+static int last_run_fatal(void) {
+    char p[PLAT_PATH_MAX * 2];
+    snprintf(p, sizeof p, "%s/logs/mkw.log", cfg_game_dir());
+    FILE *f = fopen(p, "rb");
+    if (!f) return 0;
+    static char tail[65536];
+    fseek(f, 0, SEEK_END);
+    long n = ftell(f), from = n > (long)sizeof tail - 1 ? n - (long)sizeof tail + 1 : 0;
+    fseek(f, from, SEEK_SET);
+    size_t got = fread(tail, 1, sizeof tail - 1, f);
+    fclose(f);
+    tail[got] = 0;
+    return strstr(tail, "FATAL") != nullptr || strstr(tail, "fatal signal") != nullptr;
+}
+
+// View / Select (Minus) held on any gamepad in the first 400 ms: the player asks for the start screen.
+static int start_screen_asked(void) {
+    if (!SDL_InitSubSystem(SDL_INIT_GAMEPAD)) return 0;
+    int asked = 0;
+    for (int t = 0; t < 8 && !asked; t++) {
+        SDL_UpdateGamepads();
+        int n = 0;
+        SDL_JoystickID *ids = SDL_GetGamepads(&n);
+        for (int i = 0; ids && i < n && !asked; i++) {
+            SDL_Gamepad *g = SDL_OpenGamepad(ids[i]);
+            if (g) SDL_UpdateGamepads(), asked = SDL_GetGamepadButton(g, SDL_GAMEPAD_BUTTON_BACK), SDL_CloseGamepad(g);
+        }
+        SDL_free(ids);
+        if (!asked) SDL_Delay(50);
+    }
+    SDL_QuitSubSystem(SDL_INIT_GAMEPAD);
+    return asked;
+}
+
+// MKW_START_SCREEN (General tab): auto skips the start screen when Steam's Big Picture or Gaming Mode started the game,
+// as a console starts a game from its own menu (a controller-only player on Bazzite or a Steam Deck), skip always,
+// always never. It opens anyway when it has something to do or say: the game files not set up, a setup to
+// run again after an update, a code mod to build, the last run's fatal error, or View / Select held at start. Skipped,
+// it does what Play does (the mods merged, the player's profile) and the game starts.
+static int console_start(int updated, int other) {
+    if (L.shot_at || L.gb_open) return 0;
+    const char *mode = cfg_value("MKW_START_SCREEN");
+    int skip = !strcmp(mode, "skip") || (!strcmp(mode, "auto") && steam_console());
+    if (!skip) return 0;
+    char state[PLAT_PATH_MAX * 3];
+    snprintf(state, sizeof state, "%s/setup-state.json", cfg_game_dir());
+    const char *why = !rt_game_present()                                   ? "the game files are not set up"
+                    : updated || other                                     ? "the game files are to be set up again"
+                    : mods_code_changed() && plat_file_exists(state)       ? "a code mod is to be built"
+                    : last_run_fatal()                                     ? "the last run ended in an error"
+                    : start_screen_asked()                                 ? "View / Select held"
+                                                                           : nullptr;
+    if (why) {
+        rt_log("launcher: start screen shown (MKW_START_SCREEN=%s): %s", mode, why);
+        return 0;
+    }
+    mods_merge_sync(L.exe_dir);   // as Play does
+    char player[PLAT_PATH_MAX * 2];
+    launcher_player_dir(player, sizeof player);
+    if (player[0]) mods_before_play(player);
+    rt_log("launcher: start screen skipped (MKW_START_SCREEN=%s%s): the game starts", mode,
+           steam_console() ? ", started by Steam's Big Picture or Gaming Mode" : "");
+    return 1;
+}
+
 extern "C" int launcher_run(void) {
     L.result = -1;
     L.focus_main = 1;
     exe_dir(L.exe_dir, sizeof L.exe_dir);
     parse_test();
+    int updated = update_just_installed(L.exe_dir, L.updated, sizeof L.updated);
+    int other = !updated && !L.shot_at && setup_from_other_version();
+    if (console_start(updated, other)) return LAUNCHER_PLAY;
     if (!open_window()) return LAUNCHER_PLAY;   // no start screen: the game itself says what is wrong
     L.picked_event = SDL_RegisterEvents(1);
     ImGui::CreateContext();
@@ -1823,8 +1899,6 @@ extern "C" int launcher_run(void) {
         if (exe[0] && !plat_url_scheme("mkw-recomp", "MKW Recomp mods", exe, "--gb-install"))
             rt_log("launcher: the mkw-recomp: links (GameBanana 1-Click) could not be registered");
     }
-    int updated = update_just_installed(L.exe_dir, L.updated, sizeof L.updated);
-    int other = !updated && !L.shot_at && setup_from_other_version();
     if ((updated || other) && L.tools && plat_file_exists(state)) {
         if (other) rt_log("launcher: the game files were set up by another version: setting up again what changed");
         L.page = PAGE_FILES;   // set up again what the new version changed, from the last setup's copy
