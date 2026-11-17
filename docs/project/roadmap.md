@@ -30,16 +30,6 @@ totk-pc-recomp, MIT; −10.6 % recorder instructions on Steam Deck; no measurabl
   race 1.9 ms a frame slower, its GPU faster but the CPU, which shares the chip's power, slower (in-run A/B, 17/11/2026).
   It also explains #496 (`MKW_QUEUE_WAITS` costing 60 → 50 fps on a 7900 XT): +15.3 ms a frame with amdgpu's clock,
   +0.01 ms with it held.
-- **Threads on hybrid CPUs**: on an Intel i7-14700F (8 P-cores, 12 E-cores) with an RX 6700 XT, game 1.8.0 at its
-  2560x1440 internal resolution, keeping the frame's threads off the E-cores (`MKW_FAST_CORES`, in review in #490)
-  took a race frame 3.9 ms shorter (medians, 6.3 ms means), with the scene balanced by two in-run A/B pairs and their
-  inverted twins (fc-ab1/fc-ab1i, fc-ab2/fc-ab2i, 16/11/2026), measured with amdgpu choosing the GPU clock, before
-  `MKW_GPU_CLOCKS`; the frame was ~20 ms. Still to measure: the same A/B with the clock held, and CPUs with few
-  P-cores (2 P-cores leave 2 processors once the replay core is aside). The replay thread is already on a P-core
-  (#480). A warning for whoever measures this: the same afternoon, every race up to 17:31 took 38-41 ms a frame and
-  every one from 17:33 on 19-22 ms, with no change to the code; that was the GPU clock (the item above), and comparing
-  a `taskset` run of one period with an unpinned run of the other first gave a 2x effect that was not there. Compare
-  inside one run (`MKW_AB`).
 - **Less work per draw**: descriptor sets kept across frames by their contents (`MKW_DRAW_CACHE`). On a fast CPU
   (i7-14700F, RADV) it changes nothing measurable: a race capture's recording thread ran the same instructions with
   it on and off, and its binds made ~20 % more descriptor work (sets are allocated) (16/11/2026); left for slower CPUs.
@@ -56,6 +46,11 @@ totk-pc-recomp, MIT; −10.6 % recorder instructions on Steam Deck; no measurabl
     with 2-4 P-cores (i5-1235U, Lunar Lake, Ryzen AI 9 HX 370) has been measured either way.
   - `vk submit` and `vk present` start on the replay thread after it pins itself and share its processor: their own
     A/B.
+
+  A warning for whoever measures this (16/11/2026): every race up to 17:31 took 38-41 ms a frame and every one from
+  17:33 on 19-22 ms, with no change to the code; that was the GPU clock (the item above), and comparing a `taskset`
+  run of one period with an unpinned run of the other first gave a 2x effect that was not there. Compare inside one
+  run (`MKW_AB`).
 - **The game thread**: the generated C at `-O1`, with profile-guided optimization next (12-15 % in totk-pc-recomp).
 
 \* Our numbers (not the ones said to come from totk-pc-recomp) were measured on 07-09/11/2026 on our test machine:
