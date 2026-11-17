@@ -21,6 +21,10 @@
 enum { LOW_PCT = 15, REARM_PCT = 30, WATCH_NS = 2000000000 };
 
 int input_power_from_sdl(int st, int pct, uint32_t id, InputPower *out) {
+    // MKW_BATTERY_TEST=<percent>: every gamepad on battery at that level (virtual gamepads have none), for the rows,
+    // the start screen and the notice without a controller running down
+    const char *t = cfg_get("MKW_BATTERY_TEST");
+    if (t && *t) st = SDL_POWERSTATE_ON_BATTERY, pct = atoi(t);
     int mv = 0, band = switch2_battery(id, &mv);
     if (band != S2_BATTERY_UNKNOWN) {
         static const int band_pct[] = {-1, 10, 50, 90};
@@ -40,12 +44,7 @@ int input_pad_power(int player, InputPower *out) {
     *out = (InputPower){INPUT_POWER_NONE, -1, 0, ""};
     uint32_t id = 0;
     int pct = -1, st = input_pad_power_sdl(player, out->name, sizeof out->name, &id, &pct);
-    if (st == -2) return out->state;
-    // MKW_BATTERY_TEST=<percent>: every gamepad on battery at that level (virtual gamepads have none), for the menu's
-    // rows and the notice without a controller running down
-    const char *t = cfg_get("MKW_BATTERY_TEST");
-    if (t && *t) st = SDL_POWERSTATE_ON_BATTERY, pct = atoi(t);
-    return input_power_from_sdl(st, pct, id, out);
+    return st == -2 ? out->state : input_power_from_sdl(st, pct, id, out);
 }
 
 const char *input_power_text(const InputPower *p, char *out, int out_size) {
