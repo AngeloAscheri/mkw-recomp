@@ -1,6 +1,6 @@
 #version 450
 // One triangle over the whole target, for hdr_ui.frag (gfx/vk/device/vk_hdr_ui.c).
-// From totk-pc-recomp runtime/shaders/hdr_fullscreen.vert (MIT).
+// From totk-pc-recomp runtime/shaders/hdr/hdr_fullscreen.vert (MIT).
 layout(location = 0) out vec2 uv;
 
 void main() {

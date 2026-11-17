@@ -23,7 +23,7 @@ No começo, e avançando rápido. Em 12/11/2026:
 
 ## Roteiro
 
-O principal trabalho em aberto, em ordem; os detalhes estão em [docs/roadmap.md](docs/roadmap.md).
+O principal trabalho em aberto, em ordem; os detalhes estão em [docs/project/roadmap.md](docs/project/roadmap.md).
 
 - **60 fps nas corridas.** Hoje um quadro de corrida é uma cadeia em série: o jogo termina seu quadro (~3 ms\*), depois
   o back end Vulkan grava o grande envio do jogo (~19 ms\*), depois a GPU o executa (~10 ms\*), e só então começa o
@@ -44,7 +44,7 @@ O principal trabalho em aberto, em ordem; os detalhes estão em [docs/roadmap.md
 
 ## Desempenho
 
-Os tempos de quadro medidos, cada um com a versão testada, estão em [docs/performance.md](docs/performance.md). Para incluir a
+Os tempos de quadro medidos, cada um com a versão testada, estão em [docs/project/performance.md](docs/project/performance.md). Para incluir a
 sua máquina, abra um
 [relatório de desempenho](https://github.com/adriadam10/mkw-recomp/issues/new?template=performance.yml): ele entra na
 tabela com a versão indicada. Os tempos são os quadros do próprio jogo: a geração de quadros mostra mais quadros, mas
@@ -219,7 +219,7 @@ Este projeto está sob a [Licença MIT](LICENSE). O código tirado de outros pro
 lado dele (arquivos `LICENSE.*` em [recomp/](recomp/), [runtime/](runtime/), [sm86/decode/](sm86/decode/) e
 [runtime/third_party/](runtime/third_party/README.md)): totk-pc-recomp, nvsass-disassembler, Dear ImGui, bc7enc,
 stb_image, AMD FidelityFX FSR 1 e Roboto. Cada fonte usada, com a sua licença e o que foi tirado dela (código só de
-projetos MIT; de projetos GPL, só ideias), está listada em [docs/research.md](docs/research.md#sources).
+projetos MIT; de projetos GPL, só ideias), está listada em [docs/project/research.md](docs/project/research.md#sources).
 
 Mario Kart World é © Nintendo. Este projeto não é afiliado nem endossado pela Nintendo, não contém código nem recursos
 do jogo e não ajuda a obtê-los.

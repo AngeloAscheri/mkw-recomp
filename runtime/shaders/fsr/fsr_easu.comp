@@ -17,12 +17,12 @@ layout(push_constant) uniform Params {
 
 #define A_GPU 1
 #define A_GLSL 1
-#include "ffx/ffx_a.h"
+#include "../ffx/ffx_a.h"
 #define FSR_EASU_F 1
 AF4 FsrEasuRF(AF2 p) { return textureGather(src, p, 0); }
 AF4 FsrEasuGF(AF2 p) { return textureGather(src, p, 1); }
 AF4 FsrEasuBF(AF2 p) { return textureGather(src, p, 2); }
-#include "ffx/ffx_fsr1.h"
+#include "../ffx/ffx_fsr1.h"
 
 void put(AU2 p, AU4 c0, AU4 c1, AU4 c2, AU4 c3) {
     if (p.x >= uint(pc.out_.x) || p.y >= uint(pc.out_.y)) return;

@@ -703,7 +703,7 @@ VkPipeline vk_pipeline_compute(const GfxShader *cs, const VkPipeInfo **info);
 // submission (fence): buffer, offset and GPU address; 0 when no memory.
 int vk_mesh_cs_on(void);
 int vk_mesh_cs_alloc(uint64_t fence, VkDeviceSize size, VkBuffer *buf, VkDeviceSize *off, VkDeviceAddress *addr);
-VkPipeline vk_mesh_cs_compact_pipeline(VkPipelineLayout *layout);   // runtime/shaders/mesh_compact.comp
+VkPipeline vk_mesh_cs_compact_pipeline(VkPipelineLayout *layout);   // runtime/shaders/mesh/mesh_compact.comp
 // Records every dynamic state that VkPipeState determines, after binding a graphics pipeline: cull mode, front face,
 // topology, depth and stencil tests and ops, depth bias enable, rasterizer discard, vertex input, and, where the GPU
 // has them dynamic, depth clamp, polygon mode, blend enables, equations, write masks and alpha to coverage. The replay

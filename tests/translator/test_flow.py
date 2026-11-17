@@ -1,4 +1,4 @@
-"""sm86/translate/flow.py: shapes ptxas leaves that the structured form must keep, checked with flow_sim against the
+"""sm86/translate/frontend/flow.py: shapes ptxas leaves that the structured form must keep, checked with flow_sim against the
 branch graph."""
 
 import sys
@@ -6,7 +6,8 @@ from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "sm86/translate"))
+ROOT = Path(__file__).resolve().parents[2]
+sys.path[:0] = [str(ROOT / "sm86/translate"), str(ROOT / "sm86/translate/frontend")]
 import flow  # noqa: E402
 import flow_sim  # noqa: E402
 from glsl import subroutines  # noqa: E402

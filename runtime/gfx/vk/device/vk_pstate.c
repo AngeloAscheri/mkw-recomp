@@ -4,7 +4,7 @@
 // use, no root needed). The kernel drops it when the process ends.
 //
 // Why: amdgpu's automatic clock choice judges a GPU by how busy it is, and the race frame keeps it half idle (the
-// replay records while the GPU waits, then the GPU runs while the game waits: a chain, docs/roadmap.md section 1). On an
+// replay records while the GPU waits, then the GPU runs while the game waits: a chain, docs/project/roadmap.md section 1). On an
 // RX 6700 XT (RADV, game 1.8.0 at 2560x1440, race at a fixed 60 fps) the core sat at its lowest clock, 500 of 2855 MHz,
 // with the GPU 50 % busy, and the race took 42.6 ms a frame (tl-now, dpm1); held at the peak pstate (2700 MHz) the
 // same race took 16.8 ms, its GPU busy 5.3 ms a frame instead of 19, and the replay's CPU 4.4 ms instead of 8 (pk1,

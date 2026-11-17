@@ -43,7 +43,7 @@ jobs:
               - '**'
               - '!**/*.md'
               - '!docs/**'
-              - '!i18n/*.po'
+              - '!i18n/ui/*.po'
               - '!LICENSE'
               - '!Makefile'
               - '!.github/ISSUE_TEMPLATE/**'
@@ -74,7 +74,7 @@ jobs:
         run: uv run tools/git/cfg_rows.py
       - name: Setup command lines (no game)
         run: uv run pytest tests -q
-      - name: Menu texts compile (the C build.py makes from i18n/*.po)
+      - name: Menu texts compile (the C build.py makes from i18n/ui/*.po)
         run: |
           uv run tools/i18n/catalog.py gen "$RUNNER_TEMP/i18n"
           cc -fsyntax-only -I runtime/gfx/nvn/host "$RUNNER_TEMP"/i18n/*.c

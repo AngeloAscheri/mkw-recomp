@@ -21,7 +21,7 @@ AArch64 على Linux)؛ لا يوجد مفسّر ولا JIT للمعالج. ول
 
 ## خارطة الطريق
 
-العمل الرئيسي المتبقي، بالترتيب؛ والتفاصيل في [docs/roadmap.md](docs/roadmap.md).
+العمل الرئيسي المتبقي، بالترتيب؛ والتفاصيل في [docs/project/roadmap.md](docs/project/roadmap.md).
 
 - **60 إطارًا في الثانية في السباقات.** اليوم إطار السباق سلسلة متتابعة: تُنهي اللعبة إطارها (~3 ms\*)، ثم تسجّل الواجهة
   الخلفية لـ Vulkan الإرسال الكبير للعبة (~19 ms\*)، ثم ينفّذه الـ GPU (~10 ms\*)، وعندها فقط يبدأ الإطار التالي.
@@ -39,7 +39,7 @@ AArch64 على Linux)؛ لا يوجد مفسّر ولا JIT للمعالج. ول
 
 ## الأداء
 
-أزمنة الإطارات المقيسة، كل منها بالإصدار الذي اختُبر، موجودة في [docs/performance.md](docs/performance.md). لإضافة جهازك، افتح
+أزمنة الإطارات المقيسة، كل منها بالإصدار الذي اختُبر، موجودة في [docs/project/performance.md](docs/project/performance.md). لإضافة جهازك، افتح
 [تقرير أداء](https://github.com/adriadam10/mkw-recomp/issues/new?template=performance.yml): يدخل الجدول بالإصدار المذكور فيه. هذه
 الأزمنة هي إطارات اللعبة نفسها: توليد الإطارات يعرض إطارات أكثر لكنه لا يقصّرها. ‏16.7 ms تعني 60 إطارًا في الثانية؛ ومع ضبط
 Frame rate على Automatic (كما في الجهاز) ينخفض إلى 30 إطارًا عندما يتعذر بلوغ 60، والإطار الذي يتجاوز 33.3 ms يجعل السباق
@@ -199,7 +199,7 @@ build/mkw
 هذا المشروع مرخص بموجب [رخصة MIT](LICENSE). الكود المأخوذ من مشاريع أخرى يحتفظ بترخيصه إلى جانبه (ملفات `LICENSE.*` في
 [recomp/](recomp/) و[runtime/](runtime/) و[sm86/decode/](sm86/decode/) و[runtime/third_party/](runtime/third_party/README.md)):
 ‏totk-pc-recomp وnvsass-disassembler وDear ImGui وbc7enc وstb_image وAMD FidelityFX FSR 1 وRoboto. وكل مصدر استُخدم، مع ترخيصه
-وما أُخذ منه (الكود من مشاريع MIT فقط؛ ومن مشاريع GPL الأفكار فقط)، مذكور في [docs/research.md](docs/research.md#sources).
+وما أُخذ منه (الكود من مشاريع MIT فقط؛ ومن مشاريع GPL الأفكار فقط)، مذكور في [docs/project/research.md](docs/project/research.md#sources).
 
 ‏Mario Kart World ‏© Nintendo. هذا المشروع غير تابع لـ Nintendo ولا معتمد منها، ولا يحتوي على أي كود أو أصول من اللعبة، ولا
 يساعد في الحصول عليها.

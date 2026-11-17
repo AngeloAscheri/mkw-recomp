@@ -1,7 +1,7 @@
 """Builds docs/i18n/README.<lang>.md from a translated body and the language's strings, or checks they are current.
 
 Why: the README is read in the languages of most of the players who report here; a translation is written by hand once
-(docs/i18n/body/<lang>.md) and this keeps the parts every language repeats in step: the centred title, the download
+(docs/i18n/<lang>.body.md) and this keeps the parts every language repeats in step: the centred title, the download
 buttons, the link row and the language bar (the same as README.md's, its own language in bold), the body's relative
 links moved two folders up, and a "translated from" line with the hash of the README.md it follows. check.py runs the
 check and warns, without refusing the commit, when README.md changed after a translation (Adrià 13/11/2026).
@@ -58,9 +58,9 @@ LINKS = [
     "https://discord.gg/8uYBkjQkEg",
     "../../CHANGELOG.md",
     "../../CONTRIBUTING.md",
-    "../../docs/research.md#sources",
-    "../../docs/roadmap.md",
-    "../../docs/performance.md",
+    "../../docs/project/research.md#sources",
+    "../../docs/project/roadmap.md",
+    "../../docs/project/performance.md",
     f"{REPO}/issues",
     f"{REPO}/discussions",
     # Daily copy of the repository, issues, discussions and releases (tools/github/archive.py)
@@ -101,13 +101,13 @@ def build(code: str, rtl: bool) -> str:
 
     links = " ·\n  ".join(f'<a href="{u}">{n}</a>' if i > 2 else f'<b><a href="{u}">{n}</a></b>'
                           for i, (u, n) in enumerate(zip(LINKS, names)))  # fmt: skip
-    body = (I18N / "body" / f"{code}.md").read_text(encoding="utf-8").strip()
+    body = (I18N / f"{code}.body.md").read_text(encoding="utf-8").strip()
     body = REL_HTML.sub(r"\1../../\2", REL_MD.sub(r"\1../../\2", body))
     if rtl:
         body = f'<div dir="rtl">\n\n{body}\n\n</div>'
     head = "\n\n".join([
         f"<!-- translated from README.md {readme_hash()} -->",
-        '<p align="center"><img src="../logo.svg" width="128" alt="mkw-recomp logo"></p>',
+        '<p align="center"><img src="../images/logo.svg" width="128" alt="mkw-recomp logo"></p>',
         '<h1 align="center">mkw-recomp</h1>',
         f'<p align="center">\n  <b>{tag}</b>\n</p>',
         '<p align="center">\n' + "\n".join([button(win, "0078d6"), button(lin, "e95420"), button(arm, "8957e5")])
@@ -136,7 +136,7 @@ def main() -> int:
     if args.check:
         for p in stale():
             print(
-                f"note: {p} was translated from an older README.md: update docs/i18n/body/ and run "
+                f"note: {p} was translated from an older README.md: update docs/i18n/<lang>.body.md and run "
                 "tools/docs/i18n_readme.py"
             )
         return 0

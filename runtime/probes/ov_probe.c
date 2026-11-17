@@ -913,7 +913,7 @@ static void probe_fonts(void) {
            (unsigned long long)size, path);
 }
 
-// The host catalog (ui_text.c, generated from i18n/*.po): every language has its own text for every menu id, the
+// The host catalog (ui_text.c, generated from i18n/ui/*.po): every language has its own text for every menu id, the
 // software keyboard keeps its game-language rows, and menu_text follows MKW_MENU_LANG in each language.
 static void probe_menu_text(void) {
     static const char *const langs[] = {"en", "ja", "fr", "de", "it", "es", "nl", "pt", "pt-BR", "ru", "zh-Hans",

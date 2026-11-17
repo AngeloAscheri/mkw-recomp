@@ -3,7 +3,7 @@
 // colour over a clear 0; this turns each pixel back into its colour, puts its white at p.x nits (the system's paper
 // white) and writes the PQ code with its coverage, which the pipeline blends over the game's PQ picture (in PQ code
 // values, as the menu blends in sRGB code values on an SDR swapchain). PQ: SMPTE ST 2084; Rec. 709 to Rec. 2020:
-// ITU-R BT.2087. From totk-pc-recomp runtime/shaders/hdr_ui.frag (MIT).
+// ITU-R BT.2087. From totk-pc-recomp runtime/shaders/hdr/hdr_ui.frag (MIT).
 layout(location = 0) in vec2 uv;
 layout(location = 0) out vec4 color;
 layout(binding = 0) uniform sampler2D ui;
