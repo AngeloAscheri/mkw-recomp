@@ -12,7 +12,8 @@ recomp/versions.py knows beside a romfs/ folder. Where: the home folder's usual 
 Documents, Games, EmuDeck's Emulation), Steam's Proton prefixes (compatdata/*/pfx/drive_c, where #486's copy was),
 removable media (/run/media, /media, /mnt: SteamOS mounts the SD card there) and on Windows the profile's folders and
 each drive's root. A few levels deep, hidden folders skipped, within a time budget: a slow card cannot hold the start
-screen, which reads the lines as they come.
+screen's list back for long (launcher_finddumps.cpp reads the lines when the search ends; until then step 1 says it
+is looking).
 
 Output: one line per copy, "dump<TAB>nup|nx|folder<TAB><version or ?><TAB><path>", then "done <count>". The installation
 folder itself (--game) is left out.

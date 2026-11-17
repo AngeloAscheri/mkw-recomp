@@ -1133,7 +1133,8 @@ static void game_dir_notes(void) {
 }
 
 // The copies tools/prepare/finddumps.py found in the usual places (launcher_finddumps.h), one row each to pick with
-// a controller: in Steam's Gaming Mode the file dialogs above do not open. With no copy chosen yet the first is.
+// a controller: in Steam's Gaming Mode the file dialogs above do not open. With no copy chosen yet the first of a
+// known version is (a .nup of a version the setup does not take would only fail it), else the first.
 static void found_copies(void) {
     FoundDump f[FOUND_MAX];
     int running = 0, n = finddumps_list(f, FOUND_MAX, &running);
@@ -1141,7 +1142,11 @@ static void found_copies(void) {
         if (running) ImGui::TextColored(col4(LOOK_DIM), "%s", menu_text(UI_LAUNCH_FOUND_SEARCHING));
         return;
     }
-    if (!L.source[0]) snprintf(L.source, sizeof L.source, "%s", f[0].path);
+    if (!L.source[0]) {
+        int pick = 0;
+        while (pick < n && !strcmp(f[pick].version, "?")) pick++;
+        snprintf(L.source, sizeof L.source, "%s", f[pick < n ? pick : 0].path);
+    }
     ImGui::Dummy(ImVec2(0, 4 * L.scale));
     ImGui::TextColored(col4(LOOK_HEADING), "%s", menu_text(UI_LAUNCH_FOUND));
     for (int i = 0; i < n; i++) {
