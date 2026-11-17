@@ -4,8 +4,10 @@
 // switch2.c. The game never asks (nn::hid::system::GetNpadPowerInfo has no caller in MKW): the menu (F1), the start
 // screen and a notice show it.
 #include <stdio.h>
+#include <stdlib.h>
 #include <SDL3/SDL.h>
 
+#include "cfg.h"
 #include "host.h"
 #include "input.h"
 #include "switch2.h"
@@ -38,7 +40,12 @@ int input_pad_power(int player, InputPower *out) {
     *out = (InputPower){INPUT_POWER_NONE, -1, 0, ""};
     uint32_t id = 0;
     int pct = -1, st = input_pad_power_sdl(player, out->name, sizeof out->name, &id, &pct);
-    return st == -2 ? out->state : input_power_from_sdl(st, pct, id, out);
+    if (st == -2) return out->state;
+    // MKW_BATTERY_TEST=<percent>: every gamepad on battery at that level (virtual gamepads have none), for the menu's
+    // rows and the notice without a controller running down
+    const char *t = cfg_get("MKW_BATTERY_TEST");
+    if (t && *t) st = SDL_POWERSTATE_ON_BATTERY, pct = atoi(t);
+    return input_power_from_sdl(st, pct, id, out);
 }
 
 const char *input_power_text(const InputPower *p, char *out, int out_size) {
