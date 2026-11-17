@@ -576,7 +576,8 @@ static void on_line(char *line) {
     char *arg = strchr(line, ' ');
     if (arg) *arg++ = 0;
     if (!strcmp(line, "done") && arg) {
-        char *sp = strchr(arg, ' ');
+        // Names may contain spaces; '=' cannot survive import.py's clean_name, so only metadata ends the name.
+        char *sp = strstr(arg, " romfs=");
         if (sp) *sp = 0;
         snprintf(G.done, sizeof G.done, "%s", arg);
     } else if (!strcmp(line, "error") && arg) {
