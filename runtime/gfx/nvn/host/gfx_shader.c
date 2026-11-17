@@ -378,6 +378,10 @@ const uint32_t *gfx_shader_spirv(const GfxShader *s, uint64_t *words) {
 int gfx_shader_stage(const GfxShader *s) { return s->stage; }
 int gfx_shader_first_store(const GfxShader *s) { return s->first_store; }
 
+uint32_t gfx_shader_int_inputs(const GfxShader *s) { return s->int_inputs; }
+
+uint32_t gfx_shader_raw_outputs(const GfxShader *s) { return s->raw_outputs; }
+
 // A copy of s whose specialization constants default to val[k] for each word k with fix[k] (SCU<k> true, SCV<k> =
 // val[k]), the same as spirv-opt --set-spec-const-default-value: the pipeline code sees an ordinary shader, so the
 // pipeline cache, the GPL libraries and the background builds treat a variant like any other. The copy lives for

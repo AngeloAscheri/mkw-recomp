@@ -27,6 +27,8 @@ struct GfxShader {
     uint32_t *spec;                                        // "spec": word k = bank << 16 | byte (specialization ids 2k, 2k+1)
     int nspec;
     int first_store;                                       // "first_store" (glsl/first_store.py): 0, 1 or 2
+    uint32_t int_inputs;                                   // "int_inputs" (glsl/int_hints.py): Locations used as integers
+    uint32_t raw_outputs;                                  // "raw_outputs": outputs that only move flat inputs' bits
     const struct GfxShader *variant_of;                    // gfx_shader_variant: the generic shader; NULL for one
     struct GfxShader *cs_variant;                          // task/mesh: the compute form (gfx_shader_cs_variant)
     int cs_of_mesh;                                        // this is the compute form of a task or mesh program

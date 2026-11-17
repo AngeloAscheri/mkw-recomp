@@ -82,18 +82,32 @@ static PairRec *pairs_read(size_t *n, char *path, size_t cap) {
     return (PairRec *)b;
 }
 
-// The variant a draw makes of vs when vertex attributes 6 and 7 have integer formats (gfx_shader_int_variant), NULL
-// when vs reads neither. In the census (6 165 recorded pipelines, 17/11/2026) every integer attribute format but 9
-// (RGBA16I at 0) was an unsigned one at 6 or 7, the skinning indices: 87 of the 96 draws a race replay still found
-// libraries missing for, with every pair built, drew such a variant.
+// The variant a draw makes of vs when its integer attributes have integer formats (gfx_shader_int_variant), NULL when
+// it reads none. In the census (6 165 recorded pipelines, 17/11/2026) every integer attribute format but 9 was an
+// unsigned one at 6 or 7, the skinning indices (87 of the 96 draws a race replay still found libraries missing for,
+// with every pair built, drew such a variant); the 9 were RGBA16I at 0 in the two programs the translator names in
+// int_inputs (sm86/translate/glsl/int_hints.py), taken as signed here.
 static const GfxShader *vs_int_variant(const GfxShader *vs) {
-    uint32_t m = gfx_shader_inputs(vs, NULL) & 0xc0;
-    if (!m) return NULL;
+    uint32_t read = gfx_shader_inputs(vs, NULL), u = read & 0xc0, si = read & gfx_shader_int_inputs(vs) & ~0xc0u;
+    if (!u && !si) return NULL;
     GfxShaderAnswers a = {0};
-    for (int l = 6; l < 8; l++)
-        if (m >> l & 1) a.attr_type[l] = GFX_TYPE_UINT;
+    for (int l = 0; l < 16; l++)
+        a.attr_type[l] = u >> l & 1 ? GFX_TYPE_UINT : si >> l & 1 ? GFX_TYPE_SINT : GFX_TYPE_FLOAT;
     const GfxShader *v = gfx_shader_int_variant(vs, &a);
     return v != vs ? v : NULL;
+}
+
+// The variant of fs with integer outputs a draw into integer targets makes, for the outputs the translator found only
+// moving flat inputs' bits (raw_outputs); NULL for any other. In the census one fragment program drew into an integer
+// target (R8UI), DrivePassShaderDefault's 664, which int_hints names.
+static const GfxShader *fs_int_variant(const GfxShader *fs) {
+    uint32_t m = gfx_shader_raw_outputs(fs);
+    if (!m) return NULL;
+    GfxShaderAnswers a = {0};
+    for (int l = 0; l < 8; l++)
+        if (m >> l & 1) a.out_type[l] = GFX_TYPE_UINT;
+    const GfxShader *v = gfx_shader_int_variant(fs, &a);
+    return v != fs ? v : NULL;
 }
 
 // The fragment library key lib_keys makes, for a record without a vertex stage.
@@ -103,23 +117,26 @@ static void fs_key(const GKey *k, const GfxShader *fs, FsKey *fk) {
     fk->alpha_func = k->alpha_func, fk->alpha_ref = k->alpha_ref;
 }
 
-// A record's loaded shaders (an all-zero key: none) and *vv the vertex shader's integer-input variant; 0 when a named
-// one is missing or of the wrong stage.
+// A record's loaded shaders (an all-zero key: none) and the integer variants of each (var: by index in ids); 0 when a
+// named one is missing or of the wrong stage.
 static int pair_shaders(const PairRec *r, const uint8_t (*ids)[32], size_t u, const GfxShader **sh,
-                        const GfxShader **var, const GfxShader **vs, const GfxShader **fs, const GfxShader **vv) {
+                        const GfxShader **var, const GfxShader **vs, const GfxShader **fs, const GfxShader **vv,
+                        const GfxShader **fv) {
     static const uint8_t zero[32];
-    *vs = *fs = *vv = NULL;
+    *vs = *fs = *vv = *fv = NULL;
     if (memcmp(r->vs, zero, 32)) {
         const uint8_t (*v)[32] = bsearch(r->vs, ids, u, 32, id_cmp);
         if (!v || !sh[v - ids] || gfx_shader_stage(sh[v - ids]) != GFX_STAGE_VS) return 0;
-        // a task or mesh program in the vertex slot draws through a monolithic pipeline (mesh_pipe), never a
-        // pre-rasterization library; RADV crashed building one from DrivePassShaderDefault's task program 98
+        // A task or mesh program in the vertex slot draws through a monolithic pipeline (mesh_pipe), never a
+        // pre-rasterization library (RADV crashed building one from DrivePassShaderDefault's task program 98); drawn
+        // as compute (vk_exec_draw.c), its fragment stage goes with our vertex shader of the vertices its passes wrote.
         if (gfx_shader_mesh_kind(sh[v - ids]) == GFX_MESH_NONE) *vs = sh[v - ids], *vv = var[v - ids];
+        else if (vk_mesh_cs_on()) *vs = gfx_shader_mesh_cs_vs();
     }
     if (memcmp(r->fs, zero, 32)) {
         const uint8_t (*f)[32] = bsearch(r->fs, ids, u, 32, id_cmp);
         if (!f || !sh[f - ids] || gfx_shader_stage(sh[f - ids]) != GFX_STAGE_FS) return 0;
-        *fs = sh[f - ids];
+        *fs = sh[f - ids], *fv = var[f - ids];
     }
     return *vs || *fs;
 }
@@ -150,7 +167,7 @@ void pairs_prewarm(void) {
     gfx_shader_prewarm((const uint8_t(*)[32])ids, u, sh);
     double t1 = (double)plat_now_ns() / 1e6;
 
-    // Each vertex shader's integer-input variant, then the unions: a library key taken before the last pair of its
+    // Each shader's integer variant, then the unions: a library key taken before the last pair of its
     // vertex shader entered would not be a draw's.
     const GfxShader **var = calloc(u, sizeof *var);
     if (!var) {
@@ -158,11 +175,14 @@ void pairs_prewarm(void) {
         return;
     }
     uint32_t used = 0, dropped = 0, variants = 0;
-    for (size_t i = 0; i < u; i++)
-        if (sh[i] && gfx_shader_stage(sh[i]) == GFX_STAGE_VS && (var[i] = vs_int_variant(sh[i]))) variants++;
+    for (size_t i = 0; i < u; i++) {
+        int st = sh[i] ? gfx_shader_stage(sh[i]) : -1;
+        var[i] = st == GFX_STAGE_VS ? vs_int_variant(sh[i]) : st == GFX_STAGE_FS ? fs_int_variant(sh[i]) : NULL;
+        variants += var[i] != NULL;
+    }
     for (size_t i = 0; i < n; i++) {
-        const GfxShader *vs, *fs, *vv;
-        if (!pair_shaders(&r[i], (const uint8_t(*)[32])ids, u, sh, var, &vs, &fs, &vv)) {
+        const GfxShader *vs, *fs, *vv, *fv;
+        if (!pair_shaders(&r[i], (const uint8_t(*)[32])ids, u, sh, var, &vs, &fs, &vv, &fv)) {
             dropped++;
             continue;
         }
@@ -174,21 +194,25 @@ void pairs_prewarm(void) {
     size_t nj = 0;
     plat_mutex_lock(&P.lock);
     for (size_t i = 0; i < n; i++) {
-        const GfxShader *vs, *fs, *vv;
-        if (!pair_shaders(&r[i], (const uint8_t(*)[32])ids, u, sh, var, &vs, &fs, &vv)) continue;
-        const GfxShader *vlist[2] = {vs, vv};
-        for (int x = 0; x < 1 + (vv != NULL); x++) {   // the vertex shader, then its variant (same fragment library)
+        const GfxShader *vs, *fs, *vv, *fv;
+        if (!pair_shaders(&r[i], (const uint8_t(*)[32])ids, u, sh, var, &vs, &fs, &vv, &fv)) continue;
+        // the shaders and their variants; a pre-rasterization key holds no fragment shader, one fragment key no vertex
+        // shader: their repeats are found built
+        const GfxShader *vlist[2] = {vs, vv}, *flist[2] = {fs, fv};
+        for (int xy = 0; xy < 2 * (1 + (fv != NULL)); xy++) {
+            int x = xy & 1;
+            if (x && !vv) continue;
             VkPipeState s;
-            pair_state(&s, vlist[x], fs);
+            pair_state(&s, vlist[x], flist[xy >> 1]);
             Bindings B = {0}, F = {0};
-            Layout *l = (!s.vs || add_stage(&B, s.vs, 0)) && (!fs || add_stage(&F, fs, 0)) ? layout_pair(&B, &F) : NULL;
+            Layout *l = (!s.vs || add_stage(&B, s.vs, 0)) && (!s.fs || add_stage(&F, s.fs, 0)) ? layout_pair(&B, &F) : NULL;
             if (!l) {
                 dropped++;
                 continue;
             }
             GKey k;
             if (s.vs) gkey_fill(&s, &k);
-            else memset(&k, 0, sizeof k), k.fs = fs, k.samples = 1, k.indep = (uint8_t)P.indep;   // vertex_input needs a vs
+            else memset(&k, 0, sizeof k), k.fs = s.fs, k.samples = 1, k.indep = (uint8_t)P.indep;   // vertex_input needs a vs
             FsKey fk;
             if (s.vs) {
                 ViKey vk_;
@@ -197,7 +221,7 @@ void pairs_prewarm(void) {
                 lib_keys(&s, &k, &vk_, &pk, &fk, &ok);
                 queue_lib(jobs, &nj, LIB_PR, &pk, sizeof pk, l, &s, &k);
             } else {
-                fs_key(&k, fs, &fk);
+                fs_key(&k, s.fs, &fk);
             }
             if (!x) queue_lib(jobs, &nj, LIB_FS, &fk, sizeof fk, l, &s, &k);
         }
@@ -232,7 +256,7 @@ void pairs_prewarm(void) {
     } else {
         free(jobs);
     }
-    rt_log("vk_pipeline: pairs prewarm: %zu records in %s (%u used, %u dropped), %zu shaders and %u integer-input "
+    rt_log("vk_pipeline: pairs prewarm: %zu records in %s (%u used, %u dropped), %zu shaders and %u integer "
            "variants; %zu shader libraries on %d threads; shaders %.0f ms, libraries %.0f ms",
            n, path, used, dropped, u, variants, nj, nt, t1 - t0, (double)plat_now_ns() / 1e6 - t1);
 }
