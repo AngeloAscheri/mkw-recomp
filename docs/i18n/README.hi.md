@@ -17,6 +17,7 @@
 <p align="center">
   <b><a href="https://github.com/adriadam10/mkw-recomp/releases">रिलीज़</a></b> ·
   <b><a href="https://github.com/adriadam10/mkw-recomp/wiki">विकी</a></b> ·
+  <b><a href="https://discord.gg/8uYBkjQkEg">Discord</a></b> ·
   <a href="../../CHANGELOG.md">बदलाव</a> ·
   <a href="../../CONTRIBUTING.md">योगदान</a> ·
   <a href="../../docs/research.md#sources">स्रोत</a> ·

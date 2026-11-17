@@ -17,6 +17,7 @@
 <p align="center">
   <b><a href="https://github.com/adriadam10/mkw-recomp/releases">Versões</a></b> ·
   <b><a href="https://github.com/adriadam10/mkw-recomp/wiki">Wiki de ajuda</a></b> ·
+  <b><a href="https://discord.gg/8uYBkjQkEg">Discord</a></b> ·
   <a href="../../CHANGELOG.md">Alterações</a> ·
   <a href="../../CONTRIBUTING.md">Contribuir</a> ·
   <a href="../../docs/research.md#sources">Fontes</a> ·
