@@ -9,9 +9,11 @@ The setup, the installation selector and the Add to Steam of the start screen.
 | `test_finddumps.py` | The setup's search for the player's copies (`tools/prepare/finddumps.py`): a Mario Kart World `.nup` with its version from the package's table, another game's and an unknown version told apart, `.nx` and loose copies of a known build found, an unknown build, hidden folders, folders past the depth and the installation itself left out |
 | `test_game_dir.py` | Installation selection and persistence, relative paths, UTF-8 length boundaries, trailing whitespace and quotes, environment overrides, settings saved in the chosen folder, library readiness before memory initialization, recovery from failed or invalid saved selections, and log-folder discovery with launcher fallbacks and active log destinations (`t_game_dir.c`, POSIX harness) |
 | `test_game_dir_windows.py` | The actual Windows selector compiled with Clang/MinGW, run natively or under Wine: UTF-16 root limits with room for derived filenames, ASCII/BMP/supplementary characters, prepared DLL discovery, rejection before persistence, relative-prefix counting and recovery from invalid saved paths (`t_game_dir.c`; skipped when the toolchain or runner is absent) |
+| `test_launcher_paths.py` | Setup completion refreshes the real boot/mod RomFS resolvers in the same session, preserving argv/environment precedence, dirty settings and held config pointers; synthetic NUP imports and SARC merges verify original hashes, source changes, relative/Windows paths, missing sources and repeated/failed setup (`t_launcher_paths.c`) |
 
 C sources the tests here build with the compiler at hand and run:
 
 | File | Built by | What it checks |
 |---|---|---|
 | `t_game_dir.c` | `test_game_dir.py`, `test_game_dir_windows.py` | Settings, installation discovery and log-folder discovery with real files and single-thread platform stubs; Windows uses UTF-16 file APIs and UTF-8 conversion through `wmain`; no game, SDL or GPU |
+| `t_launcher_paths.c` | `test_launcher_paths.py` | Real configuration plus the production boot/mod path and setup-completion functions, with file stubs and UTF-8 entry point cut from `t_game_dir.c`; driven over stdin without SDL, a game or GPU |
