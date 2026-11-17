@@ -696,7 +696,8 @@ void vk_pipeline_async_enable(void);
 void vk_pipeline_async_busy(unsigned *inflight, int *building);
 // Boot prewarm, before the guest runs (rt_boot): loads the shaders pipeline-keys.bin names, translating the ones not
 // cached under the current translator from their stored inputs, and builds every recorded pipeline, on all cores.
-// No-op without vk_pipeline_async_enable, with MKW_PIPE_PREBUILD=0 or with MKW_GPU=null.
+// No-op without vk_pipeline_async_enable, with MKW_PIPE_PREBUILD=0 or with MKW_GPU=null. First the shader libraries of
+// every program pair of the game copy (pipeline-pairs.bin, vk_pipe_pairs.c).
 void vk_pipeline_prewarm(void);
 VkPipeline vk_pipeline_compute(const GfxShader *cs, const VkPipeInfo **info);
 // The same with the program's FIRST_STORE set (gfx_shader_first_store): 1 only the first invocation's stores, 2 all

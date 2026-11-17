@@ -674,12 +674,16 @@ void vk_pipeline_prewarm(void) {
     }
     double t0 = now_ms();
     K.warm = 1;
-    if (!ensure_init() || !K.file_n) {
-        rt_log("vk_pipeline: prewarm: no pipeline keys (%s)", K.path[0] ? K.path : "<none>");
-        return;
-    }
+    if (!ensure_init() || !K.path[0]) return;
     char mark[sizeof K.path + 16];
     if (!prewarm_mark(mark, sizeof mark)) return;
+    pairs_prewarm();   // vk_pipe_pairs.c: every program pair of the game copy, before the records of earlier runs
+    if (!K.file_n) {
+        rt_log("vk_pipeline: prewarm: no pipeline keys (%s)", K.path);
+        plat_file_delete(mark);
+        return;
+    }
+    t0 = now_ms();
     const KeyRec *r = (const KeyRec *)K.file;
     size_t n = K.file_n, m = 0;
     uint8_t (*ids)[32] = malloc(2 * n * 32);
