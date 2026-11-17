@@ -18,6 +18,7 @@
 | `fs_bands.py` | Diagnostic FS: each texture sample of a translated FS in its own vertical band of the screen (the last one, the shader's colour); keeps the original in `<key>.spv.orig` | `uv run tools/shaders/fs_bands.py KEY [--restore]` |
 | `spec_ceiling.py` | Ceiling of specialization without the GPU: fixes in the SPIR-V the bank words a run's census (`MKW_CB_CENSUS`) saw stable, freezes and optimizes with `spirv-opt`, and counts instructions and branches against the generic one | `uv run tools/shaders/spec_ceiling.py CENSUS.tsv [--keys KEY...] [--top N]` |
 | `spec_stats.py` | RADV statistics (instructions, VGPRs) of each specialized pipeline next to its generic one, from the log of a run with `MKW_SPEC_STATS=1` | `uv run tools/shaders/spec_stats.py build/run/NAME.log [--stat Instructions]` |
+| `pipeline_keys.py` | Census of a `pipeline-keys.bin`: distinct programs, pairs and states, how often a program pair keeps one value of each state field, and how many pairs are one program of the game's shader archives (needs `extract.py`) | `python3 tools/shaders/pipeline_keys.py [build/pipeline-keys.bin]` (seconds) |
 | `spv_fnv.py` | Program key from the SPIR-V hashes a dump gives (`sh_<hash>.spv`) | `python3 tools/shaders/spv_fnv.py HASH...` |
 | `retry_shas.py`, `retry_failed.py` | Translates specific programs of the census again, or the failed ones with a given reason | see their header |
 | `classify_missing.py` | Programs dumped by `MKW_SPIRV_DUMP`: whether they are in the census | `python3 tools/shaders/classify_missing.py DIR` |
