@@ -82,6 +82,7 @@ def compile_game(game: Path, exefs: Path, work: Path, cc: list[str], target: str
     base_all = common_key(cc, sorted((ROOT / "runtime").rglob("*.h")) + sorted(gen.rglob("*.h")))
     base_cpu = common_key(cc, sorted(cpu.rglob("*.h")))
     gen_headers = sorted(gen.rglob("*.h"))
+    compiled: list[Path] = []
 
     def one(job: tuple[Path, Path, list[str]]) -> str:
         src, out, f = job
@@ -89,6 +90,7 @@ def compile_game(game: Path, exefs: Path, work: Path, cc: list[str], target: str
         stamp = out.with_suffix(".key")
         if out.is_file() and stamp.is_file() and stamp.read_text() == key:
             return ""
+        compiled.append(src)  # list.append is atomic across the pool's threads
         stamp.unlink(missing_ok=True)
         return compile_one(cc, f, src, out, stamp, key)
 
@@ -106,6 +108,8 @@ def compile_game(game: Path, exefs: Path, work: Path, cc: list[str], target: str
             emit("progress", done, total)
         if probe:
             probe.result()
+    # what an update costs here: how many chunks a release's change of the generated C really touches
+    print(f"compile: {len(compiled)} of {len(jobs_c)} units compiled, the rest reused", file=sys.stderr)
     objs = [o for _, o, _ in jobs_c]
     for stale in set(obj.glob("*.o")) - {o for _, o, _ in jobs_c}:  # chunks an earlier version had
         stale.unlink()

@@ -364,7 +364,7 @@ def main() -> None:
                 emit("skip", step)
                 continue
             emit("step", step)
-            t_step = time.monotonic()
+            t_step, c_step = time.monotonic(), os.times()
             if step == "exefs":
                 if is_nx(exefs_src):
                     clear_dir(game / "exefs", exefs_src)
@@ -418,7 +418,9 @@ def main() -> None:
                 shutil.rmtree(work / "pack", ignore_errors=True)
             state["done"][step] = key
             save_state(game, state)
-            print(f"time: {step} {time.monotonic() - t_step:.1f} s", file=sys.stderr)
+            c = os.times()  # the CPU of its tools (0 on Windows): whether a step leaves cores idle (H1, build/updates)
+            cpu = c.children_user + c.children_system - c_step.children_user - c_step.children_system
+            print(f"time: {step} {time.monotonic() - t_step:.1f} s, cpu {cpu:.1f} s", file=sys.stderr)
         print(f"time: setup {time.monotonic() - t_all:.1f} s", file=sys.stderr)
         emit("done")
     except Failed as e:
