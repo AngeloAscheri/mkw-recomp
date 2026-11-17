@@ -246,7 +246,10 @@ typedef enum {
     // the game files the setup left are not where it left them (launcher.cpp files_gone): the state line, and under it
     // HELP "... %s ..." (where they were)
     UI_LAUNCH_FILES_GONE, UI_LAUNCH_FILES_GONE_HELP,
-    UI_MENU_LAST_ID = UI_LAUNCH_FILES_GONE_HELP,
+    // the setup's copies found in the usual places (launcher.cpp found_copies): the list's title, the line while it
+    // looks, and the kind of a loose copy
+    UI_LAUNCH_FOUND, UI_LAUNCH_FOUND_SEARCHING, UI_LAUNCH_FOUND_FOLDER,
+    UI_MENU_LAST_ID = UI_LAUNCH_FOUND_FOLDER,
     UI_TEXT_COUNT
 } UiTextId;
 
