@@ -54,7 +54,7 @@ static bool g_indent;                    // opt_indent
 static bool g_mouse;
 
 // The description pane: this frame's hovered and selected rows, the page's first row, and the last one shown.
-struct Desc { char text[512]; char note[256]; };
+struct Desc { char text[512]; char note[512]; };   // the Steam note is 346 bytes in Thai (#579)
 static Desc g_hover, g_focus, g_first, g_shown;
 
 // disabled: the note of a row opt_disable_next greyed out, else NULL. note: a dim line under the description,

@@ -1264,7 +1264,13 @@ static void autosave_once(void) {
     static int64_t ivl = -1;
     if (ivl < 0) {
         const char *e = cfg_get("MKW_PIPE_AUTOSAVE_S");
-        ivl = e && *e ? (int64_t)atoi(e) * 1000 : 20000;
+        char *end = NULL;
+        long s = e && *e ? strtol(e, &end, 10) : 20;
+        if (e && *e && (*end || s < 0)) {   // atoi made a typo ("off") mean 0, the save turned off silently
+            rt_log("vk_pipeline: MKW_PIPE_AUTOSAVE_S='%s' is not a number of seconds: default 20", e);
+            s = 20;
+        }
+        ivl = (int64_t)s * 1000;
         if (ivl != 20000) rt_log("vk_pipeline: autosave %s (MKW_PIPE_AUTOSAVE_S)", ivl > 0 ? e : "off while running");
     }
     if (ivl <= 0 || now - last_ms < (uint64_t)ivl) return;

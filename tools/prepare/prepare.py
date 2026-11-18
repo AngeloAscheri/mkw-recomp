@@ -520,7 +520,10 @@ def main() -> None:
                 game_texts.build_all(game, loose_romfs(runtime, romfs, work, "Mals"))
                 # Settings > Hacks > Straight to waits for the game's phases, named by this table (seqnodes.py); a
                 # setup without it left every press of it unfired. About a second, at every setup as above.
-                seqnodes.write(game / "exefs", game / f"seq_nodes-{version.number}.tsv")
+                try:  # optional: a game folder it cannot write leaves only Straight to without its phases
+                    seqnodes.write(game / "exefs", game / f"seq_nodes-{version.number}.tsv")
+                except (OSError, ValueError) as e:
+                    print(f"warning: seq_nodes table not written: {e}", file=sys.stderr)
                 shutil.rmtree(work / "pack", ignore_errors=True)
             state["done"][step] = key
             save_state(dest, state)

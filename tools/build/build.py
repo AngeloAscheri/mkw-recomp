@@ -240,13 +240,14 @@ def defaults_glue(exefs: Path, romfs: Path, dist: bool) -> str:
 RT_EXPORTS = ("rt_dispatch", "rt_sj_owner", "rt_svc", "rt_udf", "rt_ticks", "rt_spin_gate", "fnprof_hit")
 
 
-def ninja_file(target: Target, gen: Path, out: Path, rt_extra: list[str], dist: Path | None,
+def ninja_file(target: Target, gen: Path | None, out: Path, rt_extra: list[str], dist: Path | None,
                runtime_only: bool = False, ld_extra: list[str] | None = None,
                sys_flags: list[str] | None = None) -> str:  # fmt: skip
     """dist: the player's build into that folder, the runtime (mkw, mkw.exe) and the game code apart (mkwgame.so,
     mkwgame.dll); else build/mkw with the game code linked in. runtime_only (with dist): the runtime alone, what a
     release ships and the CI builds, without the game's generated C."""
     inc = " ".join(f"-I{d}" for d in sorted({RUNTIME} | {p.parent for p in RUNTIME.rglob("*.h")}))
+    gen_inc = f"-I{gen}" if gen else ""  # --runtime-only has no generated C (it wrote -INone)
     gid = f'-DRT_GAME_ID=\\"{game_id()}\\"'
     pic = ["-fPIC"] if dist and target is LINUX else []
     link_flags = list(target.link_flags) + (ld_extra or [])
@@ -264,8 +265,8 @@ def ninja_file(target: Target, gen: Path, out: Path, rt_extra: list[str], dist: 
     lines = [
         f"builddir = {out}",
         f"genflags = {' '.join(GEN_FLAGS + pic + (sys_flags or []))} -I{RUNTIME / 'cpu'}",
-        f"rtflags = {' '.join(RT_FLAGS + target.rt_flags + rt_extra)} {gid} {inc} -I{gen} -I{out / 'rt'} -I{target.vma}",
-        f"tabflags = {' '.join(GEN_FLAGS + pic + (sys_flags or []))} {gid} {inc} -I{gen}",
+        f"rtflags = {' '.join(RT_FLAGS + target.rt_flags + rt_extra)} {gid} {inc} {gen_inc} -I{out / 'rt'} -I{target.vma}",
+        f"tabflags = {' '.join(GEN_FLAGS + pic + (sys_flags or []))} {gid} {inc} {gen_inc}",
         f"ldflags = {' '.join(link_flags)}",
         (
             f"rule cc\n  command = {cc} $genflags -MD -MF $out.d -c $in -o $out\n  depfile = $out.d\n  deps = gcc"
