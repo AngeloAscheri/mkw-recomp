@@ -72,7 +72,7 @@ ROOT = Path(__file__).resolve().parents[2]  # the repository, or the package's s
 sys.path.insert(0, str(ROOT / "tools/build"))
 sys.path.insert(0, str(ROOT / "tools/i18n"))
 import build  # (GEN_FLAGS, module_glue, game_id: the same game code as build.py --dist)
-import game_texts  # (build_all: the game's texts in ca, gl, eu)
+import game_texts  # (build_all: the game's texts in ca, gl, eu, tr)
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from gamecode import DamagedSource, compile_game, cpu_level
@@ -515,9 +515,9 @@ def main() -> None:
                 warm(game, work, runtime, dest if args.next else None)
             elif step == "cleanup":
                 clear_work(work)
-                # the languages the game does not ship (ca, gl, eu), from this version's translations (the step runs
+                # the languages the game does not ship (ca, gl, eu, tr), from this version's translations (the step runs
                 # at every setup, so an update brings its new texts); about a second
-                game_texts.build_all(game, loose_romfs(runtime, romfs, work, "Mals"))
+                game_texts.build_all(game, loose_romfs(runtime, romfs, work, "Mals", "Font"))
                 # Settings > Hacks > Straight to waits for the game's phases, named by this table (seqnodes.py); a
                 # setup without it left every press of it unfired. About a second, at every setup as above.
                 try:  # optional: a game folder it cannot write leaves only Straight to without its phases
