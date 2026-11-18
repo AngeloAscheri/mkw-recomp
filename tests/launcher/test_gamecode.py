@@ -7,7 +7,7 @@ Usage: uv run pytest tests/launcher/test_gamecode.py
 
 import subprocess
 import sys
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 import pytest
 
@@ -87,3 +87,10 @@ def test_legacy_compiler_is_the_played_folders_whole_version(tmp_path: Path) -> 
     new = [str(tmp_path / "new/setup/zig/zig"), "cc"]
     assert gamecode.legacy_compilers(new, tmp_path / "game") == [out["game/setup/zig"]]
     assert gamecode.legacy_compilers(new, tmp_path / "elsewhere") == []
+
+
+def test_installed_dir_forms_take_zigs_forward_slashes_on_windows() -> None:
+    """zig on Windows prints InstalledDir as C:/upd/base/setup/zig: the backslash form alone never matched a 0.1.13
+    object's key, and the first update compiled all ~360 chunks again (18/11/2026)."""
+    forms = gamecode.installed_dirs(PureWindowsPath(r"C:\upd\base\setup\zig"))
+    assert forms == {r"C:\upd\base\setup\zig", "C:/upd/base/setup/zig"}

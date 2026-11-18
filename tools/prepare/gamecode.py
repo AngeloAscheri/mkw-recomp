@@ -10,7 +10,7 @@ import subprocess
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
+from pathlib import Path, PurePath
 
 ROOT = Path(__file__).resolve().parents[2]  # the repository, or the package's setup/src
 sys.path.insert(0, str(ROOT / "tools/build"))
@@ -198,8 +198,14 @@ def legacy_compilers(cc: list[str], game: Path) -> list[str]:
     if "InstalledDir:" not in out:
         return []
     exe = "zig.exe" if Path(cc[0]).name.endswith(".exe") else "zig"
-    dirs = {str(d) for d in (game / "setup/zig", package_dir(game) / "zig") if (d / exe).is_file()}
+    dirs = {s for d in (game / "setup/zig", package_dir(game) / "zig") if (d / exe).is_file() for s in installed_dirs(d)}
     return [re.sub(r"(?m)^InstalledDir: .*$", lambda _, d=d: f"InstalledDir: {d}", out) for d in sorted(dirs)]
+
+
+def installed_dirs(d: PurePath) -> set[str]:
+    """How `--version` may spell a folder in InstalledDir: zig on Windows writes C:/upd/x/setup/zig, with forward
+    slashes (18/11/2026: the backslash form alone matched no 0.1.13 object, and the update compiled all ~360 again)."""
+    return {str(d), d.as_posix()}
 
 
 def common_key(cc: list[str], headers: list[Path], base: str = "", compiler: str = "") -> str:
