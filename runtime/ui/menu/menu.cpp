@@ -298,7 +298,9 @@ static void test_apply_sets(uint64_t frame) {
 
 
 // ---- the window: title, tabs (L / R or Q / E switch), the page, and the bottom row with "Continue" and "Quit game".
-// B on the gamepad and Esc close it.
+// B on the gamepad and Esc close it. Opening focuses "Continue" (g_focus_continue, spent on the first layout), so a
+// stray gamepad deflection cannot retune a setting.
+static int g_focus_continue;   // the just-opened menu focuses "Continue"
 static void layout_menu(uint32_t w, uint32_t h, float scale) {
     ImGui::GetBackgroundDrawList()->AddRectFilled(ImVec2(0, 0), ImVec2((float)w, (float)h), IM_COL32(0, 0, 0, 120));
     float ww = fminf(w * 0.88f, 1400 * scale), wh = fminf(h * 0.86f, 820 * scale);
@@ -329,6 +331,11 @@ static void layout_menu(uint32_t w, uint32_t h, float scale) {
     const char *cont = menu_text(UI_MENU_CONTINUE), *quit = menu_text(UI_MENU_QUIT);
     float bw = fmaxf(ImGui::CalcTextSize(cont).x, ImGui::CalcTextSize(quit).x) + st.FramePadding.x * 4;
     ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() - st.WindowPadding.x - bw * 2 - st.ItemSpacing.x, y));
+    if (g_focus_continue) {   // discussion #577: opening focuses "Continue", so left/right move between the bottom
+        ImGui::SetKeyboardFocusHere();   // buttons instead of retuning the first setting row. SetKeyboardFocusHere
+        ImGui::SetNavCursorVisible(true);   // leaves the cursor hidden (NoSetNavCursorVisible): show the gold outline
+        g_focus_continue = 0;
+    }
     if (ImGui::Button(cont, ImVec2(bw, 0))) set_open(0);
     ImGui::SameLine();
     if (ImGui::Button(quit, ImVec2(bw, 0))) gfx_window_request_close();
@@ -650,7 +657,10 @@ extern "C" int menu_overlay_frame(uint64_t frame, const MenuTarget *t, const cha
         io.ClearInputKeys();
         io.ClearInputMouse();
         g_last_ns = 0;
-        settings_opened();   // opening: the first row has the cursor
+        settings_opened_menu();   // opening focuses "Continue" (g_focus_continue), not the first row
+        // the test hook's pages keep the first row focused for stable screenshots (settings_select survives
+        // settings_opened_menu, so only a plain open takes "Continue")
+        g_focus_continue = (g_test.page < 0);
         if (GImGui->OpenPopupStack.Size) ImGui::ClosePopupToLevel(0, false);   // a confirmation left open on closing
     }
     io.DisplaySize = ImVec2((float)t->width, (float)t->height);
