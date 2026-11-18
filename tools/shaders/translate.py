@@ -114,12 +114,16 @@ def translate_one(
     gl, spv, res = Path(out, f"{key}.glsl"), Path(out, f"{key}.spv"), Path(out, f"{key}.result")
     if cs_src is not None:   # task/mesh as compute, for devices without mesh shaders
         cs_gl, cs_spv = Path(out, f"{key}.cs.glsl"), Path(out, f"{key}.cs.spv")
-        if full or not cs_spv.exists() or not cs_gl.exists() or cs_gl.read_text() != cs_src:
+        # its GLSL's sum, not the GLSL: the setup deletes every .glsl after the pass, so a comparison with the file
+        # compiled these again at every update
+        cs_sum, cs_sum_file = hashlib.sha256(cs_src.encode()).hexdigest(), Path(out, f"{key}.cs.sum")
+        if full or not cs_spv.exists() or not cs_sum_file.exists() or cs_sum_file.read_text() != cs_sum:
             put(cs_gl, cs_src)
             cs_why = compile_check(cs_gl, cs_spv, "cs")
             if cs_why != "ok":
                 cs_spv.unlink(missing_ok=True)
                 put(Path(out, f"{key}.cs.result"), cs_why)
+            put(cs_sum_file, cs_sum)
     # The reflection first: a change that touches only it (the written flag of storage buffers, 01/11/2026) leaves the
     # GLSL as it was, and the shortcut below kept the old file.
     put(Path(out, f"{key}.res.json"), json.dumps(refl, indent=1))
