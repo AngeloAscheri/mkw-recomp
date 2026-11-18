@@ -42,6 +42,7 @@ class Cc1:
         self.clang, self.zig_cc = str(clang), zig_cc
         self.src, self.out = obj / f"{PROBE}.c", obj / f"{PROBE}.o"
         self.lines: dict[tuple[str, ...], list[str]] = {}
+        self.outs: dict[tuple[str, ...], str] = {}  # the object path each line writes (zig.exe: a cache temporary)
 
     def add(self, flags: list[str]) -> None:
         """zig's -cc1 line for these flags; raises RuntimeError when it is not the expected one."""
@@ -49,17 +50,28 @@ class Cc1:
         cmd = [*self.zig_cc, "-std=gnu11", *flags, "-c", str(self.src), "-o", str(self.out), "-###"]
         r = subprocess.run(cmd, capture_output=True, **UTF8, check=False, timeout=120)
         lines = [ln for ln in r.stderr.splitlines() if '"-cc1"' in ln]
-        if r.returncode or len(lines) != 1:
+        # zig.exe compiles into its cache's tmp/ and renames the object to -o afterwards; with -### there is no object,
+        # so it prints the line and exits 1 on the rename (the Windows PC, 18/11/2026: every chunk fell back to zig)
+        if len(lines) != 1 or (r.returncode and "failed to rename" not in r.stderr):
             raise RuntimeError(f"zig cc -### gave rc {r.returncode} and {len(lines)} -cc1 lines")
         args = [_ESCAPE.sub(r"\1", a) for a in _QUOTED.findall(lines[0])]
-        # the probe's paths, each where the chunk's go: the output, the input and its name (-main-file-name)
-        if args[1] != "-cc1" or [args.count(str(p)) for p in (self.src, self.out)] != [1, 1]:
-            raise RuntimeError("zig's -cc1 line does not name the probe's input and output once each")
-        self.lines[tuple(flags)] = args[1:]
+        out = args[args.index("-o") + 1] if "-o" in args[:-1] else ""
+        # the probe's paths, each where the chunk's go: the output (ours or zig's temporary), the input and its name
+        # (-main-file-name)
+        if args[1] != "-cc1" or args.count(str(self.src)) != 1 or PROBE not in Path(out).name:
+            raise RuntimeError("zig's -cc1 line does not name the probe's input once and an output of it")
+        self.lines[tuple(flags)], self.outs[tuple(flags)] = args[1:], out
 
     def cmd(self, flags: list[str], src: Path, out: Path) -> list[str]:
-        swap = {str(self.src): str(src), str(self.out): str(out), self.src.name: src.name}
-        return [self.clang, *(swap.get(a, a) for a in self.lines[tuple(flags)])]
+        swap = {str(self.src): str(src), self.outs[tuple(flags)]: str(out), self.src.name: src.name}
+        # zig.exe names the temporary as the object's CodeView name too
+        return [
+            self.clang,
+            *(
+                f"-object-file-name={out}" if a.startswith("-object-file-name=") else swap.get(a, a)
+                for a in self.lines[tuple(flags)]
+            ),
+        ]
 
 
 def setup(zig_cc: list[str], package: Path, obj: Path, flag_sets: list[list[str]]) -> Cc1 | None:
