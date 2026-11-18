@@ -320,6 +320,8 @@ def main() -> None:
     # what is free when the setup starts (the player's browser and launcher stay open), as shader_jobs does on every
     # system; on Linux MemAvailable counts the reclaimable cache, and it lowers the jobs only when less than 60 % of the
     # RAM is available (not measured on Linux).
+    # 18/11/2026, the Windows PC (--next, 3 workers): 374 MB each at most with OPENBLAS_NUM_THREADS=1 (numpy's OpenBLAS
+    # had reserved memory for every thread in each worker), so Windows counts 0.7 GB as Linux does.
     free = mem_available_gb()
     # --next: the game may start while this runs, and low priority leaves it the CPU but not the memory; half of it
     share = 0.5 if args.next else 1.0
@@ -328,7 +330,7 @@ def main() -> None:
     def fit(gb: float) -> int:
         return args.jobs or max(1, min(os.cpu_count() or 1, int(budget / gb)))
 
-    jobs, gen_jobs = fit(0.5), fit(1.2 if os.name == "nt" else 0.7)
+    jobs, gen_jobs = fit(0.5), fit(0.7)
     # setup.log only (stderr): what the machine gave the setup, and below each step's time, so two setups (Linux and
     # Windows, or a player's and ours) compare step by step (Adrià 13/11/2026: "los logs de preparación deberían
     # guardar tiempos"; 0.1.10's Windows setup took twice the Linux one and nothing said where)
