@@ -75,7 +75,7 @@ import build  # (GEN_FLAGS, module_glue, game_id: the same game code as build.py
 import game_texts  # (build_all: the game's texts in ca, gl, eu)
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from gamecode import DamagedSource, compile_game
+from gamecode import DamagedSource, compile_game, cpu_level
 from gamesource import check, is_nx, loose_romfs, unpack
 from gamecopy import BUILD_BYTES, check_space, clear_dir, copy_tree, own_dir, remove_stale, romfs_bytes, tree_bytes
 from nup import Nup
@@ -382,7 +382,9 @@ def main() -> None:
             "exefs": str(exefs_src),
             "romfs": f"copy {version.name}" if args.romfs == "copy" else f"link {romfs_src}",
             "generate": f"{build.game_id()} {version.name} {code_key(GENERATOR)}{with_mods}",
-            "compile": f"{build.game_id()} {version.name} {args.target} {code_key(COMPILER)}{with_mods}",
+            # a level only when it is not the default (gamecode.py cpu_level): v3 keeps the key it had without it
+            "compile": f"{build.game_id()} {version.name} {args.target} {code_key(COMPILER)}{with_mods}"
+            + ("" if cpu_level() == "v3" else f" {cpu_level()}"),
             "shaders": f"{version.name} {translator_key()}",
             # with the shaders' key: the prewarm builds the libraries of this SPIR-V (an update that changed only the
             # translator skipped it and left the new libraries to the first start)
