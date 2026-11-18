@@ -109,6 +109,7 @@ static const RtVersion versions[] = {
         .display_set_fn = 0xde6060,
         .display_value_reg = 12,
         .display_base_reg = 9,
+        .pane_matrix_fn = 0x17f89f0,
         .ui_focus_fn = 0x7fd810,
         .camera_service = 0x378ecb8,   // RELATIVE at main+0x36f4148; 9 functions load it
         .race_events = RACE_EVENTS(0x353f5c0, 0x35448c0, 0x354a5d8, 0x353b3a0, 0x353f180, 0x3539c68, 0x3539db8,
