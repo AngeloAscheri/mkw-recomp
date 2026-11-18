@@ -15,6 +15,10 @@ from machine import Failed, crt_spec, run, tool_env
 
 ROOT = Path(__file__).resolve().parents[2]  # the repository, or the package's setup/src
 SHIPPED = ROOT / "FILES"  # the package's sources, one relative path per line (tools/build/dist.py)
+sys.path.insert(0, str(ROOT / "tools/shaders"))
+import pipeline_pairs  # noqa: E402  (MAGIC, VERSION: the format the runtime of this package reads)
+
+PAIRS_VERSION = pipeline_pairs.VERSION
 
 
 def shipped(files: list[Path]) -> list[Path]:
@@ -37,6 +41,30 @@ def translator_key() -> str:
     for f in shipped([*files, ROOT / "tools/shaders/extract.py", ROOT / "tools/shaders/translate.py"]):
         h.update(f.read_bytes())
     return h.hexdigest()[:16]
+
+
+def pairs_current(path: Path) -> bool:
+    """Whether path is a pipeline-pairs.bin of this package's format."""
+    try:
+        with path.open("rb") as f:
+            head = f.read(12)
+    except OSError:
+        return False
+    return head[:8] == pipeline_pairs.MAGIC and int.from_bytes(head[8:12], "little") == PAIRS_VERSION
+
+
+def ensure_pairs(exefs: Path, romfs: Path, work: Path, dest: Path) -> None:
+    """pipeline-pairs.bin of this package's format in dest, for the warm step: an update whose shaders key did not
+    change kept the older format, which the new runtime rejects, and prewarmed nothing (the compute programs joined it
+    in version 3, 18/11/2026); and an update set up beside (--next) with the shaders skipped had none in setup-next/.
+    A few seconds, with extract.py again when setup-work/shaders is gone."""
+    out, sh = dest / "pipeline-pairs.bin", work / "shaders"
+    if pairs_current(out):
+        return
+    if not (sh / "index.csv").is_file():
+        run([sys.executable, str(ROOT / "tools/shaders/extract.py"), "--romfs", str(romfs), "--exefs", str(exefs),
+             "--out", str(sh)])  # fmt: skip
+    run([sys.executable, str(ROOT / "tools/shaders/pipeline_pairs.py"), "--shaders", str(sh), "--out", str(out)])
 
 
 def spec_loads(spec: Path) -> bool:

@@ -94,7 +94,14 @@ from machine import (
 )
 import nextsetup
 from beside import Beside
-from shaderstep import shaders, shipped, spec_command, translator_key  # noqa: F401  (spec_command: tests/launcher/test_setup.py)
+from shaderstep import (  # noqa: F401  (spec_command: tests/launcher/test_setup.py)
+    PAIRS_VERSION,
+    ensure_pairs,
+    shaders,
+    shipped,
+    spec_command,
+    translator_key,
+)
 import update  # (ca_file)
 
 PREP_VERSION = 1  # bump when a step's output changes meaning: every step runs again
@@ -376,7 +383,7 @@ def main() -> None:
             "shaders": f"{version.name} {translator_key()}",
             # with the shaders' key: the prewarm builds the libraries of this SPIR-V (an update that changed only the
             # translator skipped it and left the new libraries to the first start)
-            "warm": f"{build.game_id()} {version.name} {translator_key()}",
+            "warm": f"{build.game_id()} {version.name} {translator_key()} pairs{PAIRS_VERSION}",
         }
         migrate_keys(state, keys, {
             "romfs": f"{args.romfs} {romfs_src}",
@@ -424,6 +431,8 @@ def main() -> None:
                 code_ready.set()
             if step == "warm" and seeding:
                 seeding.join()
+            if step == "warm" and tidying:  # setup-work/pack may be unpacked again for ensure_pairs (a .nx copy)
+                tidying.join()
             # what cleanup removes, here beside translate.py once compile is done: the swap's cleanup spent 12-17 s
             # in it at the player's first start on the Windows PC, and beside warm it slowed that by 11 s (18/11/2026);
             # generated/ comes back if a compile needs it (regenerate_if_cleaned)
@@ -486,6 +495,8 @@ def main() -> None:
             elif step == "shaders":
                 beside.join(show=True)
             elif step == "warm":
+                src_romfs = loose_romfs(runtime, romfs, work, "Shader", *SHADER_DIRS) if is_nx(romfs) else romfs
+                ensure_pairs(game / "exefs", src_romfs, work, dest)
                 warm(game, work, runtime, dest if args.next else None)
             elif step == "cleanup":
                 clear_work(work)

@@ -613,3 +613,23 @@ def test_keys_ignore_files_the_package_does_not_ship(tmp_path: Path, monkeypatch
     assert shaderstep.shipped(files) == files  # a checkout: no list
     (tmp_path / "FILES").write_text("a.py\n")
     assert shaderstep.shipped(files) == [tmp_path / "a.py"]
+
+
+@pytest.mark.parametrize("version,index,runs", [(3, True, []), (2, True, ["pipeline_pairs.py"]),
+                                                (2, False, ["extract.py", "pipeline_pairs.py"])])  # fmt: skip
+def test_ensure_pairs(tmp_path: Path, monkeypatch, version: int, index: bool, runs: list[str]) -> None:
+    """The warm step's pipeline-pairs.bin: one of the package's format kept; another version's written again (an
+    update whose shaders key did not change kept a v2 file the v3 runtime rejected), with extract.py first when
+    setup-work/shaders is gone."""
+    import shaderstep
+
+    dest, work = tmp_path / "game", tmp_path / "work"
+    (work / "shaders").mkdir(parents=True)
+    dest.mkdir()
+    if index:
+        (work / "shaders/index.csv").write_text("sha1,stage\n")
+    (dest / "pipeline-pairs.bin").write_bytes(shaderstep.pipeline_pairs.MAGIC + version.to_bytes(4, "little") + bytes(4))
+    calls: list[str] = []
+    monkeypatch.setattr(shaderstep, "run", lambda cmd, **_: calls.append(Path(cmd[1]).name))
+    shaderstep.ensure_pairs(tmp_path / "exefs", tmp_path / "romfs", work, dest)
+    assert shaderstep.PAIRS_VERSION == 3 and calls == runs
