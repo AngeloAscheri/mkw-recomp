@@ -1,4 +1,4 @@
-// MKW_REPLAY_PAR (default 1 with 6 or more physical cores, 0 below; "ab": in the B blocks): one submission's replay
+// MKW_REPLAY_PAR (default 0; 1 on; "ab": in the B blocks; setup says why it is off): one submission's replay
 // recorded on several threads. The game
 // sends a race frame as one NVN command buffer of 2,500-3,100 draws, and one thread records it in 16-23 ms
 //. Here a light walk follows the replay state through the submission's ops
@@ -599,13 +599,22 @@ static void worker_main(void *arg) {
 }
 
 static void setup(void) {
-    // On by default with 6+ physical cores: with the serial head it is neutral where the GPU sets the frame, with 1
-    // player (hd3a/hd3b: +0.28 ms) and 2 (hd4a/hd4b: +0.50 ms, the recording 34 -> 30 ms), i5-8400 with 6 cores and
-    // a GTX 1050 Ti; it gains where the recording sets it. Off below: on a Steam Deck's 4 cores (8 threads, hence not
-    // plat_cpu_count) the chunk threads took the game's CPU, 2 players 25.4 -> 22 fps (#449, before the head). 0 when
-    // the core count is unknown.
-    uint64_t all, first;
-    P.mode = rt_knob("REPLAY_PAR", plat_cpu_cores(&all, &first) >= 6 ? "1" : "0");
+    // Off by default: no measurement has the frame shorter with chunks, on any core count. From 16/11/2026 it was on
+    // with 6+ physical cores, after the serial head made it neutral where the GPU sets the frame (i5-8400 with 6
+    // cores and a GTX 1050 Ti: +0.28 ms with 1 player, hd3a/hd3b; +0.50 with 2, hd4a/hd4b, the recording 34 -> 30
+    // ms), on the expectation that it gains where the recording sets it. Where the recording sets it, it lost: in-run
+    // A/B with inverted twins, 2-player split race at MKW_FPS=60 (CPU bound, GPU busy 7.7 of 17 ms), i7-14700F with
+    // an RX 6700 XT on Linux, 18/11/2026: +1.70 and +1.36 ms a frame on all 20 cores (rp2p-all, rp2ptl-all), +1.31 on
+    // 6 P-cores (taskset 0-11, rp2p-six). Windows on an i5-10600K (6 cores), 1 player: +0.9 to +1.7 ms in three twin
+    // pairs (#590). A Steam Deck's 4 cores: 2 players 25.4 -> 22 fps (#449). The chunks shorten the recording (last
+    // submit to recording done -1.6 ms) but not the frame (rp2ptl-all, MKW_TRACE_TL, A against B):
+    // - the GPU gets its work later and finishes 0.9 ms later after the game's last submit (it starts 0.3 ms later and
+    //   idles 0.5 ms more inside the frame while the chunks are sent in order; its busy time is the same, 7.72/7.80);
+    // - the fence's completion work takes 0.9 ms longer: every chunk notes the writable ranges it binds in its own
+    //   command buffer, so the chunks of one submission merge the same ranges back again at one fence (MKW_WB_CENSUS,
+    //   rpwb-0: 775 -> 1175 MiB compared per 60 frames for the same 8.6-8.8 MiB the GPU changed; 2.65 -> 3.40 ms a
+    //   frame in merge_back).
+    P.mode = rt_knob("REPLAY_PAR", "0");
     const char *e = cfg_get("MKW_REPLAY_WALK");
     P.walk_diag = e && atoi(e) > 0;
     e = cfg_get("MKW_REPLAY_PAR_DRAWS");

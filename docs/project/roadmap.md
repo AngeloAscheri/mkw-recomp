@@ -33,8 +33,12 @@ totk-pc-recomp, MIT; −10.6 % recorder instructions on Steam Deck; no measurabl
 - **Less work per draw**: descriptor sets kept across frames by their contents (`MKW_DRAW_CACHE`). On a fast CPU
   (i7-14700F, RADV) it changes nothing measurable: a race capture's recording thread ran the same instructions with
   it on and off, and its binds made ~20 % more descriptor work (sets are allocated) (16/11/2026); left for slower CPUs.
-- **Recording in parallel**: chunks of a submit on several threads; today they fight over the texture lock, which has
-  to be split first.
+- **Recording in parallel** (`MKW_REPLAY_PAR`, off by default since 18/11/2026): chunks of a submit on several
+  threads. It shortens the recording but lengthens the frame: +1.3 to +1.7 ms in a 2-player race on an i7-14700F on
+  6 cores and on 20, +0.9 to +1.7 in 1 player on a 6-core i5-10600K (#590), in-run A/B. The GPU gets the chunks later
+  (+0.9 ms to its end after the game's last submit) and every chunk merges the writable ranges it binds back again
+  at the fence (+0.9 ms of completion work). Those two first; the chunks also fight over the texture lock, which has
+  to be split.
 - **The kernel's global lock**: waits by address are done (−1.3 ms\*); the rest of the lock remains.
 - **Hybrid CPUs** (`MKW_FAST_CORES`, #490 by @AngeloAscheri): on Linux the frame's threads stay on the fast cores
   and background work (pipeline builds, prewarming, video) on all of them; on an i7-14700F at a fixed 60 fps, races
