@@ -147,7 +147,7 @@ Beyond the console, all optional and off (or at the console's value) by default:
   folder.
 - **Hacks**: turbo (hold or toggle F2), skip movies, unlock everything, the same randomness every time, straight to
   time trial or free roam.
-- **Languages**: the menus in 20 languages; the game itself also in Catalan, Galician and Basque.
+- **Languages**: the menus in 20 languages; the game itself also in Catalan, Galician, Basque and Turkish.
 - **Game files**: choose the installation folder; a dump as folders or as one `.nup` or `.nx` file, used where it is;
   updates from the start screen.
 - **Performance overlay** (FPS, or CPU, GPU and memory in full) and a one-click system info for bug reports.

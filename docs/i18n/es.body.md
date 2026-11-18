@@ -109,7 +109,7 @@ Más allá de la consola, todas opcionales y desactivadas (o al valor de la cons
   el USB necesita un paso único con el controlador, más abajo.
 - **Hacks**: turbo (mantener o alternar F2), saltar vídeos, desbloquearlo todo, la misma aleatoriedad cada vez,
   directo a contrarreloj o a modo libre.
-- **Idiomas**: los menús en 20 idiomas; el propio juego también en catalán, gallego y euskera.
+- **Idiomas**: los menús en 20 idiomas; el propio juego también en catalán, gallego, euskera y turco.
 - **Ficheros del juego**: elegir la carpeta de instalación; un volcado en carpetas o en un único archivo `.nup` o
   `.nx`, usado donde está; actualizaciones desde la pantalla de inicio.
 - **Superposición de rendimiento** (FPS, o CPU, GPU y memoria al completo) e información del sistema en un clic para
