@@ -26,9 +26,10 @@ void input_poll_player(int player, uint64_t *buttons, int32_t *lx, int32_t *ly, 
 // it closes (nothing until every button and stick direction is released). Independent of input_block.
 void input_menu(int open);
 // The gamepad alone, for the menu: Switch button bits and the left stick (up +y). 0 without a connected gamepad.
-// Minus+Plus combo and the neutral pad while the menu is open (input_map.c, window-system free): *held is the caller's memory
-// of the combo, sticks are lx, ly, rx, ry. Returns 1 in the poll where the combo goes down (toggle the menu once).
-int input_menu_gate(int *held, int menu_open, uint64_t *buttons, int32_t sticks[4]);
+// Minus+Plus combo (or the Guide button when MKW_MENU_SHORTCUT=guide) and the neutral pad while the menu is open
+// (input_map.c, window-system free): *held is the caller's memory of the combo, guide the Guide button held,
+// sticks are lx, ly, rx, ry. Returns 1 in the poll where the shortcut goes down (toggle the menu once).
+int input_menu_gate(int *held, int menu_open, uint64_t *buttons, int32_t sticks[4], int guide);
 int input_overlay_gate(int *held, uint64_t *buttons);   // L3+R3: 1 in the poll both go down
 int input_script_inject(const char *line);   // MKW_CTL: "<ticks from now> <button> [hold]", 1 when queued
 void input_script_phase(const char *node);   // seqwatch.c: a phase started (script lines "<node>+<ticks> ...")
