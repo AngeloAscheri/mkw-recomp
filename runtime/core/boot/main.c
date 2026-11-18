@@ -673,7 +673,10 @@ int main(int argc, char **argv) {
     }
     if (cfg.shot && !cfg.seconds) return usage(argv[0]);
     if (cfg.seconds && mode) return usage(argv[0]);
-    log_open(!mode);
+    // the setup's warm step (--prewarm) keeps its log too, as logs/warm.log (MKW_LOG_NAME): until 18/11/2026 it went
+    // nowhere, and prepare.py drops its output, so a prewarm that failed on a player's PC left no trace. Only with its
+    // own name: a --prewarm by hand must not rotate the player's mkw.log
+    log_open(!mode || (!strcmp(mode, "--prewarm") && log_name_own()));
     // the player the launcher picked (core/base/players.h): its account and save; the lock stays on the folder
     static char player_profile[PLAT_PATH_MAX * 2];
     cfg.profile_base = cfg.profile;
