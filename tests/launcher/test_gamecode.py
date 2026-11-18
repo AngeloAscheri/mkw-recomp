@@ -54,3 +54,19 @@ def test_crash_retried_once(tmp_path: Path, capsys: pytest.CaptureFixture[str], 
     assert stamp.is_file() == ok
     if plan.startswith("ice"):
         assert "Program arguments" in capsys.readouterr().err  # the crash's head, which the 300-character tail lost
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="a shell script stands in for the compiler")
+def test_compiler_id_leaves_out_the_package_path_and_host(tmp_path: Path) -> None:
+    """The AppImage mounts the package at a new path each start: with InstalledDir in the key, every update on Linux
+    compiled every chunk again."""
+    ids = []
+    for where, kernel in (("a", "linux7.3.4-gnu2.44.0"), ("b", "linux7.4.0-gnu2.44.0")):
+        cc = tmp_path / where / "zig"
+        cc.parent.mkdir()
+        cc.write_text(f"#!/bin/sh\necho 'clang version 22.1.8'\necho 'Target: x86_64-unknown-{kernel}'\n"
+                      f"echo 'InstalledDir: {cc.parent}'\n")  # fmt: skip
+        cc.chmod(0o755)
+        ids.append(gamecode.compiler_id([str(cc), "cc", "-target", "x86_64-linux-gnu"]))
+    assert ids[0] == ids[1]
+    assert "22.1.8" in ids[0] and "x86_64-linux-gnu" in ids[0]

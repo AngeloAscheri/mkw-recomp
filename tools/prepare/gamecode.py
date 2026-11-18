@@ -164,14 +164,20 @@ def chunk_base(cc: list[str], base_cpu: str, gen_headers: list[Path], src: Path)
     return common_key(cc, named, base_cpu) if named else base_cpu
 
 
+def compiler_id(cc: list[str]) -> str:
+    """The compiler as far as its objects go: its version and its arguments, without the paths. `--version` also prints
+    InstalledDir (the package's folder: the AppImage mounts it at a new /tmp/.mount_* each start) and, for zig, a
+    Target with the host's kernel and glibc: in the key, every update on Linux compiled all ~360 chunks again
+    (18/11/2026: the update from 0.1.13 to main, with 357 of its 358 chunks' C unchanged)."""
+    out = subprocess.run([*cc, "--version"], capture_output=True, **UTF8, check=False).stdout
+    keep = [ln for ln in out.splitlines() if not ln.startswith(("InstalledDir:", "Target:"))]
+    return "\n".join([*keep, *cc[1:]])
+
+
 def common_key(cc: list[str], headers: list[Path], base: str = "") -> str:
     """What an object depends on besides its own C and flags: the compiler (or `base`, a key that already holds it)
     and every header it can include."""
-    h = hashlib.sha256(
-        base.encode()
-        if base
-        else subprocess.run([*cc, "--version"], capture_output=True, **UTF8, check=False).stdout.encode()
-    )
+    h = hashlib.sha256(base.encode() if base else compiler_id(cc).encode())
     for p in headers:
         h.update(p.relative_to(p.parents[1]).as_posix().encode() + p.read_bytes())
     return h.hexdigest()
