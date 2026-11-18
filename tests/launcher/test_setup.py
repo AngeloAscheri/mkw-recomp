@@ -464,6 +464,11 @@ def test_package_has_the_launchers_tools() -> None:
     for cpp in (ROOT / "runtime/ui/launcher").glob("*.cpp"):
         wanted |= set(re.findall(r'setup_tool\([^,]+, "([^"]+)"', cpp.read_text(encoding="utf-8")))
     assert wanted - {"prepare/prepare.py"}, "no setup_tool calls found: the pattern is stale"
+    # and every tool prepare.py runs by its path (ROOT / "tools/....py"): until 18/11/2026 shaderstep.py ran
+    # tools/shaders/pipeline_pairs.py, which no package carried, and every setup from main failed at its shaders
+    for py in (ROOT / "tools/prepare").glob("*.py"):
+        found = re.findall(r'ROOT / "tools/([^"]+\.py)"', py.read_text(encoding="utf-8"))
+        wanted |= set(found)
     for rel in sorted(wanted):
         path = f"tools/{rel}"
         assert any(path == s or path.startswith(s.rstrip("/") + "/") for s in sources), f"{path} not in dist.py SOURCES"
