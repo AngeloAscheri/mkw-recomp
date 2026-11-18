@@ -786,6 +786,32 @@ msgctxt "UI_MENU_ICONS_IN_USE"
 msgid "in use: %s"
 msgstr "사용 중: %s"
 
+msgctxt "UI_MENU_MENU_SHORTCUT"
+msgid "Menu shortcut"
+msgstr "메뉴 단축키"
+
+msgctxt "UI_MENU_MENU_SHORTCUT_DESC"
+msgid ""
+"Choose which controller input opens this menu (Start + Select or the Guide button). Keyboard "
+"defaults to F1 or Esc."
+msgstr "이 메뉴를 여는 컨트롤러 입력을 선택하세요(Start + Select 또는 Guide 버튼). 키보드는 기본적으로 F1 또는 Esc입니다."
+
+msgctxt "UI_MENU_SHORTCUT_MINUS_PLUS"
+msgid "Start + Select"
+msgstr "Start + Select"
+
+msgctxt "UI_MENU_SHORTCUT_GUIDE"
+msgid "Guide button"
+msgstr "Guide 버튼"
+
+msgctxt "UI_MENU_SHORTCUT_STEAM_NOTE"
+msgid ""
+"Note: If using the Guide button, we recommend disabling 'Guide button focuses Steam' in Steam "
+"(Settings -> Controller -> Advanced Settings) so Steam doesn't open over the game."
+msgstr ""
+"참고: Guide 버튼을 사용하는 경우 Steam이 게임 위에 열리지 않도록 Steam에서 'Guide button focuses Steam'을 비활성화하는 것이 "
+"좋습니다(설정 -> 컨트롤러 -> 고급 설정)."
+
 msgctxt "UI_BINDS_HELP"
 msgid ""
 "Select a cell and press A or Enter, then the key, mouse button or controller button. Delete or X "

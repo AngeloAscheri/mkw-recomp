@@ -759,6 +759,31 @@ msgctxt "UI_MENU_ICONS_IN_USE"
 msgid "in use: %s"
 msgstr "正在使用：%s"
 
+msgctxt "UI_MENU_MENU_SHORTCUT"
+msgid "Menu shortcut"
+msgstr "選單快速鍵"
+
+msgctxt "UI_MENU_MENU_SHORTCUT_DESC"
+msgid ""
+"Choose which controller input opens this menu (Start + Select or the Guide button). Keyboard "
+"defaults to F1 or Esc."
+msgstr "選擇哪個控制器輸入開啟此選單(Start + Select 或 Guide 按鈕)。鍵盤預設為 F1 或 Esc。"
+
+msgctxt "UI_MENU_SHORTCUT_MINUS_PLUS"
+msgid "Start + Select"
+msgstr "Start + Select"
+
+msgctxt "UI_MENU_SHORTCUT_GUIDE"
+msgid "Guide button"
+msgstr "Guide 按鈕"
+
+msgctxt "UI_MENU_SHORTCUT_STEAM_NOTE"
+msgid ""
+"Note: If using the Guide button, we recommend disabling 'Guide button focuses Steam' in Steam "
+"(Settings -> Controller -> Advanced Settings) so Steam doesn't open over the game."
+msgstr ""
+"注意:如果使用 Guide 按鈕,建議在 Steam 中關閉 'Guide button focuses Steam'(設定 -> 控制器 -> 進階設定),以免 Steam 蓋在遊戲上開啟。"
+
 msgctxt "UI_BINDS_HELP"
 msgid ""
 "Select a cell and press A or Enter, then the key, mouse button or controller button. Delete or X "
