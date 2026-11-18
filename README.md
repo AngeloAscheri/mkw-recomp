@@ -174,13 +174,20 @@ The start screen's **Mods** page installs mods as they are published for the gam
   searched, with each mod's author, license, screenshots and description. **Install** downloads the file from
   GameBanana, only when you ask for it.
 - **Installed**: your mods, each with an on/off switch; **Import zip / Import folder** takes a mod you already have
-  (`.zip`, `.rar` or `.7z`, with `romfs/` and/or `exefs/` anywhere inside, including the `atmosphere/contents/` layout).
+  (`.zip`, `.rar` or `.7z`, with `romfs/`, `exefs/` and/or `plugin/` anywhere inside, including the
+  `atmosphere/contents/` layout).
 
 Mods that replace game files (`romfs/`: skins, textures, texts, courses) take effect at the next start. Mods that change
 the game's code (`exefs/` `.ips` or `.pchtxt` patches, such as 200cc or 30 FPS) are built into the game code: turning
 one on or off rebuilds it before you play (a few minutes). Two mods that change the same archive are merged file by
 file, and the page asks which one wins where both change the same file. The page warns about mods that replace the
 game's graphics settings or shaders, which the port handles its own way.
+
+A mod with a `plugin/` folder carries a native plugin (`.dll` on Windows, `.so` on Linux) that the game loads at start
+while the mod is on. It runs its own program on your computer, so the page warns about it: turn it on only if you
+trust where it comes from. For modders, the API is one header, [`runtime/plugin/mkw_plugin.h`](runtime/plugin/mkw_plugin.h),
+explained in the wiki's [Writing a plugin](https://github.com/adriadam10/mkw-recomp/wiki/Writing-a-plugin). More on
+installing and ordering mods: the wiki's [Mods](https://github.com/adriadam10/mkw-recomp/wiki/Mods) page.
 
 Mods are made by other people and are not tested by this project: one can crash the game or damage your save. Read a
 mod's page before installing it, keep a copy of your save, and report a mod's problems to its author; when you report
