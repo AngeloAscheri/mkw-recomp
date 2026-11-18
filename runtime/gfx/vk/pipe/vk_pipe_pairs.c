@@ -161,6 +161,7 @@ void pairs_prewarm(void) {
     char path[sizeof K.path + 32];
     size_t n = 0;
     PairRec *r = pairs_read(&n, path, sizeof path);
+    PJ.finished = 1;   // until threads start: what the shader preload loaded is released after the prewarm
     if (!r || !n) {
         if (!r) rt_log("vk_pipeline: no %s: shader libraries are built as the game draws", path);
         free(r);

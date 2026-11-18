@@ -95,7 +95,9 @@ from machine import (
 import nextsetup
 from beside import Beside
 from shaderstep import (  # noqa: F401  (spec_command: tests/launcher/test_setup.py)
+    PACK_VERSION,
     PAIRS_VERSION,
+    ensure_pack,
     ensure_pairs,
     shaders,
     shipped,
@@ -383,7 +385,7 @@ def main() -> None:
             "shaders": f"{version.name} {translator_key()}",
             # with the shaders' key: the prewarm builds the libraries of this SPIR-V (an update that changed only the
             # translator skipped it and left the new libraries to the first start)
-            "warm": f"{build.game_id()} {version.name} {translator_key()} pairs{PAIRS_VERSION}",
+            "warm": f"{build.game_id()} {version.name} {translator_key()} pairs{PAIRS_VERSION} pack{PACK_VERSION}",
         }
         migrate_keys(state, keys, {
             "romfs": f"{args.romfs} {romfs_src}",
@@ -497,6 +499,7 @@ def main() -> None:
             elif step == "warm":
                 src_romfs = loose_romfs(runtime, romfs, work, "Shader", *SHADER_DIRS) if is_nx(romfs) else romfs
                 ensure_pairs(game / "exefs", src_romfs, work, dest)
+                ensure_pack(dest / "spirv")
                 warm(game, work, runtime, dest if args.next else None)
             elif step == "cleanup":
                 clear_work(work)

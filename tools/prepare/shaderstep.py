@@ -16,9 +16,11 @@ from machine import Failed, crt_spec, run, tool_env
 ROOT = Path(__file__).resolve().parents[2]  # the repository, or the package's setup/src
 SHIPPED = ROOT / "FILES"  # the package's sources, one relative path per line (tools/build/dist.py)
 sys.path.insert(0, str(ROOT / "tools/shaders"))
+import pack  # noqa: E402  (spirv/shaders.pack)
 import pipeline_pairs  # noqa: E402  (MAGIC, VERSION: the format the runtime of this package reads)
 
 PAIRS_VERSION = pipeline_pairs.VERSION
+PACK_VERSION = pack.VERSION
 
 
 def shipped(files: list[Path]) -> list[Path]:
@@ -65,6 +67,15 @@ def ensure_pairs(exefs: Path, romfs: Path, work: Path, dest: Path) -> None:
         run([sys.executable, str(ROOT / "tools/shaders/extract.py"), "--romfs", str(romfs), "--exefs", str(exefs),
              "--out", str(sh)])  # fmt: skip
     run([sys.executable, str(ROOT / "tools/shaders/pipeline_pairs.py"), "--shaders", str(sh), "--out", str(out)])
+
+
+def ensure_pack(spirv: Path) -> None:
+    """spirv/shaders.pack written again when the shaders step changed the folder after it, or none is there: the boot
+    prewarm reads every program from it, 0.7 s instead of 24 s with the file cache cold on the Windows PC (prep-pack,
+    18/11/2026). For the warm step, whose mkw --prewarm already reads it; a few seconds."""
+    if spirv.is_dir() and not pack.current(spirv):
+        n, size = pack.pack(spirv)
+        print(f"warm: {n} programs packed, {size / 2**20:.0f} MiB", file=sys.stderr)
 
 
 def spec_loads(spec: Path) -> bool:

@@ -114,7 +114,7 @@ PINS = {
 SOURCES = ["recomp", "sm86", "tools/build/build.py", "tools/build/icon.py", "tools/prepare", "tools/mod", "tools/romfs/resolution.py",
            "tools/i18n/catalog.py", "tools/i18n/game_texts.py", "i18n/game",
            "tools/shaders/extract.py", "tools/shaders/translate.py", "tools/shaders/shaderc_lib.py",
-           "tools/shaders/pipeline_pairs.py",
+           "tools/shaders/pipeline_pairs.py", "tools/shaders/pack.py",
            "runtime/cpu",
            "runtime/core/boot/gamelib.h",
            "tools/github/signatures.toml"]  # fmt: skip  (the known errors tools/prepare/lastrun.py names)

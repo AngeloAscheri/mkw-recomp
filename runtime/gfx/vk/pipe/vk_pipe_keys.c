@@ -674,9 +674,19 @@ static void prewarm_run(void) {
     }
     double t0 = now_ms();
     K.warm = 1;
-    if (!ensure_init() || !K.path[0]) return;
+    // the boot's wait is device + pairs + records: the pack's programs load beside the device, which needs the driver
+    // from the disk (pack-boot2, 18/11/2026, file cache cold: 7.2 s of the 11.3 s wait)
+    PlatThread *pre = gfx_shader_preload_start();
+    int ok = ensure_init() && K.path[0];
+    if (ok)
+        rt_log("vk_pipeline: prewarm: device ready in %.0f ms, %.0f ms after process start", now_ms() - t0,
+               (double)plat_process_uptime_ns() / 1e6);
+    gfx_shader_preload_join(pre);
     char mark[sizeof K.path + 16];
-    if (!prewarm_mark(mark, sizeof mark)) return;
+    if (!ok || !prewarm_mark(mark, sizeof mark)) {
+        if (pre) gfx_shader_spirv_release();   // no prewarm reads what the preload loaded
+        return;
+    }
     pairs_prewarm();   // vk_pipe_pairs.c: every program pair of the game copy, before the records of earlier runs
     if (!K.file_n) {
         rt_log("vk_pipeline: prewarm: no pipeline keys (%s)", K.path);
