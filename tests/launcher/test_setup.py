@@ -470,6 +470,9 @@ def loose_romfs_setup(
     monkeypatch.setattr(prepare, "own_children", lambda: None)
     monkeypatch.setattr(prepare.update, "ca_file", lambda: None)
     monkeypatch.setattr(prepare.build, "game_id", lambda: "synthetic")
+    # setup.lock is held until the process ends; here every run shares this process, and a run that exits early leaves
+    # its open lock file in the SystemExit traceback pytest.raises keeps, so the next run would wait for it forever
+    monkeypatch.setattr(prepare, "hold_lock", lambda _game: None)
 
     def check(src: Path, *_: Path) -> tuple[Path, Path, SimpleNamespace]:
         return src / "exefs", src / "romfs", SimpleNamespace(name=src.name, romfs_files=3)
