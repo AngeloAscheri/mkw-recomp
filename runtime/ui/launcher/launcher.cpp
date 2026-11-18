@@ -386,7 +386,8 @@ static bool pad_row(float w, float hgt) {
         if (ImGui::IsItemHovered()) {
             ImGui::BeginTooltip();
             for (int i = 0; pad_power(i, &w, power, sizeof power); i++)
-                ImGui::Text(menu_text(UI_MENU_PAD_PLAYER), i + 1, w.name), ImGui::SameLine(), ImGui::TextDisabled("%s", power);
+                ImGui::Text(menu_text(UI_MENU_PAD_PLAYER), i + 1, w.name), ImGui::SameLine(0, 8 * s),
+                    ImGui::TextDisabled("%s", power);
             ImGui::EndTooltip();
         }
     } else {
