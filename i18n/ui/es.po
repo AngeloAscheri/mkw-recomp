@@ -2356,6 +2356,22 @@ msgctxt "UI_LAUNCH_UPDATE_NOW"
 msgid "Update"
 msgstr "Actualizar"
 
+msgctxt "UI_LAUNCH_UPDATE_PREPARING"
+msgid "Setting up %s in the background. You can keep playing meanwhile."
+msgstr ""
+
+msgctxt "UI_LAUNCH_UPDATE_PREPARED"
+msgid "%s is ready"
+msgstr ""
+
+msgctxt "UI_LAUNCH_UPDATE_RESTART"
+msgid "Restart with it"
+msgstr ""
+
+msgctxt "UI_LAUNCH_UPDATE_PREPARE_FAILED"
+msgid "It could not be set up in advance (%s): it will be set up when it starts."
+msgstr ""
+
 #. Opens the release's notes on GitHub.
 msgctxt "UI_LAUNCH_WHATS_NEW"
 msgid "What's new"

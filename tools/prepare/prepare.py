@@ -84,6 +84,7 @@ from machine import (
     default_cc,
     default_glslc,
     emit,
+    hold_lock,
     mem_available_gb,
     mem_gb,
     own_children,
@@ -265,7 +266,10 @@ def main() -> None:
     # directory limit, making warm-up reject the very installation this setup just built.
     game = args.game.absolute()
     runtime = args.runtime.resolve() if args.runtime else game
-    if not args.next:  # the update an earlier --next run set up beside the played version, now that this one runs
+    lock = hold_lock(game)  # noqa: F841 (held until exit)
+    if args.next:  # the player may be racing meanwhile: the game's threads go first; the tools inherit it
+        nextsetup.lower_priority()
+    else:  # the update an earlier --next run set up beside the played version, now that this one runs
         nextsetup.promote(game, args.port)
     state = load_state(game)
     dest = game  # where the outputs the game reads, and the state, are written
@@ -310,7 +314,9 @@ def main() -> None:
     # system; on Linux MemAvailable counts the reclaimable cache, and it lowers the jobs only when less than 60 % of the
     # RAM is available (not measured on Linux).
     free = mem_available_gb()
-    budget = min(mem_gb() * 0.6, free)
+    # --next: the game may start while this runs, and low priority leaves it the CPU but not the memory; half of it
+    share = 0.5 if args.next else 1.0
+    budget = min(mem_gb() * 0.6, free) * share
 
     def fit(gb: float) -> int:
         return args.jobs or max(1, min(os.cpu_count() or 1, int(budget / gb)))
@@ -424,7 +430,7 @@ def main() -> None:
             elif step == "shaders":
                 # extract.py reads a .nup itself; a .nx's shader archives are unpacked first
                 src_romfs = loose_romfs(runtime, romfs, work, "Shader", *SHADER_DIRS) if is_nx(romfs) else romfs
-                shaders(game / "exefs", src_romfs, game, work, glslc, args.jobs or shader_jobs(), cc, dest)
+                shaders(game / "exefs", src_romfs, game, work, glslc, args.jobs or shader_jobs(share), cc, dest)
             elif step == "warm":
                 warm(game, work, runtime)
             elif step == "cleanup":

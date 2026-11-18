@@ -26,6 +26,21 @@ def next_dir(game: Path) -> Path:
     return game / NEXT
 
 
+def lower_priority() -> None:
+    """This process and the tools it starts below normal priority (Windows: its priority class, inherited; elsewhere a
+    nice of 10). Best effort: a system that refuses leaves the setup as it was."""
+    try:
+        if os.name == "nt":
+            import ctypes  # noqa: PLC0415
+
+            k32 = ctypes.windll.kernel32
+            k32.SetPriorityClass(k32.GetCurrentProcess(), 0x4000)  # BELOW_NORMAL_PRIORITY_CLASS
+        else:
+            os.nice(10)
+    except (OSError, AttributeError) as e:
+        print(f"setup: priority not lowered: {e}", file=sys.stderr)
+
+
 def seed(game: Path) -> Path:
     """setup-next/ with spirv/ linked to the current one; returns the folder. Links already there stay (a resumed run)."""
     out = next_dir(game)

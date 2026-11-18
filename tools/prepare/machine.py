@@ -16,8 +16,13 @@ import build  # (mem_total_gb, windows_memory_gb)
 
 
 def emit(*words: object) -> None:
-    """One event for the start screen (stdout) and the same line for logs/setup.log (stderr)."""
-    print(*words, flush=True)
+    """One event for the start screen (stdout) and the same line for logs/setup.log (stderr). A start screen that is
+    gone (the player closed the game while an update was set up beside it, prepare.py --next) does not stop the setup:
+    its events go on to the log alone, and the next start resumes from the state."""
+    try:
+        print(*words, flush=True)
+    except OSError:  # BrokenPipeError on Linux, EINVAL on Windows
+        sys.stdout = open(os.devnull, "w", encoding="utf-8")  # noqa: SIM115
     print(*words, file=sys.stderr)
 
 
@@ -111,6 +116,31 @@ def tool_env(glslc: str) -> dict[str, str]:
     return env
 
 
+def hold_lock(game: Path) -> object:
+    """<game>/setup.lock held until this process ends; a second setup of the folder waits for the first. Why: an update
+    set up in the background (prepare.py --next) may still run, its start screen closed, when the next start resumes
+    it or the player sets up again; two at once wrote the same setup-work. Returns the open file (keep it)."""
+    f = open(game / "setup.lock", "a+b")  # noqa: SIM115
+    waited = False
+    while True:
+        try:
+            if os.name == "nt":
+                import msvcrt  # noqa: PLC0415
+
+                f.seek(0)
+                msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl  # noqa: PLC0415
+
+                fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return f
+        except OSError:
+            if not waited:
+                print("setup: another setup of this folder is running: waiting for it", file=sys.stderr)
+                waited = True
+            time.sleep(2)
+
+
 def own_children() -> None:
     """A cancel from the start screen ends this process: its tools (gen.py's workers, the compilers, glslc) must end with
     it. POSIX: our own process group, killed on SIGTERM. Windows: a job object that kills its processes when its last
@@ -161,11 +191,11 @@ def mem_available_gb() -> float:
     return 8.0
 
 
-def shader_jobs() -> int:
+def shader_jobs(share: float = 1.0) -> int:
     """Every core, as far as memory goes: a worker and its glslc take ~0.25 GB (four took 1.0 GB, 06/11/2026) and up
     to 0.75 GB on the largest programs (translate.py). Half the cores, as before, left 8 of 12 idle: 40 min."""
     cores = min(os.cpu_count() or 1, 61) if os.name == "nt" else os.cpu_count() or 1  # Windows' pool limit (#222)
-    return max(1, min(cores, int(mem_available_gb() / 0.75)))
+    return max(1, min(cores, int(mem_available_gb() * share / 0.75)))
 
 
 def mem_gb() -> float:

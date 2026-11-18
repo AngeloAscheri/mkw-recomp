@@ -221,6 +221,9 @@ typedef enum {
     UI_LAUNCH_UPDATE_FETCHING, UI_LAUNCH_UPDATE_FAILED, UI_LAUNCH_UPDATED,
     // the update card (TITLE: the release; DETAIL: the version in use and the download's MB) and the main page's rows
     UI_LAUNCH_UPDATE_TITLE, UI_LAUNCH_UPDATE_DETAIL, UI_LAUNCH_UPDATE_NOW, UI_LAUNCH_WHATS_NEW, UI_LAUNCH_RETRY,
+    // the update set up beside the version played: PREPARING "... %s ..." (tag), PREPARED "%s ..." (tag), RESTART the
+    // button, PREPARE_FAILED "... %s ..." (why; the new version's start sets it up instead)
+    UI_LAUNCH_UPDATE_PREPARING, UI_LAUNCH_UPDATE_PREPARED, UI_LAUNCH_UPDATE_RESTART, UI_LAUNCH_UPDATE_PREPARE_FAILED,
     UI_LAUNCH_FILES_READY_AS, UI_LAUNCH_PAD, UI_LAUNCH_PAD_NONE, UI_LAUNCH_CONFIGURE, UI_LAUNCH_SHORTCUT_ASK,
     UI_LAUNCH_SHORTCUT_MAKE, UI_LAUNCH_NOT_NOW, UI_LAUNCH_KEYS,
     UI_LAUNCH_SETTINGS_NOTE,   // beside the Settings title: changes save at once and apply when the game starts
