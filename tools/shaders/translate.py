@@ -35,9 +35,15 @@ import glsl
 from glsl import int_hints
 from extract import sph_stage, trim
 from program import Decoder
+import shaderc_lib
 from shaderc_lib import Shaderc
 
 GLSLC_STAGE = {"ps": "frag", "vs": "vert", "cs": "comp", "task": "task", "mesh": "mesh"}
+# glslc without optimization: -O was 86 % of glslc's time (366 -> 140 s over 11 561 programs on 12 threads) for SPIR-V
+# 2.5 times larger; the driver optimizes it again (prewarm +27 s on RADV) and the frame's GPU time stayed the same
+# (19.5 -> 19.2 ms replaying cap/race on a GTX 1050 Ti, 18/11/2026). Here, not in shaderc_lib, so the step's key
+# (translator_key) changes and a set-up game translates again.
+GLSLC_O = 0
 _dec = None
 _shaderc: Shaderc | None = None  # libshaderc in this process when found; else one glslc a program
 
@@ -55,6 +61,7 @@ def init(spec: Path = SPEC, glslc: str = GLSLC, validate: bool = True, base: str
     global _dec, GLSLC, VALIDATE, _shaderc, BASE
     _dec = Decoder(spec)
     GLSLC, VALIDATE, BASE = glslc, validate, base
+    shaderc_lib.PERFORMANCE = GLSLC_O
     _shaderc = Shaderc.near(glslc)
 
 
@@ -166,7 +173,7 @@ def compile_check(gl: Path, spv: Path, stage: str) -> str:
             put(spv, code)
     else:
         tmp = spv.with_name(spv.name + ".tmp")
-        r = subprocess.run([GLSLC, "--target-env=vulkan1.3", f"-fshader-stage={GLSLC_STAGE[stage]}", "-O", str(gl),
+        r = subprocess.run([GLSLC, "--target-env=vulkan1.3", f"-fshader-stage={GLSLC_STAGE[stage]}", f"-O{GLSLC_O}", str(gl),
                             "-o", str(tmp)], capture_output=True, text=True, check=False)  # fmt: skip
         err = r.stderr if r.returncode else ""
         if not err:
