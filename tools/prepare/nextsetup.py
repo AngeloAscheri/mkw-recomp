@@ -99,8 +99,15 @@ def promote(game: Path, port: str) -> bool:
         if dst.exists():
             dst.rename(old)
         src.rename(dst)
-        shutil.rmtree(old, ignore_errors=True) if old.is_dir() else old.unlink(missing_ok=True)
     shutil.rmtree(out, ignore_errors=True)
     print(f"setup: the update set up beside the played version ({port}) is now in place", file=sys.stderr)
     print(f"time: promote {time.monotonic() - t0:.1f} s", file=sys.stderr)  # the player waits for it (swap run)
     return True
+
+
+def remove_old(game: Path) -> None:
+    """The played version's outputs promote set aside (<name>.old). Apart from promote: the old spirv/'s 46 297 files
+    took 10 s to delete on the Windows PC (18/11/2026), and prepare.py deletes them beside the swap's other steps."""
+    for name in (*OUTPUTS, *WARMED, STATE):
+        old = game / (name + ".old")
+        shutil.rmtree(old, ignore_errors=True) if old.is_dir() else old.unlink(missing_ok=True)

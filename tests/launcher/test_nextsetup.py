@@ -47,7 +47,9 @@ def test_promote_moves_a_finished_update_in(tmp_path: Path) -> None:
     assert nextsetup.promote(tmp_path, "0.1.13")
     assert (tmp_path / "mkwgame.so").read_bytes() == b"new lib"
     assert json.loads((tmp_path / "setup-state.json").read_text())["port"] == "0.1.13"
-    assert not out.exists() and not (tmp_path / "spirv.old").exists()
+    assert not out.exists() and (tmp_path / "spirv.old").is_dir()  # removed beside the swap's steps
+    nextsetup.remove_old(tmp_path)
+    assert not (tmp_path / "spirv.old").exists() and not (tmp_path / "mkwgame.so.old").exists()
 
 
 def test_promote_drops_an_unfinished_or_other_version(tmp_path: Path) -> None:

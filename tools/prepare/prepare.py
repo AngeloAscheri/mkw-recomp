@@ -17,8 +17,8 @@ Steps, into --game (by default the folder of mkw / mkw.exe):
             tools/shaders/extract.py and translate.py into spirv/
   warm      mkw --prewarm, without the game: the shader libraries of every program pair of the copy into the driver's
             pipeline cache for the first start
-  cleanup   setup-work removed but its obj/ and zig-cache/: the next update compiles only the chunks whose C changed
-            (gamecode.py), and zig does not build its libc again
+  cleanup   setup-work removed but its obj/, zig-cache/ and shaders/: the next update compiles only the chunks whose C
+            changed (gamecode.py), zig does not build its libc again, and extract.py writes only new programs
 
 The copy is loose exefs/ and romfs/ folders, or a .nup package (the Switch 2 dump format, nup.py): --source names the
 package file itself. From a package, exefs/ is extracted, romfs/ extracted (copy) or the package itself
@@ -222,9 +222,11 @@ def warm(game: Path, work: Path, runtime: Path | None = None, out: Path | None =
 
 
 def clear_work(work: Path) -> None:
-    """setup-work emptied but its obj/ and zig-cache/ (the next update compiles only the chunks whose C changed)."""
+    """setup-work emptied but its obj/ and zig-cache/ (the next update compiles only the chunks whose C changed) and
+    shaders/ (extract.py's output, named by content: the next update's extract.py writes only new programs, and
+    nothing deletes its ~23 000 files, 159 MB)."""
     for p in work.glob("*"):
-        if p.is_dir() and p.name not in ("obj", ZIG_CACHE):
+        if p.is_dir() and p.name not in ("obj", ZIG_CACHE, "shaders"):
             shutil.rmtree(p, ignore_errors=True)
 
 
@@ -287,6 +289,8 @@ def main() -> None:
         nextsetup.lower_priority()
     else:  # the update an earlier --next run set up beside the played version, now that this one runs
         nextsetup.promote(game, args.port)
+    # the played version's outputs promote set aside, deleted beside this run's steps (joined at its end)
+    removing = Beside("remove-old", lambda _: nextsetup.remove_old(game)) if not args.next else None
     state = load_state(game)
     dest = game  # where the outputs the game reads, and the state, are written
     if args.next:  # beside the played version's, the state with them (nextsetup.py)
@@ -393,7 +397,7 @@ def main() -> None:
         # setup-next/spirv's links (17 s on the Windows PC) and the shaders step go beside generate and compile
         # (beside.py): the shaders start with generate, translate.py waits for its end and for the links
         seeding = Beside("seed", lambda _: nextsetup.seed(game)) if args.next else None
-        code_ready, beside = threading.Event(), None
+        code_ready, beside, tidying = threading.Event(), None, None
 
         def shaders_job(b: Beside) -> None:
             def before_translate() -> None:
@@ -418,6 +422,11 @@ def main() -> None:
                 code_ready.set()
             if step == "warm" and seeding:
                 seeding.join()
+            # what cleanup removes, here beside translate.py once compile is done: the swap's cleanup spent 12-17 s
+            # in it at the player's first start on the Windows PC, and beside warm it slowed that by 11 s (18/11/2026);
+            # generated/ comes back if a compile needs it (regenerate_if_cleaned)
+            if step == "shaders" and args.next:
+                tidying = Beside("clear-work", lambda _: clear_work(work))
             # cleanup after the swap, by the new version's own run; warm here, into setup-next/: the Windows PC's
             # swap run spent 106 s in it at the player's first start (18/11/2026)
             if args.next and step == "cleanup":
@@ -487,13 +496,11 @@ def main() -> None:
             c = os.times()  # the CPU of its tools (0 on Windows): whether a step leaves cores idle (H1, build/updates)
             cpu = c.children_user + c.children_system - c_step.children_user - c_step.children_system
             print(f"time: {step} {time.monotonic() - t_step:.1f} s, cpu {cpu:.1f} s", file=sys.stderr)
-        if seeding:
-            seeding.join()
+        for b in (seeding, removing, tidying):
+            if b:
+                b.join()
         print(f"time: setup {time.monotonic() - t_all:.1f} s", file=sys.stderr)
         if args.next:  # finished: the next start of the new version moves it into place (nextsetup.promote)
-            # what cleanup removes, here: the swap's cleanup spent 12-17 s in it at the player's first start on the
-            # Windows PC (18/11/2026); generated/ comes back if a compile needs it (regenerate_if_cleaned)
-            clear_work(work)
             state["port"], state["ready"] = args.port, True
             save_state(dest, state)
         emit("done")
