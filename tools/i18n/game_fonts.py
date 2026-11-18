@@ -173,10 +173,20 @@ def build(font_dir: Path, text: str, out: Path) -> list[str]:
     import io
 
     lines = []
+    sha = hashlib.sha256
+    tool = sha(Path(__file__).read_bytes()).hexdigest()[:16]
     for name, lack in missing(font_dir, text).items():
         if not lack:
             continue
         orig = read_font(font_dir, name)
+        rel = f"Font/{name}.bfotf.zs"
+        # the setup runs this every time (~6 s a font): the last result kept while the font, letters and tool match
+        key = f"{sha(orig).hexdigest()} {lack} {tool}\n"
+        key_path = out / f"{rel}.key"
+        if (out / rel).is_file() and key_path.is_file() and key_path.read_text(encoding="utf-8") == key:
+            data = (out / rel).read_bytes()
+            lines.append(f"{rel}\t{len(data)}\t{sha(data).hexdigest()}\t{sha(orig).hexdigest()}")
+            continue
         font = TTFont(io.BytesIO(decrypt(zstd.decompress(orig))))
         added = compose(font, lack)
         left = "".join(c for c in lack if c not in added)
@@ -187,10 +197,9 @@ def build(font_dir: Path, text: str, out: Path) -> list[str]:
         buf = io.BytesIO()
         font.save(buf)
         data = zstd.compress(encrypt(buf.getvalue()))
-        rel = f"Font/{name}.bfotf.zs"
         (out / rel).parent.mkdir(parents=True, exist_ok=True)
         (out / rel).write_bytes(data)
-        sha = hashlib.sha256
+        key_path.write_text(key, encoding="utf-8")
         lines.append(f"{rel}\t{len(data)}\t{sha(data).hexdigest()}\t{sha(orig).hexdigest()}")
         print(f"{name}: {''.join(added)} composed", file=sys.stderr)
     return lines
