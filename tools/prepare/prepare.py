@@ -482,8 +482,16 @@ def main() -> None:
                     remove_stale(romfs, romfs_src, set(nup.files("romfs")), version.name)
                     ini_set(game / "mkw.ini", "romfs", "romfs")
                 elif args.romfs == "copy":
-                    copy_tree(romfs_src, romfs, version.romfs_files, version.name)
+                    previous = state.get("romfs_copy_in_progress", state["done"].get("romfs", key))
+                    verify_existing = previous != key
+                    # An interrupted version switch can leave files from both versions. Persist that before
+                    # writing any files so even a switch back checks their bytes instead of skipping the copy.
+                    state["romfs_copy_in_progress"] = None if verify_existing else key
+                    state["done"].pop("romfs", None)
+                    save_state(game, state)
+                    copy_tree(romfs_src, romfs, version.romfs_files, version.name, verify_existing=verify_existing)
                     ini_set(game / "mkw.ini", "romfs", "romfs")
+                    del state["romfs_copy_in_progress"]
                 else:
                     ini_set(game / "mkw.ini", "romfs", str(romfs_src))
             elif step == "generate":
