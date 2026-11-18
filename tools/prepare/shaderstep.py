@@ -98,11 +98,14 @@ def shaders(
     before_translate()
     n = jobs()
     print(f"shaders: translate.py with {n} workers", file=sys.stderr)
+    # --next: the played version's outputs linked program by program in translate.py's workers; nextsetup.seed linked
+    # all 46 297 files first, one after another (46 s on the Windows PC, 18/11/2026)
+    base = ["--base", str(game / "spirv")] if dest != game and (game / "spirv").is_dir() else []
     while True:
         try:
             run([sys.executable, str(ROOT / "tools/shaders/translate.py"), "--shaders", str(sh),
                  "--out", str(dest / "spirv"), "--glslc", glslc, "--no-validate", "--progress", "--jobs", str(n),
-                 "--spec", str(spec)], env=tool_env(glslc), progress_prefix="progress",
+                 "--spec", str(spec), *base], env=tool_env(glslc), progress_prefix="progress",
                 on_progress=on_progress)  # fmt: skip
             break
         except Failed as e:

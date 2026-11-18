@@ -206,8 +206,9 @@ def warm(game: Path, work: Path, runtime: Path | None = None, out: Path | None =
     and where its caches go; the game folder's mkw.ini still picks the GPU."""
     exe = (runtime or game) / ("mkw.exe" if os.name == "nt" else "mkw")
     env = dict(os.environ, MKW_LOG_NAME="warm", MKW_GAME_DIR=str(game))
-    if out:
-        env |= {"MKW_SPIRV": str(out / "spirv"), "MKW_PIPELINE_CACHE": str(out / "pipeline-cache.bin")}
+    if out:  # its own spirv/ when the update translated (nextsetup.seed)
+        spirv = out / "spirv" if (out / "spirv").is_dir() else game / "spirv"
+        env |= {"MKW_SPIRV": str(spirv), "MKW_PIPELINE_CACHE": str(out / "pipeline-cache.bin")}
     emit("progress", 0, 1)
     try:
         p = subprocess.run([str(exe), "--prewarm"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
@@ -394,8 +395,8 @@ def main() -> None:
         if "compile" in STEPS and "compile" not in state["done"]:
             need += BUILD_BYTES
         check_space(game, need)
-        # setup-next/spirv's links (17 s on the Windows PC) and the shaders step go beside generate and compile
-        # (beside.py): the shaders start with generate, translate.py waits for its end and for the links
+        # setup-next/'s cache copies and the shaders step go beside generate and compile
+        # (beside.py): the shaders start with generate, translate.py waits for its end
         seeding = Beside("seed", lambda _: nextsetup.seed(game)) if args.next else None
         code_ready, beside, tidying = threading.Event(), None, None
 
@@ -415,7 +416,8 @@ def main() -> None:
                 beside = Beside("shaders", shaders_job)
             # generate done or skipped: translate.py may take the cores, beside compile when an earlier setup left its
             # objects (an update, a few chunks); a first setup's 360 compiles and translate.py would both size their
-            # jobs by the same free memory
+            # jobs by the same free memory. translate.py beside generate too gained nothing on the 6-thread Windows
+            # PC (344 and 346 s against 334, up-win-h1e/h1f, 18/11/2026): the two only share the same cores
             if step == "compile" and "compile" in state["done"]:
                 code_ready.set()
             if step == "shaders":

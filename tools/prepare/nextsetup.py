@@ -46,19 +46,11 @@ def lower_priority() -> None:
 
 
 def seed(game: Path) -> Path:
-    """setup-next/ with spirv/ linked to the current one; returns the folder. Links already there stay (a resumed run)."""
+    """setup-next/ with copies of the played version's caches; returns the folder. Its spirv/ is translate.py's (--base
+    links the played one's outputs program by program); with no shaders step there is none, and promote keeps the
+    played one."""
     out = next_dir(game)
-    spirv, dst = game / "spirv", out / "spirv"
-    dst.mkdir(parents=True, exist_ok=True)
-    if spirv.is_dir():
-        have = {p.name for p in dst.iterdir()}
-        for p in spirv.iterdir():
-            if p.name in have or not p.is_file():
-                continue
-            try:
-                os.link(p, dst / p.name)
-            except OSError:
-                shutil.copy2(p, dst / p.name)
+    out.mkdir(parents=True, exist_ok=True)
     for name in WARMED:
         if (game / name).is_file() and not (out / name).exists():
             shutil.copy2(game / name, out / name)
