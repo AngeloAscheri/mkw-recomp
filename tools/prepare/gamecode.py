@@ -5,6 +5,7 @@ earlier objects. Not run on its own.
 """
 
 import hashlib
+import re
 import subprocess
 import sys
 import time
@@ -87,12 +88,25 @@ def compile_game(
     base_cpu = common_key(cc, sorted(cpu.rglob("*.h")))
     gen_headers = sorted(gen.rglob("*.h"))
     compiled: list[Path] = []
+    legacy = legacy_compilers(cc, game)
+    old_all = [common_key(cc, sorted((ROOT / "runtime").rglob("*.h")) + gen_headers, compiler=c) for c in legacy]
+    old_cpu = [common_key(cc, sorted(cpu.rglob("*.h")), compiler=c) for c in legacy]
 
     def one(job: tuple[Path, Path, list[str]]) -> str:
         src, out, f = job
         key = object_key(base_all if src.parent == obj else chunk_base(cc, base_cpu, gen_headers, src), src, f, gen)
         stamp = out.with_suffix(".key")
-        if out.is_file() and stamp.is_file() and stamp.read_text() == key:
+        if out.is_file() and stamp.is_file() and (had := stamp.read_text()) == key:
+            return ""
+        if (
+            out.is_file()
+            and stamp.is_file()
+            and any(
+                had == object_key(a if src.parent == obj else chunk_base(cc, c, gen_headers, src), src, f, gen)
+                for a, c in zip(old_all, old_cpu, strict=True)
+            )
+        ):
+            stamp.write_text(key)  # an object of the same compiler under its key before 0.1.14
             return ""
         compiled.append(src)  # list.append is atomic across the pool's threads
         stamp.unlink(missing_ok=True)
@@ -174,10 +188,24 @@ def compiler_id(cc: list[str]) -> str:
     return "\n".join([*keep, *cc[1:]])
 
 
-def common_key(cc: list[str], headers: list[Path], base: str = "") -> str:
+def legacy_compilers(cc: list[str], game: Path) -> list[str]:
+    """The compiler as releases up to 0.1.13 keyed it (its whole `--version`, InstalledDir and all), for each folder
+    the played version's zig could have run from: the game folder's setup/ and this package's. A player's first
+    update to the new key (dacd613) reuses the objects of the same compiler instead of compiling all ~360 chunks
+    once more (9 min on the 6-thread Windows PC). Only Windows matches: the AppImage's mount there was a new
+    /tmp/.mount_* each run. Drop it once 0.1.13 is no longer updated from."""
+    out = subprocess.run([*cc, "--version"], capture_output=True, **UTF8, check=False).stdout
+    if "InstalledDir:" not in out:
+        return []
+    exe = "zig.exe" if Path(cc[0]).name.endswith(".exe") else "zig"
+    dirs = {str(d) for d in (game / "setup/zig", package_dir(game) / "zig") if (d / exe).is_file()}
+    return [re.sub(r"(?m)^InstalledDir: .*$", lambda _, d=d: f"InstalledDir: {d}", out) for d in sorted(dirs)]
+
+
+def common_key(cc: list[str], headers: list[Path], base: str = "", compiler: str = "") -> str:
     """What an object depends on besides its own C and flags: the compiler (or `base`, a key that already holds it)
-    and every header it can include."""
-    h = hashlib.sha256(base.encode() if base else compiler_id(cc).encode())
+    and every header it can include. `compiler`: that compiler's id instead of compiler_id(cc)."""
+    h = hashlib.sha256(base.encode() if base else (compiler or compiler_id(cc)).encode())
     for p in headers:
         h.update(p.relative_to(p.parents[1]).as_posix().encode() + p.read_bytes())
     return h.hexdigest()

@@ -5,6 +5,7 @@ different chunk each time on an i7-13700KF). Seconds, no game.
 Usage: uv run pytest tests/launcher/test_gamecode.py
 """
 
+import subprocess
 import sys
 from pathlib import Path
 
@@ -70,3 +71,19 @@ def test_compiler_id_leaves_out_the_package_path_and_host(tmp_path: Path) -> Non
         ids.append(gamecode.compiler_id([str(cc), "cc", "-target", "x86_64-linux-gnu"]))
     assert ids[0] == ids[1]
     assert "22.1.8" in ids[0] and "x86_64-linux-gnu" in ids[0]
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="a shell script stands in for the compiler")
+def test_legacy_compiler_is_the_played_folders_whole_version(tmp_path: Path) -> None:
+    """An update run from the new package apart (prepare.py --next) still finds the key 0.1.13 gave the played folder's
+    objects: the whole `--version` of the same zig, InstalledDir the game folder's setup/zig."""
+    out = {}
+    for where in ("game/setup/zig", "new/setup/zig"):
+        cc = tmp_path / where / "zig"
+        cc.parent.mkdir(parents=True)
+        cc.write_text(f"#!/bin/sh\necho 'clang version 22.1.8'\necho 'InstalledDir: {cc.parent}'\n")
+        cc.chmod(0o755)
+        out[where] = subprocess.run([str(cc), "cc", "--version"], capture_output=True, text=True, check=True).stdout
+    new = [str(tmp_path / "new/setup/zig/zig"), "cc"]
+    assert gamecode.legacy_compilers(new, tmp_path / "game") == [out["game/setup/zig"]]
+    assert gamecode.legacy_compilers(new, tmp_path / "elsewhere") == []
