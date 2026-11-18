@@ -44,8 +44,10 @@ totk-pc-recomp, MIT; −10.6 % recorder instructions on Steam Deck; no measurabl
     per-thread placement (CPU Sets, or each frame thread's own mask) and then the same A/B on a hybrid CPU.
   - **Few P-cores**: on by default only with 8 fast processors left besides the replay core, a hypothesis; no CPU
     with 2-4 P-cores (i5-1235U, Lunar Lake, Ryzen AI 9 HX 370) has been measured either way.
-  - `vk submit` and `vk present` start on the replay thread after it pins itself and share its processor: their own
-    A/B.
+  - `vk submit` and `vk present` started on the replay thread after it pinned itself and shared its processor; now
+    with the frame's threads (`MKW_SUBMIT_APART`): a part waits 11-13 us for its `vkQueueSubmit2` instead of 34-39,
+    and the replay thread sends 1.5-2.3 % of the parts itself instead of 9-10 % (in-run A/B and its inverted twin,
+    i7-14700F, 18/11/2026). The frame the same there, at the 60 fps cap; a CPU-bound machine (the 660M) to measure.
 
   A warning for whoever measures this (16/11/2026): every race up to 17:31 took 38-41 ms a frame and every one from
   17:33 on 19-22 ms, with no change to the code; that was the GPU clock (the item above), and comparing a `taskset`
