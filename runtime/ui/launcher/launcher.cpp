@@ -26,7 +26,8 @@
 // MKW_LAUNCHER_EXIT_AFTER_SETUP=1 quits when that setup ends, after saving the page as <shot out>-end.png (its result
 // is in the log); MKW_LAUNCHER_SHOT then takes its shot without quitting. During a shot the update check runs only
 // with MKW_UPDATE_AS (tools/prepare/update.py: compare as that version). MKW_LAUNCHER_UPDATE=1 takes the update offered
-// at once, as its button does; MKW_LAUNCHER_BACKUP=1 and MKW_LAUNCHER_UNDO=1 press the Tools page's Back up and Undo
+// at once, as its button does, and MKW_LAUNCHER_RESTART=1 its Restart with it once it is set up beside;
+// MKW_LAUNCHER_BACKUP=1 and MKW_LAUNCHER_UNDO=1 press the Tools page's Back up and Undo
 // update once (Undo confirmed too; MKW_LAUNCHER_UNDO=ask leaves its dialog open, for a shot). The last run's notice (launcher_lastrun.h) is read during a shot only with
 // MKW_LAUNCHER_LASTRUN=1.
 #include <SDL3/SDL.h>
@@ -531,7 +532,8 @@ static void update_card(float w) {
             snprintf(text, sizeof text, menu_text(UI_LAUNCH_UPDATE_PREPARE_FAILED), u.error);
             ImGui::TextColored(col4(LOOK_HEADING), "%s", text);
         }
-        if (ImGui::Button(menu_text(UI_LAUNCH_UPDATE_RESTART)) && update_apply(L.exe_dir))
+        bool press = ImGui::Button(menu_text(UI_LAUNCH_UPDATE_RESTART)) || getenv("MKW_LAUNCHER_RESTART");
+        if (press && update_apply(L.exe_dir))
             L.relaunch = 1, L.result = LAUNCHER_QUIT;
     } else {
         snprintf(text, sizeof text, menu_text(UI_LAUNCH_UPDATE_FETCHING), u.tag);
