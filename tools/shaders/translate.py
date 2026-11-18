@@ -237,9 +237,9 @@ def main() -> None:
             if why != "ok":
                 failed.setdefault(why, []).append(sha)
     # The work list per reason, for the next translator change: <out>/failed.tsv (reason, programs).
-    with (args.out / "failed.tsv").open("w") as f:
-        for why, shas in sorted(failed.items(), key=lambda x: -len(x[1])):
-            f.write(f"{why}\t{' '.join(shas)}\n")
+    # put: an output folder seeded with hard links to the played version's (prepare.py --next) must not write through
+    rows = sorted(failed.items(), key=lambda x: -len(x[1]))
+    put(args.out / "failed.tsv", "".join(f"{why}\t{' '.join(shas)}\n" for why, shas in rows))
     ok = results.pop("ok", 0)
     print(f"{len(jobs)} programs: {ok} valid SPIR-V ({ok / max(1, len(jobs)):.1%})")
     for why, n in results.most_common(args.top):
