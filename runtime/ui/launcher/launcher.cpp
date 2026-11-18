@@ -201,7 +201,7 @@ static bool pad_power(int i, InputPower *w, char *text, int size) {
     snprintf(w->name, sizeof w->name, "%s", n ? n : "");
     int pct = -1;
     SDL_PowerState st = SDL_GetGamepadPowerInfo(g, &pct);
-    input_power_from_sdl(st, pct, SDL_GetGamepadID(g), w);
+    input_power_from_sdl(st, pct, SDL_GetGamepadID(g), i, w);
     input_power_text(w, text, size);
     return true;
 }
