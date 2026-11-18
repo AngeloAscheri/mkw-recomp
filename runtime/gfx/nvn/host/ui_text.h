@@ -5,6 +5,8 @@
 typedef enum {
     // Software keyboard
     UI_SWKBD_DEFAULT_NAME,   // text the entry starts with when the game gives none, so a controller can confirm it
+    // The on-screen number pad of a digits-only request (ui/menu/text_entry.cpp), in the menu language
+    UI_KEYPAD_OK, UI_KEYPAD_CANCEL, UI_KEYPAD_DELETE,
 
     // Menu: window, tabs, bottom row. UI_MENU_FIRST..UI_MENU_LAST_ID carry English and Russian texts.
     UI_MENU_FIRST,

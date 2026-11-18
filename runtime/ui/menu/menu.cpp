@@ -25,6 +25,7 @@
 #include "ui/menu/menu_notice.h"
 #include "ui/menu/settings_tabs.h"
 #include "ui/menu/option_rows.h"
+#include "ui/menu/text_entry.h"
 
 extern "C" {
 #include "cfg.h"
@@ -37,6 +38,7 @@ extern "C" {
 #include "sysinfo.h"
 #include "ui/menu/menu.h"
 #include "ui_text.h"
+#include "plugin/plugin.h"
 // host.h and vk.h pull in cpu.h, which is C only: the functions the menu needs from them, as declared there.
 void rt_log(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 void vk_queue_lock(void);
@@ -72,10 +74,11 @@ static void set_open(int open) { change_open(open); }
 static int g_failed_flag();
 extern "C" int menu_is_open(void) { return g_open.load(std::memory_order_relaxed); }
 extern "C" void menu_toggle(void) {
-    if (!g_failed_flag()) change_open(-1);
+    if (!g_failed_flag() && !text_entry_up()) change_open(-1);   // the number pad is modal, as the applet
 }
 
-// ---- events from the window adapter, queued while the menu is open; the present path hands them to ImGui
+// ---- events from the window adapter, queued while the menu or the number pad is up; the present path hands them to
+// ImGui
 enum { EV_KEY, EV_POS, EV_BUTTON, EV_WHEEL, EV_FOCUS, EV_MAX = 256 };
 struct Ev { int type, a, b; float x, y; };
 static PlatMutex ev_lock = PLAT_MUTEX_INIT;
@@ -83,7 +86,7 @@ static Ev ev_q[EV_MAX];
 static int ev_n;
 
 static void push(Ev e) {
-    if (!menu_is_open()) return;
+    if (!menu_is_open() && !text_entry_up()) return;
     plat_mutex_lock(&ev_lock);
     if (e.type == EV_POS && ev_n && ev_q[ev_n - 1].type == EV_POS) ev_q[ev_n - 1] = e;   // only the newest position
     else if (ev_n < EV_MAX) ev_q[ev_n++] = e;
@@ -122,6 +125,7 @@ static const struct { int bit; ImGuiKey key; } pad_keys[] = {
     {B_Y, ImGuiKey_GamepadFaceLeft}, {B_L, ImGuiKey_GamepadL1}, {B_R, ImGuiKey_GamepadR1},
     {B_ZL, ImGuiKey_GamepadL2}, {B_ZR, ImGuiKey_GamepadR2}, {B_LEFT, ImGuiKey_GamepadDpadLeft},
     {B_UP, ImGuiKey_GamepadDpadUp}, {B_RIGHT, ImGuiKey_GamepadDpadRight}, {B_DOWN, ImGuiKey_GamepadDpadDown},
+    {B_PLUS, ImGuiKey_GamepadStart},   // the number pad's OK
 };
 static uint64_t pad_prev;   // buttons at the last frame; a button held when the menu opened counts once released
 static int stick_dir = -1;  // the D-pad button the left stick holds, -1 none
@@ -618,6 +622,7 @@ extern "C" int menu_overlay_frame(uint64_t frame, const MenuTarget *t, const cha
     if (g_test.next_set < g_test.n_sets && frame >= g_test.sets[g_test.next_set].frame) test_apply_sets(frame);
     if (g_perf_save.exchange(0)) cfg_save();
     perf_tick(plat_now_ns(), frame, t);
+    text_entry_test(frame);
     classic_poll();   // MKW_CLASSIC_GP or _VS changed: the cups and routes in the game's memory (core/hacks/classic.c)
     bool open = g_open.load(std::memory_order_relaxed);
     if (!open) {
@@ -628,7 +633,7 @@ extern "C" int menu_overlay_frame(uint64_t frame, const MenuTarget *t, const cha
             settings_select(0);
             set_open(1);
             open = true;
-        } else if (!g_perf_mode && !menu_notice_shown()) {
+        } else if (!g_perf_mode && !menu_notice_shown() && !text_entry_up() && !plugins_overlay_wanted()) {
             return 0;
         }
     }
@@ -667,10 +672,16 @@ extern "C" int menu_overlay_frame(uint64_t frame, const MenuTarget *t, const cha
     double dt = g_last_ns ? (t0 - g_last_ns) / 1e9 : 1 / 60.0;
     io.DeltaTime = (float)(dt < 1e-4 ? 1e-4 : dt > 0.1 ? 0.1 : dt);
     g_last_ns = t0;
-    if (!open) {   // the overlay alone: no input reaches ImGui
+    bool entry = text_entry_up();
+    int entry_new = text_entry_opened();   // what was held or queued before the pad went up does not press its keys
+    if (entry_new && !reset) {
+        io.ClearInputKeys();
+        io.ClearInputMouse();
+    }
+    if (!open && !entry) {   // the overlay alone: no input reaches ImGui
     } else if (g_test.page < 0) {
         drain_events(io);
-        pad_events(io, reset);
+        pad_events(io, reset || entry_new);
     } else {   // the test hook's pages: the user's input in a background test window must not change settings
         plat_mutex_lock(&ev_lock);
         ev_n = 0;
@@ -679,9 +690,11 @@ extern "C" int menu_overlay_frame(uint64_t frame, const MenuTarget *t, const cha
     ImGui_ImplVulkan_NewFrame();
     ui_id_check("in-game menu");
     ImGui::NewFrame();
+    plugins_overlay_draw((float)t->width, (float)t->height, scale);
     if (open) layout_menu(t->width, t->height, scale);
     perf_draw(t, scale);
     menu_notice_draw((float)t->width, scale);
+    text_entry_draw((float)t->width, (float)t->height, scale);
     ImGui::Render();
     if (open) g_save_pending = opt_save_tick(0);
     g_cost_ns += plat_now_ns() - t0;

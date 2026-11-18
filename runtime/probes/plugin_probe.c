@@ -2,7 +2,8 @@
 // builds as the enabled mod plugin-probe. Loads it the way rt_boot does (plugins_load, ldr_load, the game-loaded
 // callbacks, the seal), then calls guest code both ways: through main's GOT slot of nn::os::GetSystemTick (the
 // override by name, chained to the runtime's clock) and through the game's own definition of it (the override by
-// address, which calls the translated original).
+// address, which calls the translated original). The plugin's overlay drawing must be on (overlay_set from its init
+// accepted, from the game-loaded callback refused).
 #include <stdio.h>
 #include <string.h>
 
@@ -22,6 +23,7 @@ int probe_plugin(void) {
     hostfn_seal();
     plugins_started();
 
+    CHECK(plugins_overlay_wanted(), "the plugin's overlay is not on (overlay_set from init refused, or accepted late)");
     Cpu *c = plat_aligned_alloc(sizeof(Cpu), 64);
     memset(c, 0, sizeof *c);
     uint8_t *stack = mem_kernel_alloc(0x10000, 16);

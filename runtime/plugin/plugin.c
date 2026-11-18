@@ -15,6 +15,7 @@
 #include "plugin.h"
 #include "version.h"
 #include "platform/platform.h"
+#include "ui/menu/menu.h"
 
 _Static_assert(offsetof(MkwCpu, x) == offsetof(Cpu, x), "MkwCpu.x");
 _Static_assert(offsetof(MkwCpu, sp) == offsetof(Cpu, sp), "MkwCpu.sp");
@@ -113,6 +114,14 @@ static uint64_t api_call_original(MkwCpu *m) {
 
 static MkwCpu *api_current_cpu(void) { return (MkwCpu *)kern_cpu(); }
 
+static int api_overlay_set(MkwOverlayFn draw, void *user) {
+    if (!in_init || !plugin_overlay_add(draw, user)) {
+        rt_log("plugin: overlay_set refused: only from mkw_plugin_init, with a function, at most 16");
+        return 0;
+    }
+    return 1;
+}
+
 static const MkwPluginApi api_template = {
     .size = sizeof(MkwPluginApi),
     .version = MKW_PLUGIN_API_VERSION,
@@ -130,6 +139,9 @@ static const MkwPluginApi api_template = {
     .current_cpu = api_current_cpu,
     .core_away = kern_core_away,
     .core_back = kern_core_back,
+    .notice = menu_notice,
+    .overlay_set = api_overlay_set,
+    .overlay_show = plugin_overlay_show,
 };
 
 // A plugin that declines or fails to load is told to the player too: the mod they enabled does nothing this run.

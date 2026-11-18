@@ -38,6 +38,20 @@ typedef void (*MkwGuestFn)(MkwCpu *c);
 // reading a guest structure costs nothing.
 static inline void *mkw_guest_ptr(uint64_t guest) { return (void *)(uintptr_t)guest; }
 
+// What a plugin's overlay drawing gets each frame (overlay_set). Pixels of the window's picture, origin top left.
+// Colours are 0xRRGGBBAA. The text is the runtime menu's font, UTF-8.
+typedef struct MkwOverlay {
+    uint32_t size;          // sizeof(MkwOverlay) of the runtime: a field is there when its offset is below size
+    float width, height;    // the picture
+    float scale;            // the menu's UI scale: 1 at 1080 lines
+    float line_height;      // of the text
+    void (*rect)(float x0, float y0, float x1, float y1, uint32_t rgba, float rounding);   // filled
+    void (*text)(float x, float y, uint32_t rgba, const char *utf8);
+    void (*text_size)(const char *utf8, float *w, float *h);
+} MkwOverlay;
+
+typedef void (*MkwOverlayFn)(const MkwOverlay *o, void *user);
+
 typedef struct MkwPluginApi {
     uint32_t size;      // sizeof(MkwPluginApi) of the runtime: a field is there when its offset is below size
     uint32_t version;   // MKW_PLUGIN_API_VERSION of the runtime
@@ -82,6 +96,16 @@ typedef struct MkwPluginApi {
     MkwCpu *(*current_cpu)(void);    // the calling guest thread's MkwCpu, NULL on other threads
     int (*core_away)(void);          // before a blocking host wait: gives the virtual core up ...
     void (*core_back)(int *away);    // ... and after it takes it back (away: core_away's result)
+
+    // ---- the screen, any thread
+    // A line at the top middle of the picture for that many seconds, menu open or not; a newer notice (the plugin's or
+    // the runtime's) replaces it.
+    void (*notice)(const char *utf8, int seconds);
+    // A drawing of the plugin's over the game picture, under the runtime's menu and windows: draw runs on the present
+    // thread once per shown frame while overlay_show(draw, 1) is on. It runs no guest code and does not wait (it copies
+    // what it shows under a lock of its own). overlay_set only from mkw_plugin_init; 1 done, 0 refused.
+    int (*overlay_set)(MkwOverlayFn draw, void *user);
+    void (*overlay_show)(MkwOverlayFn draw, int on);
 } MkwPluginApi;
 
 // Exported by the plugin. api_version is the runtime's (api->version); size tells which fields exist. Return 0 to stay

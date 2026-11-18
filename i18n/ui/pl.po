@@ -8,6 +8,21 @@ msgctxt "UI_SWKBD_DEFAULT_NAME"
 msgid "Player"
 msgstr "Gracz"
 
+#. The on-screen number pad the game opens to ask for a number: its confirm key (keep it short, it fits a small key)
+msgctxt "UI_KEYPAD_OK"
+msgid "OK"
+msgstr "OK"
+
+#. The on-screen number pad: the wide button under the keys that closes it without a number
+msgctxt "UI_KEYPAD_CANCEL"
+msgid "Cancel"
+msgstr "Anuluj"
+
+#. The on-screen number pad: the key that erases the last digit (keep it short, it fits a small key)
+msgctxt "UI_KEYPAD_DELETE"
+msgid "Delete"
+msgstr "Usuń"
+
 msgctxt "UI_MENU_TITLE"
 msgid "Settings"
 msgstr "Ustawienia"
