@@ -2243,19 +2243,19 @@ msgstr "更新"
 
 msgctxt "UI_LAUNCH_UPDATE_PREPARING"
 msgid "Setting up %s in the background. You can keep playing meanwhile."
-msgstr ""
+msgstr "正在后台准备 %s。在此期间可以继续游戏。"
 
 msgctxt "UI_LAUNCH_UPDATE_PREPARED"
 msgid "%s is ready"
-msgstr ""
+msgstr "%s 已准备就绪"
 
 msgctxt "UI_LAUNCH_UPDATE_RESTART"
 msgid "Restart with it"
-msgstr ""
+msgstr "用它重新启动"
 
 msgctxt "UI_LAUNCH_UPDATE_PREPARE_FAILED"
 msgid "It could not be set up in advance (%s): it will be set up when it starts."
-msgstr ""
+msgstr "无法提前准备（%s）：将在启动时准备。"
 
 #. Opens the release's notes on GitHub.
 msgctxt "UI_LAUNCH_WHATS_NEW"

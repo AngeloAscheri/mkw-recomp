@@ -2279,19 +2279,19 @@ msgstr "업데이트"
 
 msgctxt "UI_LAUNCH_UPDATE_PREPARING"
 msgid "Setting up %s in the background. You can keep playing meanwhile."
-msgstr ""
+msgstr "%s을(를) 백그라운드에서 준비하는 중입니다. 그동안 계속 플레이할 수 있습니다."
 
 msgctxt "UI_LAUNCH_UPDATE_PREPARED"
 msgid "%s is ready"
-msgstr ""
+msgstr "%s 준비 완료"
 
 msgctxt "UI_LAUNCH_UPDATE_RESTART"
 msgid "Restart with it"
-msgstr ""
+msgstr "이 버전으로 다시 시작"
 
 msgctxt "UI_LAUNCH_UPDATE_PREPARE_FAILED"
 msgid "It could not be set up in advance (%s): it will be set up when it starts."
-msgstr ""
+msgstr "미리 준비하지 못했습니다(%s). 시작할 때 준비됩니다."
 
 #. Opens the release's notes on GitHub.
 msgctxt "UI_LAUNCH_WHATS_NEW"

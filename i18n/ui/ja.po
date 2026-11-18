@@ -2260,19 +2260,19 @@ msgstr "更新する"
 
 msgctxt "UI_LAUNCH_UPDATE_PREPARING"
 msgid "Setting up %s in the background. You can keep playing meanwhile."
-msgstr ""
+msgstr "%s をバックグラウンドで準備しています。その間もプレイを続けられます。"
 
 msgctxt "UI_LAUNCH_UPDATE_PREPARED"
 msgid "%s is ready"
-msgstr ""
+msgstr "%s の準備ができました"
 
 msgctxt "UI_LAUNCH_UPDATE_RESTART"
 msgid "Restart with it"
-msgstr ""
+msgstr "このバージョンで再起動"
 
 msgctxt "UI_LAUNCH_UPDATE_PREPARE_FAILED"
 msgid "It could not be set up in advance (%s): it will be set up when it starts."
-msgstr ""
+msgstr "事前に準備できませんでした（%s）。起動時に準備されます。"
 
 #. Opens the release's notes on GitHub.
 msgctxt "UI_LAUNCH_WHATS_NEW"

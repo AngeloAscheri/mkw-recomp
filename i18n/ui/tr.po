@@ -2346,19 +2346,19 @@ msgstr "Güncelle"
 
 msgctxt "UI_LAUNCH_UPDATE_PREPARING"
 msgid "Setting up %s in the background. You can keep playing meanwhile."
-msgstr ""
+msgstr "%s arka planda hazırlanıyor. Bu sırada oynamaya devam edebilirsin."
 
 msgctxt "UI_LAUNCH_UPDATE_PREPARED"
 msgid "%s is ready"
-msgstr ""
+msgstr "%s hazır"
 
 msgctxt "UI_LAUNCH_UPDATE_RESTART"
 msgid "Restart with it"
-msgstr ""
+msgstr "Bununla yeniden başlat"
 
 msgctxt "UI_LAUNCH_UPDATE_PREPARE_FAILED"
 msgid "It could not be set up in advance (%s): it will be set up when it starts."
-msgstr ""
+msgstr "Önceden hazırlanamadı (%s): başlatılırken hazırlanacak."
 
 #. Opens the release's notes on GitHub.
 msgctxt "UI_LAUNCH_WHATS_NEW"
