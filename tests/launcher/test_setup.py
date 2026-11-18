@@ -598,3 +598,18 @@ def test_space_checked_before_copying(tmp_path: Path, monkeypatch: pytest.Monkey
     with pytest.raises(gamecopy.Failed) as e:
         gamecopy.check_space(tmp_path / "game", 5 * gamecopy.GIB)
     assert e.value.code == "space" and e.value.detail.startswith("5.0 GB, 2.0 GB free in ")
+
+
+def test_keys_ignore_files_the_package_does_not_ship(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    # a package unzipped by hand over an older one keeps the files it moved (0.1.13's sm86/translate/flow.py): only
+    # the listed ones count, so the update does not redo the shaders
+    import shaderstep  # noqa: PLC0415
+
+    (tmp_path / "a.py").write_text("new")
+    (tmp_path / "stale.py").write_text("old")
+    monkeypatch.setattr(shaderstep, "ROOT", tmp_path)
+    monkeypatch.setattr(shaderstep, "SHIPPED", tmp_path / "FILES")
+    files = [tmp_path / "a.py", tmp_path / "stale.py"]
+    assert shaderstep.shipped(files) == files  # a checkout: no list
+    (tmp_path / "FILES").write_text("a.py\n")
+    assert shaderstep.shipped(files) == [tmp_path / "a.py"]

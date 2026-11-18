@@ -12,6 +12,17 @@ from pathlib import Path
 from machine import Failed, crt_spec, run, tool_env
 
 ROOT = Path(__file__).resolve().parents[2]  # the repository, or the package's setup/src
+SHIPPED = ROOT / "FILES"  # the package's sources, one relative path per line (tools/build/dist.py)
+
+
+def shipped(files: list[Path]) -> list[Path]:
+    """The files of a key that this package ships: a package unzipped by hand over an older one (#50's update) kept
+    the files the new one moved or dropped, and they changed the keys (18/11/2026: 0.1.13's sm86/translate/flow.py,
+    moved to frontend/, made the update redo the shaders). A source checkout has no list: every file counts."""
+    if not SHIPPED.is_file():
+        return files
+    names = set(SHIPPED.read_text(encoding="utf-8").splitlines())
+    return [f for f in files if f.relative_to(ROOT).as_posix() in names]
 
 
 def translator_key() -> str:
@@ -21,7 +32,7 @@ def translator_key() -> str:
     position default never reached a set-up game)."""
     h = hashlib.sha256()
     files = sorted((ROOT / "sm86/translate").rglob("*.py")) + sorted((ROOT / "sm86/decode").rglob("*.py"))
-    for f in [*files, ROOT / "tools/shaders/extract.py", ROOT / "tools/shaders/translate.py"]:
+    for f in shipped([*files, ROOT / "tools/shaders/extract.py", ROOT / "tools/shaders/translate.py"]):
         h.update(f.read_bytes())
     return h.hexdigest()[:16]
 

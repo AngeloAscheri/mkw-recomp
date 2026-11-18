@@ -11,6 +11,7 @@ Layout of build/dist/<target>/ (after build.py --dist):
     mkw, mkwgame.id                 the runtime (mkw.exe and its DLLs on Windows; mkwgame.* comes from the setup)
     setup/python, setup/zig, setup/glslc
     setup/src/                      recomp/, sm86/, tools/{build,prepare,romfs,shaders}, runtime/{cpu,core/boot/gamelib.h}
+    setup/src/FILES                 the list of those files: the only ones prepare.py's keys count
     setup/lib/libmkw.dll.a          (Windows) the runtime's import library the game code library links against
     setup/lib/crt/                  (Windows) zig's C runtime for the target, prebuilt, and link.json: windows_crt()
 The desktop shortcut is the start screen's (a .desktop on Linux, a .lnk on Windows: platform.h).
@@ -230,6 +231,9 @@ def copy_sources(src_root: Path) -> None:
             shutil.copytree(s, d, ignore=skip)
         else:
             shutil.copy2(s, d)
+    # what prepare.py's keys count (shaderstep.shipped): files left by an older package unzipped over this one do not
+    files = sorted(p.relative_to(src_root).as_posix() for p in src_root.rglob("*") if p.is_file())
+    (src_root / "FILES").write_text("".join(f"{f}\n" for f in files), encoding="utf-8")
 
 
 def main() -> None:

@@ -92,7 +92,7 @@ from machine import (
     shader_jobs,
 )
 import nextsetup
-from shaderstep import shaders, spec_command, translator_key  # noqa: F401  (spec_command: tests/launcher/test_setup.py)
+from shaderstep import shaders, shipped, spec_command, translator_key  # noqa: F401  (spec_command: tests/launcher/test_setup.py)
 import update  # (ca_file)
 
 PREP_VERSION = 1  # bump when a step's output changes meaning: every step runs again
@@ -159,7 +159,7 @@ def code_key(files: list[Path]) -> str:
     """Generate's and compile's keys besides the ExeFS and game_id: the code that makes their output. Before, they were
     game_id alone, so an update that changed only recomp/ (or the glue and flags) kept the old game code."""
     h = hashlib.sha256()
-    for f in files:
+    for f in shipped(files):
         h.update(f.read_bytes())
     return h.hexdigest()[:16]
 
