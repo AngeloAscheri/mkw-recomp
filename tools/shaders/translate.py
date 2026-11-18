@@ -230,7 +230,9 @@ def main() -> None:
     failed: dict[str, list[str]] = {}
     init_args = (args.spec, args.glslc, not args.no_validate)
     with ProcessPoolExecutor(args.jobs, initializer=init, initargs=init_args) as pool:
-        for n, (sha, why) in enumerate(pool.map(work, jobs), 1):
+        # blocks of 16 neighbours (by size: often variants of one program): a worker's word cache decodes 13 % fewer
+        # words than with one program at a time (18/11/2026)
+        for n, (sha, why) in enumerate(pool.map(work, jobs, chunksize=16), 1):
             if args.progress and (n % 100 == 0 or n == len(jobs)):
                 print(f"progress {n} {len(jobs)}", flush=True)
             results[why] += 1

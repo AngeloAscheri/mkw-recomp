@@ -237,6 +237,10 @@ def main() -> None:
     # player's PYTHONPATH or PYTHONHOME and load another Python's modules: "Module use of python312.dll conflicts" (#177)
     for k in [k for k in os.environ if k.startswith("PYTHON")]:
         del os.environ[k]
+    # numpy's OpenBLAS sets a buffer aside per hardware thread in every process that imports it, and Windows counts it
+    # as private memory: 178 MB on 6 threads against 17 MB with one (18/11/2026), ~0.65 GB a generate worker on 24.
+    # No tool does linear algebra, and its workers run one per core already
+    os.environ["OPENBLAS_NUM_THREADS"] = "1"
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument(
         "--source",
