@@ -425,6 +425,8 @@ typedef struct {
     uint8_t bound;                 // aliases physical-pool memory (physical and virtual pools)
     uint8_t block_views;           // BC image that renders through uncompressed views of its blocks (BLOCK_TEXEL_VIEW_
                                    // COMPATIBLE + EXTENDED_USAGE: only those views may use COLOR_ATTACHMENT)
+    uint8_t block_ca_skipped;      // the GFX9 guard (vk_tex_gfx9.c) left this 3D BC volume without that usage: it does
+                                   // not crash addrlib, and a draw into it writes nothing (vk_exec_rt.c logs it)
     uint8_t swz[4];               // NVN texture swizzle selectors (nvnTextureBuilderSetSwizzle); a view swizzle replaces them
     uint8_t fb_usage;              // created with ATTACHMENT_FEEDBACK_LOOP usage (VK_FEEDBACK_LAYOUT, attachable images)
     uint8_t listed;                // a render target whose MUTABLE_FORMAT lists its views' formats: format and twin
