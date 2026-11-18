@@ -77,6 +77,7 @@ import game_texts  # (build_all: the game's texts in ca, gl, eu)
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from gamecode import DamagedSource, compile_game, cpu_level
 from gamesource import check, is_nx, loose_romfs, unpack
+import seqnodes  # (the phase table Straight to presses through the menus by)
 from gamecopy import BUILD_BYTES, check_space, clear_dir, copy_tree, own_dir, remove_stale, romfs_bytes, tree_bytes
 from nup import Nup
 from machine import (
@@ -517,6 +518,9 @@ def main() -> None:
                 # the languages the game does not ship (ca, gl, eu), from this version's translations (the step runs
                 # at every setup, so an update brings its new texts); about a second
                 game_texts.build_all(game, loose_romfs(runtime, romfs, work, "Mals"))
+                # Settings > Hacks > Straight to waits for the game's phases, named by this table (seqnodes.py); a
+                # setup without it left every press of it unfired. About a second, at every setup as above.
+                seqnodes.write(game / "exefs", game / f"seq_nodes-{version.number}.tsv")
                 shutil.rmtree(work / "pack", ignore_errors=True)
             state["done"][step] = key
             save_state(dest, state)
