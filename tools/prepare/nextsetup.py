@@ -15,6 +15,7 @@ import json
 import os
 import shutil
 import sys
+import time
 from pathlib import Path
 
 NEXT = "setup-next"
@@ -78,7 +79,7 @@ def load(game: Path, state: dict) -> dict:
 def promote(game: Path, port: str) -> bool:
     """The outputs of a finished --next run for this port version moved into place (the old ones removed); an
     unfinished or other version's setup-next/ is removed. True when something was promoted."""
-    out = next_dir(game)
+    out, t0 = next_dir(game), time.monotonic()
     if not out.is_dir():
         return False
     try:
@@ -101,4 +102,5 @@ def promote(game: Path, port: str) -> bool:
         shutil.rmtree(old, ignore_errors=True) if old.is_dir() else old.unlink(missing_ok=True)
     shutil.rmtree(out, ignore_errors=True)
     print(f"setup: the update set up beside the played version ({port}) is now in place", file=sys.stderr)
+    print(f"time: promote {time.monotonic() - t0:.1f} s", file=sys.stderr)  # the player waits for it (swap run)
     return True

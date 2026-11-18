@@ -7,8 +7,10 @@ Why apart: prepare.py holds the order of the steps and their keys; this step dri
 import hashlib
 import json
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
+from beside import Beside
 from machine import Failed, crt_spec, run, tool_env
 
 ROOT = Path(__file__).resolve().parents[2]  # the repository, or the package's setup/src
@@ -68,29 +70,48 @@ def spec_command(game: Path, work: Path, cc: list[str], crt: Path | None) -> lis
 
 
 def shaders(
-    exefs: Path, romfs: Path, game: Path, work: Path, glslc: str, jobs: int, cc: list[str], dest: Path | None = None
+    exefs: Path,
+    romfs: Path,
+    game: Path,
+    work: Path,
+    glslc: str,
+    jobs: Callable[[], int],
+    cc: list[str],
+    dest: Path | None = None,
+    before_translate: Callable[[], None] = lambda: None,
+    on_progress: Callable[[str], None] | None = None,
 ) -> None:
-    """spirv/ and pipeline-pairs.bin into dest (default the game folder; prepare.py --next: setup-next/)."""
+    """spirv/ and pipeline-pairs.bin into dest (default the game folder; prepare.py --next: setup-next/).
+    before_translate waits for what translate.py must not run beside (run beside generate, beside.py: generate's
+    workers, and setup-next/spirv's links); jobs is asked then, from the memory free at that moment."""
     dest = dest or game
+    dest.mkdir(parents=True, exist_ok=True)
     spec = sm86_spec(game, work, cc)
     sh = work / "shaders"
     run([sys.executable, str(ROOT / "tools/shaders/extract.py"), "--romfs", str(romfs), "--exefs", str(exefs),
          "--out", str(sh)])  # fmt: skip
+    # every program pair of the copy, for the boot's shader library prewarm (runtime/gfx/vk/pipe/vk_pipe_pairs.c); it
+    # reads only the extracted shaders, so it runs beside translate.py. Before it, beside generate on the Windows PC,
+    # its 6.6 s took 124 s and held translate.py back (18/11/2026)
+    pairs = Beside("pairs", lambda _: run([sys.executable, str(ROOT / "tools/shaders/pipeline_pairs.py"),
+                                          "--shaders", str(sh), "--out", str(dest / "pipeline-pairs.bin")]))  # fmt: skip
+    before_translate()
+    n = jobs()
+    print(f"shaders: translate.py with {n} workers", file=sys.stderr)
     while True:
         try:
             run([sys.executable, str(ROOT / "tools/shaders/translate.py"), "--shaders", str(sh),
-                 "--out", str(dest / "spirv"), "--glslc", glslc, "--no-validate", "--progress", "--jobs", str(jobs),
-                 "--spec", str(spec)], env=tool_env(glslc), progress_prefix="progress")  # fmt: skip
+                 "--out", str(dest / "spirv"), "--glslc", glslc, "--no-validate", "--progress", "--jobs", str(n),
+                 "--spec", str(spec)], env=tool_env(glslc), progress_prefix="progress",
+                on_progress=on_progress)  # fmt: skip
             break
         except Failed as e:
             # A worker that dies (the system ends it when memory runs out) breaks the whole pool (issue #24,
             # BrokenProcessPool). What is translated stays (translate.py resumes); half the workers need half the memory.
-            if "BrokenProcessPool" not in str(e) or jobs == 1:
+            if "BrokenProcessPool" not in str(e) or n == 1:
                 raise
-            jobs = max(1, jobs // 2)
-            print(f"shaders: a worker ended abruptly, again with {jobs} workers", file=sys.stderr)
+            n = max(1, n // 2)
+            print(f"shaders: a worker ended abruptly, again with {n} workers", file=sys.stderr)
     for p in (dest / "spirv").glob("*.glsl"):  # the runtime reads .spv and .res.json; the GLSL only made them
         p.unlink()
-    # every program pair of the copy, for the boot's shader library prewarm (runtime/gfx/vk/pipe/vk_pipe_pairs.c)
-    run([sys.executable, str(ROOT / "tools/shaders/pipeline_pairs.py"), "--shaders", str(sh),
-         "--out", str(dest / "pipeline-pairs.bin")])  # fmt: skip
+    pairs.join()

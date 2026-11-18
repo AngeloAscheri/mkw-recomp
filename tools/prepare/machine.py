@@ -9,6 +9,7 @@ import os
 import subprocess
 import sys
 import time
+from collections.abc import Callable
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools/build"))
@@ -205,17 +206,22 @@ def mem_gb() -> float:
         return 8.0
 
 
-def run(cmd: list[str], env: dict[str, str] | None = None, progress_prefix: str = "") -> None:
+def run(
+    cmd: list[str],
+    env: dict[str, str] | None = None,
+    progress_prefix: str = "",
+    on_progress: Callable[[str], None] | None = None,
+) -> None:
     """A tool's run; its 'progress n total' lines (translate.py) pass through, the rest goes to stderr, and at its end
     "time: tool <name> <wall> s, cpu <s> s": a step's line alone did not say which of its tools took the time (the
     shaders step is spec, extract, translate and pipeline_pairs). The CPU time of the children is 0 on Windows
-    (os.times)."""
+    (os.times). on_progress takes the progress lines instead of the start screen (a step run beside, beside.py)."""
     t0, c0 = time.monotonic(), os.times()
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors="replace", env=env)
     tail = []
     for line in p.stdout:
         if progress_prefix and line.startswith(progress_prefix):
-            emit(line.strip())
+            (on_progress or emit)(line.strip())
         else:
             sys.stderr.write(line)
             tail = (tail + [line.strip()])[-5:]

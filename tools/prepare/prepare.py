@@ -65,6 +65,7 @@ import json
 import os
 import shutil
 import subprocess
+import threading
 import time
 
 ROOT = Path(__file__).resolve().parents[2]  # the repository, or the package's setup/src
@@ -92,6 +93,7 @@ from machine import (
     shader_jobs,
 )
 import nextsetup
+from beside import Beside
 from shaderstep import shaders, shipped, spec_command, translator_key  # noqa: F401  (spec_command: tests/launcher/test_setup.py)
 import update  # (ca_file)
 
@@ -217,6 +219,13 @@ def warm(game: Path, work: Path, runtime: Path | None = None, out: Path | None =
             print(f"warm: the pipeline prewarm failed (exit {p.returncode}, {game / 'logs/warm.log'}); left to the game",
                   file=sys.stderr)  # fmt: skip
     emit("progress", 1, 1)
+
+
+def clear_work(work: Path) -> None:
+    """setup-work emptied but its obj/ and zig-cache/ (the next update compiles only the chunks whose C changed)."""
+    for p in work.glob("*"):
+        if p.is_dir() and p.name not in ("obj", ZIG_CACHE):
+            shutil.rmtree(p, ignore_errors=True)
 
 
 def load_state(game: Path) -> dict:
@@ -381,9 +390,34 @@ def main() -> None:
         if "compile" in STEPS and "compile" not in state["done"]:
             need += BUILD_BYTES
         check_space(game, need)
-        if args.next:
-            nextsetup.seed(game)
+        # setup-next/spirv's links (17 s on the Windows PC) and the shaders step go beside generate and compile
+        # (beside.py): the shaders start with generate, translate.py waits for its end and for the links
+        seeding = Beside("seed", lambda _: nextsetup.seed(game)) if args.next else None
+        code_ready, beside = threading.Event(), None
+
+        def shaders_job(b: Beside) -> None:
+            def before_translate() -> None:
+                code_ready.wait()
+                if seeding:
+                    seeding.join()
+
+            # extract.py reads a .nup itself; a .nx's shader archives are unpacked first
+            src_romfs = loose_romfs(runtime, romfs, work, "Shader", *SHADER_DIRS) if is_nx(romfs) else romfs
+            shaders(game / "exefs", src_romfs, game, work, glslc, lambda: args.jobs or shader_jobs(share), cc, dest,
+                    before_translate, b.progress)  # fmt: skip
+
         for step in STEPS[1:]:
+            if step == "generate" and state["done"].get("shaders") != keys["shaders"]:
+                beside = Beside("shaders", shaders_job)
+            # generate done or skipped: translate.py may take the cores, beside compile when an earlier setup left its
+            # objects (an update, a few chunks); a first setup's 360 compiles and translate.py would both size their
+            # jobs by the same free memory
+            if step == "compile" and "compile" in state["done"]:
+                code_ready.set()
+            if step == "shaders":
+                code_ready.set()
+            if step == "warm" and seeding:
+                seeding.join()
             # cleanup after the swap, by the new version's own run; warm here, into setup-next/: the Windows PC's
             # swap run spent 106 s in it at the player's first start (18/11/2026)
             if args.next and step == "cleanup":
@@ -439,15 +473,11 @@ def main() -> None:
                     emit("step", "compile")
                     compile_game(game, game / "exefs", work, cc, args.target, jobs, dest)
             elif step == "shaders":
-                # extract.py reads a .nup itself; a .nx's shader archives are unpacked first
-                src_romfs = loose_romfs(runtime, romfs, work, "Shader", *SHADER_DIRS) if is_nx(romfs) else romfs
-                shaders(game / "exefs", src_romfs, game, work, glslc, args.jobs or shader_jobs(share), cc, dest)
+                beside.join(show=True)
             elif step == "warm":
                 warm(game, work, runtime, dest if args.next else None)
             elif step == "cleanup":
-                for p in work.glob("*"):
-                    if p.is_dir() and p.name not in ("obj", ZIG_CACHE):
-                        shutil.rmtree(p, ignore_errors=True)
+                clear_work(work)
                 # the languages the game does not ship (ca, gl, eu), from this version's translations (the step runs
                 # at every setup, so an update brings its new texts); about a second
                 game_texts.build_all(game, loose_romfs(runtime, romfs, work, "Mals"))
@@ -457,8 +487,13 @@ def main() -> None:
             c = os.times()  # the CPU of its tools (0 on Windows): whether a step leaves cores idle (H1, build/updates)
             cpu = c.children_user + c.children_system - c_step.children_user - c_step.children_system
             print(f"time: {step} {time.monotonic() - t_step:.1f} s, cpu {cpu:.1f} s", file=sys.stderr)
+        if seeding:
+            seeding.join()
         print(f"time: setup {time.monotonic() - t_all:.1f} s", file=sys.stderr)
         if args.next:  # finished: the next start of the new version moves it into place (nextsetup.promote)
+            # what cleanup removes, here: the swap's cleanup spent 12-17 s in it at the player's first start on the
+            # Windows PC (18/11/2026); generated/ comes back if a compile needs it (regenerate_if_cleaned)
+            clear_work(work)
             state["port"], state["ready"] = args.port, True
             save_state(dest, state)
         emit("done")
