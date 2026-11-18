@@ -1,4 +1,5 @@
-"""The compile step of prepare.py: the generated C into mkwgame.so / mkwgame.dll with the package's zig (or clang).
+"""The compile step of prepare.py: the generated C into mkwgame.so / mkwgame.dll with the package's zig (or clang), its
+chunks on LLVM's own clang when the package has it (fastcc.py).
 
 Why apart: prepare.py holds the order of the steps and their keys; this step is the largest and has its own reuse of
 earlier objects. Not run on its own.
@@ -17,6 +18,7 @@ sys.path.insert(0, str(ROOT / "tools/build"))
 import build  # (GEN_FLAGS, gen_modules, module_glue, game_id: the same game code as build.py --dist)
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import fastcc
 from machine import Failed, crt_link, emit, package_dir
 
 # The compiler's messages as text: zig writes UTF-8 (paths with "Área de Trabalho" in it), which the locale's code page
@@ -78,6 +80,7 @@ def compile_game(
     cpu = ROOT / "runtime/cpu"
     jobs_c = [(src, obj / f"{src.parent.name}_{src.stem}.o", [*flags, f"-I{cpu}"]) for src in srcs]
     jobs_c.append((obj / "modules.c", obj / "modules.o", [*flags, gid, *inc]))
+    cc1 = fastcc.setup(cc, package_dir(game), obj, [jobs_c[0][2], jobs_c[-1][2]])
     jobs_c.sort(key=lambda j: -j[0].stat().st_size)  # the largest first: no 10 MB main_table.c alone at the end
     total, done = len(jobs_c) + 1, 0  # the link is the last unit: a progress bar full before it hid it (issue #2)
     extra = [str(package_dir(game) / "lib/libmkw.dll.a")] if windows else ["-Wl,-z,noexecstack"]
@@ -110,7 +113,7 @@ def compile_game(
             return ""
         compiled.append(src)  # list.append is atomic across the pool's threads
         stamp.unlink(missing_ok=True)
-        return compile_one(cc, f, src, out, stamp, key)
+        return compile_one(cc, f, src, out, stamp, key, cc1.cmd(f, src, out) if cc1 else None)
 
     lib = dest / ("mkwgame.dll" if windows else "mkwgame.so")
     part = lib.with_name(lib.name + ".part")
@@ -147,9 +150,12 @@ def compile_game(
     (dest / "mkwgame.id").write_text(build.game_id())  # runtime/core/boot/gamelib.c rt_game_present
 
 
-def compile_one(cc: list[str], flags: list[str], src: Path, out: Path, stamp: Path, key: str) -> str:
-    """One object: "" when built, else the error for the player; a damaged source raises DamagedSource instead."""
-    cmd = [*cc, "-std=gnu11", *flags, "-c", str(src), "-o", str(out)]
+def compile_one(
+    cc: list[str], flags: list[str], src: Path, out: Path, stamp: Path, key: str, cmd: list[str] | None = None
+) -> str:
+    """One object: "" when built, else the error for the player; a damaged source raises DamagedSource instead.
+    cmd: the command instead of cc's (fastcc.py's -cc1 line)."""
+    cmd = cmd or [*cc, "-std=gnu11", *flags, "-c", str(src), "-o", str(out)]
     r = subprocess.run(cmd, capture_output=True, **UTF8, check=False)
     if r.returncode and crashed(r.stderr):
         # A compiler crash (ICE) on a chunk that compiles everywhere else is the machine, not the source (#506: a
