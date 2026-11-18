@@ -34,8 +34,8 @@ Usage: python prepare.py --source DIR|FILE.nup --game DIR [--runtime DIR] [--rom
                          [--target linux|windows] [--next --port VER]
 Without --source (the launcher after an update, tools/prepare/update.py): the copy and the RomFS mode of the last
 setup in --game, from its setup-state.json; only the steps whose key changed run again.
---next (an update while the player keeps playing): the outputs the game reads go to <game>/setup-next/ and warm and
-cleanup wait; the next run without --next of that --port version moves them into place first (nextsetup.py).
+--next (an update while the player keeps playing): the outputs the game reads go to <game>/setup-next/, warm's caches
+too, and cleanup waits; the next run without --next of that --port version moves them into place first (nextsetup.py).
 """
 
 import faulthandler
@@ -193,16 +193,19 @@ GENERATOR = [
 COMPILER = [*GENERATOR, ROOT / "tools/build/build.py", Path(__file__).with_name("gamecode.py")]
 
 
-def warm(game: Path, work: Path, runtime: Path | None = None) -> None:
+def warm(game: Path, work: Path, runtime: Path | None = None, out: Path | None = None) -> None:
     """mkw --prewarm, without the game: the shader libraries of every program pair of the copy (pipeline-pairs.bin,
     from the shaders step) compiled into the driver's caches and pipeline-cache.bin, so the first start only loads
     them (runtime/gfx/vk/pipe/vk_pipe_pairs.c). Until 17/11/2026 this ran the game for a minute and kept the keys of
     what its title drew; a new place still drew with libraries compiling. Its log is logs/warm.log (#437: in mkw.log
     it pushed the player's last run out of the file reports attach). A driver that crashes or hangs here does not fail
     the setup: the prewarm's mark (pipeline-keys.prewarm) then skips it at every start on that GPU and driver, and the
-    game builds its pipelines as it draws, as before."""
+    game builds its pipelines as it draws, as before. out: an update's setup-next/ (--next), whose SPIR-V it reads
+    and where its caches go; the game folder's mkw.ini still picks the GPU."""
     exe = (runtime or game) / ("mkw.exe" if os.name == "nt" else "mkw")
     env = dict(os.environ, MKW_LOG_NAME="warm", MKW_GAME_DIR=str(game))
+    if out:
+        env |= {"MKW_SPIRV": str(out / "spirv"), "MKW_PIPELINE_CACHE": str(out / "pipeline-cache.bin")}
     emit("progress", 0, 1)
     try:
         p = subprocess.run([str(exe), "--prewarm"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
@@ -379,7 +382,9 @@ def main() -> None:
         if args.next:
             nextsetup.seed(game)
         for step in STEPS[1:]:
-            if args.next and step in ("warm", "cleanup"):  # after the swap, by the new version's own run
+            # cleanup after the swap, by the new version's own run; warm here, into setup-next/: the Windows PC's
+            # swap run spent 106 s in it at the player's first start (18/11/2026)
+            if args.next and step == "cleanup":
                 continue
             # The start screen sets up again when its version differs (launcher.cpp): an update by hand (a new
             # AppImage or zip over the old) kept the old steps (#50: 0.1.8 played with 0.1.7's shaders). Kept once the
@@ -436,7 +441,7 @@ def main() -> None:
                 src_romfs = loose_romfs(runtime, romfs, work, "Shader", *SHADER_DIRS) if is_nx(romfs) else romfs
                 shaders(game / "exefs", src_romfs, game, work, glslc, args.jobs or shader_jobs(share), cc, dest)
             elif step == "warm":
-                warm(game, work, runtime)
+                warm(game, work, runtime, dest if args.next else None)
             elif step == "cleanup":
                 for p in work.glob("*"):
                     if p.is_dir() and p.name not in ("obj", ZIG_CACHE):

@@ -57,3 +57,18 @@ def test_promote_drops_an_unfinished_or_other_version(tmp_path: Path) -> None:
     (out / "setup-state.json").write_text(json.dumps({"version": 1, "done": {}, "port": "0.1.13"}))
     assert not nextsetup.promote(tmp_path, "0.1.13")
     assert (tmp_path / "mkwgame.so").read_bytes() == b"old lib" and not out.exists()
+
+
+def test_warm_caches_are_copies_and_move_in(tmp_path: Path) -> None:
+    # the prewarm appends to the keys: a link would change the played version's file
+    played(tmp_path)
+    (tmp_path / "pipeline-keys.bin").write_bytes(b"keys")
+    out = nextsetup.seed(tmp_path)
+    with open(out / "pipeline-keys.bin", "ab") as f:
+        f.write(b" more")
+    assert (tmp_path / "pipeline-keys.bin").read_bytes() == b"keys"
+    (out / "pipeline-cache.bin").write_bytes(b"cache")
+    (out / "setup-state.json").write_text(json.dumps({"version": 1, "done": {}, "port": "0.1.13", "ready": True}))
+    assert nextsetup.promote(tmp_path, "0.1.13")
+    assert (tmp_path / "pipeline-keys.bin").read_bytes() == b"keys more"
+    assert (tmp_path / "pipeline-cache.bin").read_bytes() == b"cache"

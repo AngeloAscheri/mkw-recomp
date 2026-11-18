@@ -20,6 +20,9 @@ from pathlib import Path
 NEXT = "setup-next"
 STATE = "setup-state.json"
 OUTPUTS = ("mkwgame.so", "mkwgame.dll", "mkwgame.dll.pdb", "mkwgame.id", "pipeline-pairs.bin", "spirv")  # with STATE
+# the warm step's (prepare.warm): copies, not links, since the runtime appends to the keys and rewrites the cache; the
+# mark is the prewarm's guard against a driver that dies in it (vk_pipe_keys.c prewarm_mark)
+WARMED = ("pipeline-cache.bin", "pipeline-keys.bin", "pipeline-keys.prewarm")
 
 
 def next_dir(game: Path) -> Path:
@@ -55,6 +58,9 @@ def seed(game: Path) -> Path:
                 os.link(p, dst / p.name)
             except OSError:
                 shutil.copy2(p, dst / p.name)
+    for name in WARMED:
+        if (game / name).is_file() and not (out / name).exists():
+            shutil.copy2(game / name, out / name)
     return out
 
 
@@ -83,7 +89,7 @@ def promote(game: Path, port: str) -> bool:
         print(f"setup: {out} is not a finished setup of {port or 'this version'}: removed", file=sys.stderr)
         shutil.rmtree(out, ignore_errors=True)
         return False
-    for name in (*OUTPUTS, STATE):
+    for name in (*OUTPUTS, *WARMED, STATE):
         src, dst = out / name, game / name
         if not src.exists():
             continue
