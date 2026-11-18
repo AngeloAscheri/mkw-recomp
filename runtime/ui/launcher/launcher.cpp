@@ -1554,6 +1554,7 @@ static void page_mods(float w, float h) {
         ImGui::PushTextWrapPos(0);
         if (m->warn_graphics) ImGui::TextColored(ImVec4(0.95f, 0.75f, 0.35f, 1), "%s", menu_text(UI_MOD_WARN_GRAPHICS));
         if (m->warn_shaders) ImGui::TextColored(ImVec4(0.95f, 0.75f, 0.35f, 1), "%s", menu_text(UI_MOD_WARN_SHADERS));
+        if (m->has_plugin) ImGui::TextColored(ImVec4(0.95f, 0.75f, 0.35f, 1), "%s", menu_text(UI_MOD_PLUGIN));
         ImGui::PopTextWrapPos();
         ImGui::Separator();
         ImGui::PopID();

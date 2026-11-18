@@ -253,6 +253,7 @@ static int list_cb(const char *name, int kind, uint64_t, void *) {
         if (json_value(json, "has_romfs", v, sizeof v)) m->has_romfs = !strcmp(v, "true") || !strcmp(v, "1");
         if (json_value(json, "romfs_files", v, sizeof v)) m->romfs_files = atoi(v);
         if (json_value(json, "has_exefs", v, sizeof v)) m->has_exefs = !strcmp(v, "true") || !strcmp(v, "1");
+        if (json_value(json, "has_plugin", v, sizeof v)) m->has_plugin = !strcmp(v, "true") || !strcmp(v, "1");
         if (json_value(json, "exefs_match", v, sizeof v)) m->exefs_match = !strcmp(v, "true") || !strcmp(v, "1");
         m->code = strstr(json, "\"image\"") || strstr(json, "\"patches\"");
         const char *warn = strstr(json, "\"warnings\"");   // a list of names; ours, so a search is enough

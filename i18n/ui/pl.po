@@ -2333,6 +2333,14 @@ msgid "I understand"
 msgstr "Rozumiem"
 
 #. Under a mod that changes the game's code (its .ips): the game code is built with it.
+msgctxt "UI_MOD_PLUGIN"
+msgid ""
+"Native plugin: runs its own program on your computer alongside the game. Enable it only if you "
+"trust where it comes from"
+msgstr ""
+"Natywna wtyczka: uruchamia własny program na twoim komputerze obok gry. Włącz ją tylko, jeśli "
+"ufasz jej źródłu"
+
 msgctxt "UI_MOD_CODE_REBUILD"
 msgid "code: turning it on or off builds the game code again before you play (a few minutes)"
 msgstr "kod: włączenie lub wyłączenie przebudowuje kod gry przed uruchomieniem (kilka minut)"

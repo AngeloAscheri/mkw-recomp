@@ -509,7 +509,7 @@ static int selftest(void) {
 }
 
 static int usage(const char *argv0) {
-    fprintf(stderr, "usage: %s [--exefs DIR] [--romfs DIR|FILE.nup|FILE.nx] [--nup FILE] [--profile DIR] [--launcher | --play | --selftest | --probe-loader | "
+    fprintf(stderr, "usage: %s [--exefs DIR] [--romfs DIR|FILE.nup|FILE.nx] [--nup FILE] [--profile DIR] [--mod NAME]... [--launcher | --play | --selftest | --probe-loader | --probe-plugin | "
                     "--probe-cfg | --probe-kernel | --probe-audio | --probe-services | --probe-fs | --probe-gfx-abi | "
                     "--probe-nvn | --probe-nvn-tex | --probe-window | --probe-vkmem | "
                     "--probe-vkexec | --probe-astc | --probe-framegen | --probe-gpu-clocks | --probe-fps | --probe-discord | --probe-dsu | --probe-texpre | --texpre | --prewarm | --boot |--seconds S [--shot PNG]]\n", argv0);
@@ -647,7 +647,14 @@ int main(int argc, char **argv) {
         return cap_replay_main(argc - 2, argv + 2);
     }
     const char *mode = NULL;
+    static char extra_mods[1024];   // --mod NAME, repeatable: added to the Mods page's enabled list for this run
     for (int i = 1; i < argc; i++) {
+        if (!strcmp(argv[i], "--mod")) {
+            if (++i == argc || strchr(argv[i], ',')) return usage(argv[0]);
+            size_t len = strlen(extra_mods);
+            snprintf(extra_mods + len, sizeof extra_mods - len, "%s%s", len ? "," : "", argv[i]);
+            continue;
+        }
         // --romfs takes the loose romfs/ folder or a packed dump, .nup or .nx (romfs.c); --nup is the same
         const char **path = !strcmp(argv[i], "--exefs") ? &cfg.exefs
                           : !strcmp(argv[i], "--romfs") || !strcmp(argv[i], "--nup") ? &cfg.romfs
@@ -672,6 +679,12 @@ int main(int argc, char **argv) {
         }
     }
     if (cfg.shot && !cfg.seconds) return usage(argv[0]);
+    if (*extra_mods) {   // another launcher starts the game with its mod on, without touching the player's mkw.ini
+        const char *on = cfg_get("MKW_MODS");
+        char list[4096];
+        snprintf(list, sizeof list, "%s%s%s", on && *on ? on : "", on && *on ? "," : "", extra_mods);
+        plat_setenv("MKW_MODS", list);
+    }
     if (cfg.seconds && mode) return usage(argv[0]);
     // the setup's warm step (--prewarm) keeps its log too, as logs/warm.log (MKW_LOG_NAME): until 18/11/2026 it went
     // nowhere, and prepare.py drops its output, so a prewarm that failed on a player's PC left no trace. Only with its
@@ -690,6 +703,7 @@ int main(int argc, char **argv) {
     if (!strcmp(mode, "--selftest")) return selftest();
     if (!strcmp(mode, "--probe-loader")) return probe_loader();
     if (!strcmp(mode, "--probe-cfg")) return probe_cfg();
+    if (!strcmp(mode, "--probe-plugin")) return probe_plugin();
     if (!strcmp(mode, "--probe-kernel")) return probe_kernel();
     if (!strcmp(mode, "--probe-audio")) return probe_audio();
     if (!strcmp(mode, "--probe-services")) return probe_services();
