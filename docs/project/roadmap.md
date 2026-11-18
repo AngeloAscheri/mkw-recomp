@@ -94,8 +94,11 @@ screen by screen against the console.
   (`tex_bl_copy`) runs at memcpy speed (16-25 GB/s, 9.6 for a 16 MiB BC7 level), so on the GPU it only pays if the
   GPU reads the storage from its mirror without a CPU copy. In the course load's peak (1.5 s, user call graphs of the
   replay thread, tl-fp1) the replay spent ~66 ms in the BC1/BC7 choice for ASTC textures (`astc_alpha_one`, at image
-  creation) and ~44 ms in the deswizzle, both serial on the critical path; spreading them over worker threads is the
-  cheaper step.
+  creation) and ~44 ms in the deswizzle, both serial on the critical path. Both are now spread over the texture
+  workers (`tex_par.c`, `MKW_TEX_PAR`): in a Grand Prix run from boot to the race, at the same 3 328 images, the scan
+  took 215 -> 138 ms of the replay thread and the deswizzle of textures of 512 KiB or more 139 -> 77 ms (i7-14700F,
+  17/11/2026, two runs). Left: the deswizzle of the smaller ones (~85 ms over ~9 000 uploads of ~140 KiB), too small
+  to wake the workers for each; it needs uploads batched before they are split.
 - A Linux package that starts on non-rolling distributions (glibc 2.31 through zig), and the launcher tested on real
   Windows machines.
 - Windows with a dedicated GPU: memory the GPU wrote is not uploaded again to its mirror.
