@@ -613,6 +613,15 @@ void settings_opened(void) {
     g_modal = false;
 }
 
+// The in-game menu opened (discussion #577): no row takes the cursor, layout_menu focuses "Continue" instead, so a
+// stray D-pad deflection on open cannot retune a setting. A pending tab request survives: tab switches in
+// settings_tabs still focus the new page's first row, and the test hook's settings_select(0) keeps its screenshots
+// on the first row.
+void settings_opened_menu(void) {
+    g_focus_page = -1;
+    g_modal = false;
+}
+
 bool settings_modal(void) { return g_modal || binds_modal(); }
 
 void settings_tabs(float scale, float bottom) {
