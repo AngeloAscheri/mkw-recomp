@@ -177,6 +177,51 @@ def test_fetch_update_package(
             assert out.stat().st_mode & 0o777 == 0o755
 
 
+@pytest.mark.parametrize("failure", ["incomplete", "reset"])
+def test_fetch_interrupted_download(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], failure: str,
+) -> None:
+    import hashlib
+    import http.client
+    import io
+
+    first, last = b"first chunk", b"last chunk"
+
+    class InterruptedResponse(io.BytesIO):
+        def read(self, size: int = -1) -> bytes:
+            if self.tell() == 0:
+                return super().read(size)
+            if failure == "incomplete":
+                raise http.client.IncompleteRead(b"", len(last))
+            raise ConnectionResetError("connection reset")
+
+    asset = {
+        "name": "mkw-recomp-v9.8.7-x86_64.AppImage",
+        "size": len(first + last),
+        "digest": "sha256:" + hashlib.sha256(first + last).hexdigest(),
+        "browser_download_url": "https://example.invalid/download",
+    }
+    monkeypatch.setattr(update, "latest_asset", lambda _: ("v9.8.7", asset))
+    monkeypatch.setattr(update, "get", lambda *_: InterruptedResponse(first))
+    monkeypatch.setattr(sys, "argv", ["update.py", "fetch", "--os", "linux", "--tag", "v9.8.7", "--dest", str(tmp_path)])
+
+    with pytest.raises(SystemExit) as exited:
+        update.main()
+
+    assert exited.value.code == 1
+    lines = capsys.readouterr().out.splitlines()
+    assert lines[0] == f"progress {len(first)} {asset['size']}"
+    assert len(lines) == 2 and lines[1].startswith("error fetch ")
+    assert not list(tmp_path.iterdir())
+
+    monkeypatch.setattr(update, "get", lambda *_: io.BytesIO(first + last))
+    update.main()
+    out = tmp_path / asset["name"]
+    assert out.read_bytes() == first + last
+    assert capsys.readouterr().out.splitlines()[-1] == f"ready {out.resolve()}"
+    assert list(tmp_path.iterdir()) == [out]
+
+
 def test_romfs_version_matches_main() -> None:
     # #315: 1.0.0's exefs/main with 1.8.0's RomFS passed the file count and crashed while warming up
     import versions
