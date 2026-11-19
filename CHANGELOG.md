@@ -271,7 +271,13 @@ generation target by @Hampter588, and the README in German by @andreknieriem. Th
 
 ### Tested
 
-TODO
+From the packages Actions built for this tag, before publishing:
+
+- The whole setup from the Linux AppImage (12 threads, game 1.0.0) in about 12 minutes; its warm-up built all 13 630
+  shader libraries and compute pipelines (761 compute) with none failed.
+- The whole setup from the Windows zip (the 6-thread Windows PC, game 1.0.0) in about 15 minutes; its warm-up built
+  the same 13 630 with none failed.
+- #596's autosave on a GTX 1050 Ti (45 s of race): its 4 saves came in the menus and the load, none in the race.
 
 
 ## 0.1.13
