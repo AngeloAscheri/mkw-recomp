@@ -14,7 +14,8 @@
 #include "platform/platform.h"
 
 static int on = -1;
-static int64_t noacc[3][2];   // shadow fills, texture uploads, fence write-backs: count, bytes
+static void noacc_log(void);
+static int64_t noacc[4][2];   // shadow fills, texture uploads, fence write-backs, ASTC texture uploads: count, bytes
 
 int vk_pool_diag_on(void) {
     if (on < 0) {
@@ -25,9 +26,10 @@ int vk_pool_diag_on(void) {
 }
 
 void vk_pool_diag_note(uint32_t flags, int what, uint64_t bytes) {
-    if (!vk_pool_diag_on() || !(flags & NVN_MEMORY_POOL_FLAGS_CPU_NO_ACCESS) || what < 0 || what > 2) return;
-    __atomic_add_fetch(&noacc[what][0], 1, __ATOMIC_RELAXED);
+    if (!vk_pool_diag_on() || !(flags & NVN_MEMORY_POOL_FLAGS_CPU_NO_ACCESS) || what < 0 || what > 3) return;
+    int64_t k = __atomic_add_fetch(&noacc[what][0], 1, __ATOMIC_RELAXED);
     __atomic_add_fetch(&noacc[what][1], (int64_t)bytes, __ATOMIC_RELAXED);
+    if (what == 1 && k % 128 == 0) noacc_log();   // a capture's replay has fewer frames than the census's 300
 }
 
 void vk_pool_diag_log(uint64_t frame) {
@@ -54,8 +56,12 @@ void vk_pool_diag_log(uint64_t frame) {
         rt_log("mem: pools %#x at frame %llu: %llu pools %.1f MiB, %llu shadowed %.1f MiB, game's pages in RAM %.1f MiB",
                g[j].flags, (unsigned long long)frame, (unsigned long long)g[j].n, g[j].bytes / 1048576.0,
                (unsigned long long)g[j].nshadow, g[j].shadowed / 1048576.0, g[j].resident / 1048576.0);
+    noacc_log();
+}
+
+static void noacc_log(void) {
     rt_log("mem: CPU_NO_ACCESS pool storage so far: shadow fills %lld (%.1f MiB), texture uploads %lld (%.1f MiB), "
-           "fence write-backs %lld (%.1f MiB)",
+           "fence write-backs %lld (%.1f MiB); of the uploads, ASTC (the GPU holds a decode, not these bytes) %lld (%.1f MiB)",
            (long long)noacc[0][0], noacc[0][1] / 1048576.0, (long long)noacc[1][0], noacc[1][1] / 1048576.0,
-           (long long)noacc[2][0], noacc[2][1] / 1048576.0);
+           (long long)noacc[2][0], noacc[2][1] / 1048576.0, (long long)noacc[3][0], noacc[3][1] / 1048576.0);
 }
