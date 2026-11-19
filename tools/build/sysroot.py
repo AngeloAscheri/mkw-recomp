@@ -143,10 +143,10 @@ def build_sdl3() -> None:
     local = SYSROOT / "usr/local"
     # The SDK's wayland-scanner: a newer one writes calls its libwayland 1.18 lacks (wl_proxy_marshal_flags), which
     # Debian 11's lacks too. x86_64: the SDK's scanner, run by the SDK's own loader with its libraries, its glibc 2.31
-    # included. Until 18/11/2026 it ran with them on LD_LIBRARY_PATH under this machine's loader, which with the SDK's
-    # libc.so.6 (lib/) aborts at start ("Inconsistency detected by ld.so: dl-call-libc-early-init.c"); SDL's configure
-    # then dropped its Wayland backend without an error, and every Linux release up to 0.1.13 drew through Xwayland
-    # (SDL "video driver x11" on KDE Wayland sessions, #50). aarch64: bullseye's amd64 scanner, its packages
+    # included. From 0.1.9 (the AArch64 sysroot added lib/ to its LD_LIBRARY_PATH) to 0.1.13 it ran under this
+    # machine's loader with the SDK's libc.so.6, which aborts at start ("Inconsistency detected by ld.so:
+    # dl-call-libc-early-init.c"); SDL's configure then dropped its Wayland backend without an error and those
+    # releases drew through Xwayland even on Wayland sessions (#620). aarch64: bullseye's amd64 scanner, its packages
     # installed without libc6 (host/), on this machine's glibc.
     scanner = local / "bin/wayland-scanner"
     scanner.parent.mkdir(parents=True, exist_ok=True)
