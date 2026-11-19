@@ -88,8 +88,10 @@ def main() -> None:
     ap.add_argument("--off", type=lambda s: int(s, 0), action="append", default=[])
     ap.add_argument("--via", type=lambda s: int(s, 0))
     ap.add_argument("--vcall", type=lambda s: int(s, 0))
+    ap.add_argument("--ret", type=lambda s: int(s.split("+")[-1], 0), help="main+OFF: fields of x0 after bl OFF")
     ap.add_argument("--field", type=lambda s: int(s, 0), action="append", default=[])
     ap.add_argument("--list", action="store_true")
+    ap.add_argument("--funcs", type=Path, help="only these functions: a file of main+0xOFF, one per line")
     ap.add_argument("--exefs", type=Path, default=Path(os.environ.get("MKW_GAME", "game")) / "exefs")
     ap.add_argument("--db", type=Path, default=ROOT / "build/bindb.sqlite")
     a = ap.parse_args()
@@ -106,8 +108,15 @@ def main() -> None:
         k = int(np.searchsorted(starts, addr, side="right")) - 1
         return funcs[k] if k >= 0 and funcs[k][1] > addr else None
 
-    seed = a.off or [a.via if a.via is not None else a.vcall]
-    fs = {func_of(text_lo + 4 * int(i)) for i in candidates(words, seed, only64=not a.off)} - {None}
+    if a.ret is not None:
+        callers = db.execute("SELECT DISTINCT site FROM call WHERE target=?", (base + a.ret,)).fetchall()
+        fs = {func_of(c) for (c,) in callers} - {None}
+    else:
+        seed = a.off or [a.via if a.via is not None else a.vcall]
+        fs = {func_of(text_lo + 4 * int(i)) for i in candidates(words, seed, only64=not a.off)} - {None}
+    if a.funcs:
+        only = {base + int(t.split("+")[-1], 16) for t in a.funcs.read_text().split()}
+        fs = {f for f in fs if f[0] in only}
     sites: dict[int, list[tuple[int, str]]] = defaultdict(list)
     for f0, f1 in sorted(fs):
         code = img[f0 - base : f1 - base]
@@ -133,6 +142,7 @@ def main() -> None:
                 ins.mnemonic in ("blr", "blraa", "blraaz", "blrab", "blrabz")
                 and reg64(ins.reg_name(ins.operands[0].reg)) in vslot
             )
+            called_r = a.ret is not None and ins.mnemonic == "bl" and ins.operands[0].imm == base + a.ret
             if ins.mnemonic.startswith("bl"):
                 tracked -= CLOBBER
                 vslot -= CLOBBER
@@ -141,7 +151,7 @@ def main() -> None:
                 if not (a.vcall is not None and acc and acc[1] == a.vcall):
                     vslot.discard(r)
             tracked |= new_t
-            if called_v:
+            if called_v or called_r:
                 tracked.add("x0")
     per_field: dict[str, int] = defaultdict(int)
     for f0, lst in sites.items():
