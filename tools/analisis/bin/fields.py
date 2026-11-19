@@ -10,6 +10,7 @@ followed, so a consumer that receives the value as an argument shows up as a cal
 Usage: uv run tools/analisis/bin/fields.py --off 0x50c [--off 0x214]              direct [R, #OFF]
        uv run tools/analisis/bin/fields.py --via 0x58 --field 0 --field 4 --field 8   fields of P = [R, #0x58]
        uv run tools/analisis/bin/fields.py --vcall 0x1a8 --field 8                  fields of x0 after blr via [vt, #0x1a8]
+       uv run tools/analisis/bin/fields.py --arg 1 --funcs F --field 8             fields of argument x1 from each entry
        [--list] every site; [--exefs DIR] [--db DB] (1.8.0: --db build/bindb-180.sqlite --exefs .../1.8.0/exefs)
 """
 
@@ -89,6 +90,7 @@ def main() -> None:
     ap.add_argument("--via", type=lambda s: int(s, 0))
     ap.add_argument("--vcall", type=lambda s: int(s, 0))
     ap.add_argument("--ret", type=lambda s: int(s.split("+")[-1], 0), help="main+OFF: fields of x0 after bl OFF")
+    ap.add_argument("--arg", type=int, help="fields of argument register xN from each function's entry (with --funcs)")
     ap.add_argument("--field", type=lambda s: int(s, 0), action="append", default=[])
     ap.add_argument("--list", action="store_true")
     ap.add_argument("--funcs", type=Path, help="only these functions: a file of main+0xOFF, one per line")
@@ -108,7 +110,11 @@ def main() -> None:
         k = int(np.searchsorted(starts, addr, side="right")) - 1
         return funcs[k] if k >= 0 and funcs[k][1] > addr else None
 
-    if a.ret is not None:
+    if a.arg is not None:
+        if not a.funcs:
+            sys.exit("--arg needs --funcs")
+        fs = {func_of(base + int(t.split("+")[-1], 16)) for t in a.funcs.read_text().split()} - {None}
+    elif a.ret is not None:
         callers = db.execute("SELECT DISTINCT site FROM call WHERE target=?", (base + a.ret,)).fetchall()
         fs = {func_of(c) for (c,) in callers} - {None}
     else:
@@ -120,7 +126,7 @@ def main() -> None:
     sites: dict[int, list[tuple[int, str]]] = defaultdict(list)
     for f0, f1 in sorted(fs):
         code = img[f0 - base : f1 - base]
-        tracked: set[str] = set()  # registers holding the followed pointer
+        tracked: set[str] = {f"x{a.arg}"} if a.arg is not None else set()  # registers holding the followed pointer
         vslot: set[str] = set()  # registers holding a function pointer loaded from [vt, #vcall]
         for ins in cs.disasm(code, f0):
             acc = mem_access(ins)
