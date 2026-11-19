@@ -70,10 +70,9 @@ def load(game: Path, state: dict) -> dict:
     return s if s.get("version") == state.get("version", s.get("version")) else json.loads(json.dumps(state))
 
 
-def restore(game: Path, out: Path, names: list[str], legacy: Path | None = None) -> None:
+def restore(game: Path, out: Path, names: list[str]) -> None:
     for name in reversed(names):
-        src, dst = out / name, game / name
-        old = legacy / name if legacy is not None else game / (name + ".old")
+        src, dst, old = out / name, game / name, game / (name + ".old")
         if not src.exists() and dst.exists():
             dst.rename(src)
         if old.exists():
@@ -95,11 +94,6 @@ def recover(game: Path) -> None:
             raise OSError(f"invalid promotion journal: {journal}")
         restore(game, out, names)
         journal.unlink()
-    legacy = out / "promotion-backup"
-    if legacy.is_dir() and ((out / STATE).exists() or not (game / STATE).is_file()):
-        names = [name for name in (*OUTPUTS, STATE) if (legacy / name).exists()]
-        restore(game, out, names, legacy)
-        legacy.rmdir()
 
 
 def promote(game: Path, port: str) -> bool:

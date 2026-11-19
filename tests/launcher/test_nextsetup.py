@@ -118,20 +118,6 @@ def test_promotion_restores_outputs_after_a_failed_or_interrupted_rename(
     assert not (tmp_path / "pipeline-keys.bin.old").exists()
 
 
-def test_promote_recovers_an_older_promotion_backup(tmp_path: Path) -> None:
-    played(tmp_path)
-    out = nextsetup.seed(tmp_path)
-    backup = out / "promotion-backup"
-    backup.mkdir()
-    (tmp_path / "mkwgame.so").rename(backup / "mkwgame.so")
-    (tmp_path / "mkwgame.so").write_bytes(b"new lib")
-    (out / nextsetup.STATE).write_text(json.dumps({"port": "0.1.13", "ready": True}))
-    assert nextsetup.promote(tmp_path, "0.1.13")
-    assert (tmp_path / "mkwgame.so").read_bytes() == b"new lib"
-    assert (tmp_path / "mkwgame.so.old").read_bytes() == b"old lib"
-    assert not out.exists()
-
-
 def test_failed_rollback_preserves_both_versions_until_retry(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     played(tmp_path)
     out = nextsetup.seed(tmp_path)
