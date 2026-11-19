@@ -54,6 +54,8 @@ typedef struct {
     // (display, const size *, slot); 0 where the version has none (1.0.0 scales its picture to the whole output)
     uint64_t display_store, display_set_fn;
     uint8_t display_value_reg, display_base_reg;
+    uint64_t pane_matrix_fn;   // nn::ui2d's pane global-matrix builder (pane, draw info) (set aspect, host_pane_matrix);
+                               // 0: its callers are not in the version's table
     RtRaceEvent race_events[RT_RACE_EVENTS];   // race_scene.c; none: 20 and 15 fps apply everywhere
     // sdk offsets: the NVN2 driver's proc table (tools/gpu/nvn2_procs.py TABLES, the same rows)
     uint64_t sdk_name_pool, sdk_name_offsets, sdk_pointers;
