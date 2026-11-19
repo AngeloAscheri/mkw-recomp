@@ -376,21 +376,24 @@ msgstr "Ventana"
 
 msgctxt "UI_MENU_HUD_POSITION"
 msgid "HUD position"
-msgstr ""
+msgstr "Posición del HUD"
 
 msgctxt "UI_MENU_HUD_POSITION_DESC"
 msgid ""
 "On a picture wider or taller than 16:9, keep the race HUD in the middle 16:9 area (the console's "
 "place) or put it at the screen's edges and corners. Takes effect at the next start."
 msgstr ""
+"En una imagen más ancha o más alta que 16:9, deja el HUD de la carrera en la zona 16:9 del centro "
+"(donde está en la consola) o lo lleva a los bordes y esquinas de la pantalla. Se aplica en el "
+"próximo inicio."
 
 msgctxt "UI_MENU_HUD_POSITION_16X9"
 msgid "16:9 area"
-msgstr ""
+msgstr "Zona 16:9"
 
 msgctxt "UI_MENU_HUD_POSITION_EDGES"
 msgid "Screen edges"
-msgstr ""
+msgstr "Bordes de la pantalla"
 
 msgctxt "UI_MENU_PRESENT"
 msgid "Presentation"

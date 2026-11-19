@@ -352,21 +352,21 @@ msgstr "ウィンドウ"
 
 msgctxt "UI_MENU_HUD_POSITION"
 msgid "HUD position"
-msgstr ""
+msgstr "HUDの位置"
 
 msgctxt "UI_MENU_HUD_POSITION_DESC"
 msgid ""
 "On a picture wider or taller than 16:9, keep the race HUD in the middle 16:9 area (the console's "
 "place) or put it at the screen's edges and corners. Takes effect at the next start."
-msgstr ""
+msgstr "16:9より横長または縦長の画面で、レースのHUDを中央の16:9の範囲(本体と同じ位置)に置くか、画面の端と隅に置きます。次回の起動から反映されます。"
 
 msgctxt "UI_MENU_HUD_POSITION_16X9"
 msgid "16:9 area"
-msgstr ""
+msgstr "16:9の範囲"
 
 msgctxt "UI_MENU_HUD_POSITION_EDGES"
 msgid "Screen edges"
-msgstr ""
+msgstr "画面の端"
 
 msgctxt "UI_MENU_PRESENT"
 msgid "Presentation"

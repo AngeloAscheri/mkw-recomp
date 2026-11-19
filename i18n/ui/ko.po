@@ -360,21 +360,21 @@ msgstr "창"
 
 msgctxt "UI_MENU_HUD_POSITION"
 msgid "HUD position"
-msgstr ""
+msgstr "HUD 위치"
 
 msgctxt "UI_MENU_HUD_POSITION_DESC"
 msgid ""
 "On a picture wider or taller than 16:9, keep the race HUD in the middle 16:9 area (the console's "
 "place) or put it at the screen's edges and corners. Takes effect at the next start."
-msgstr ""
+msgstr "16:9보다 넓거나 높은 화면에서 레이스 HUD를 가운데 16:9 영역(본체와 같은 위치)에 두거나 화면의 가장자리와 모서리로 옮깁니다. 다음 실행부터 적용됩니다."
 
 msgctxt "UI_MENU_HUD_POSITION_16X9"
 msgid "16:9 area"
-msgstr ""
+msgstr "16:9 영역"
 
 msgctxt "UI_MENU_HUD_POSITION_EDGES"
 msgid "Screen edges"
-msgstr ""
+msgstr "화면 가장자리"
 
 msgctxt "UI_MENU_PRESENT"
 msgid "Presentation"

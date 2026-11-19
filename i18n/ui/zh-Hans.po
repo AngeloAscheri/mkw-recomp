@@ -347,21 +347,21 @@ msgstr "窗口"
 
 msgctxt "UI_MENU_HUD_POSITION"
 msgid "HUD position"
-msgstr ""
+msgstr "HUD 位置"
 
 msgctxt "UI_MENU_HUD_POSITION_DESC"
 msgid ""
 "On a picture wider or taller than 16:9, keep the race HUD in the middle 16:9 area (the console's "
 "place) or put it at the screen's edges and corners. Takes effect at the next start."
-msgstr ""
+msgstr "在比 16:9 更宽或更高的画面上,将比赛 HUD 保留在中间的 16:9 区域(主机上的位置),或移到屏幕的边缘和角落。下次启动时生效。"
 
 msgctxt "UI_MENU_HUD_POSITION_16X9"
 msgid "16:9 area"
-msgstr ""
+msgstr "16:9 区域"
 
 msgctxt "UI_MENU_HUD_POSITION_EDGES"
 msgid "Screen edges"
-msgstr ""
+msgstr "屏幕边缘"
 
 msgctxt "UI_MENU_PRESENT"
 msgid "Presentation"

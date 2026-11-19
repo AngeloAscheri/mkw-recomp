@@ -379,21 +379,24 @@ msgstr "Fenêtre"
 
 msgctxt "UI_MENU_HUD_POSITION"
 msgid "HUD position"
-msgstr ""
+msgstr "Position de l'ATH"
 
 msgctxt "UI_MENU_HUD_POSITION_DESC"
 msgid ""
 "On a picture wider or taller than 16:9, keep the race HUD in the middle 16:9 area (the console's "
 "place) or put it at the screen's edges and corners. Takes effect at the next start."
 msgstr ""
+"Sur une image plus large ou plus haute que 16:9, garde l'ATH de course dans la zone 16:9 du "
+"milieu (sa place sur la console) ou le place aux bords et aux coins de l'écran. Prend effet au "
+"prochain démarrage."
 
 msgctxt "UI_MENU_HUD_POSITION_16X9"
 msgid "16:9 area"
-msgstr ""
+msgstr "Zone 16:9"
 
 msgctxt "UI_MENU_HUD_POSITION_EDGES"
 msgid "Screen edges"
-msgstr ""
+msgstr "Bords de l'écran"
 
 msgctxt "UI_MENU_PRESENT"
 msgid "Presentation"
