@@ -475,4 +475,6 @@ void plat_mem_info(float *used_mb, float *total_mb, float *proc_mb);
 void plat_process_memory(uint64_t *resident, uint64_t *private_bytes);
 // Hands the C heap's free pages back to the system after a large release of small blocks.
 void plat_heap_trim(void);
+// The C heap in bytes: in use, free inside it, and what it has mapped (all arenas); 0 when unknown (Windows).
+void plat_heap_stats(uint64_t *in_use, uint64_t *free_bytes, uint64_t *mapped);
 

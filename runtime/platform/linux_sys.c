@@ -555,6 +555,11 @@ void plat_process_memory(uint64_t *resident, uint64_t *private_bytes) {
 
 void plat_heap_trim(void) { malloc_trim(0); }
 
+void plat_heap_stats(uint64_t *in_use, uint64_t *free_bytes, uint64_t *mapped) {
+    struct mallinfo2 m = mallinfo2();   // every arena: arena + hblkhd mapped, uordblks in use, fordblks free
+    *in_use = m.uordblks + m.hblkhd, *free_bytes = m.fordblks, *mapped = m.arena + m.hblkhd;
+}
+
 
 // CPU time (user + system) of this process's threads with that name (/proc/self/task/*/comm), summed; -1 when none.
 int64_t plat_threads_cpu_ns_named(const char *name) {
