@@ -63,6 +63,9 @@ extern "C" {
 #include "cfg.h"
 #include "gamelib.h"
 #include "input.h"
+#ifdef __linux__
+#include "linux_power.h"
+#endif
 #include "platform/platform.h"
 #include "sysinfo.h"
 #include "ui_text.h"
@@ -202,7 +205,16 @@ static bool pad_power(int i, InputPower *w, char *text, int size) {
     snprintf(w->name, sizeof w->name, "%s", n ? n : "");
     int pct = -1;
     SDL_PowerState st = SDL_GetGamepadPowerInfo(g, &pct);
-    input_power_from_sdl(st, pct, SDL_GetGamepadID(g), i, w);
+#ifdef __linux__
+    int xi = 0;   // this pad's order among Xbox-named pads: other makes in earlier slots shift no index
+    for (int j = 0; j < i; j++) {
+        const char *m = L.pad_open[j] ? SDL_GetGamepadName(L.pad_open[j]) : nullptr;
+        if (linux_power_is_xbox(m)) xi++;
+    }
+#else
+    int xi = i;
+#endif
+    input_power_from_sdl(st, pct, SDL_GetGamepadID(g), xi, w);
     input_power_text(w, text, size);
     return true;
 }
