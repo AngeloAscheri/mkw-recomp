@@ -33,8 +33,13 @@ def test_the_root_sizes_put_the_split_layouts_in_split():
             assert cls == "split", name
 
 
-def test_generated_header_is_up_to_date():
-    assert (ROOT / "runtime/core/boot/hud_layouts.h").read_text() == hud_layouts.header_text()
+def test_generated_header_has_every_layout_once():
+    # build.py writes it to build/obj/rt/hud_layouts.h (generated C stays out of the repo)
+    text = hud_layouts.header_text()
+    sigs = re.findall(r'\{0x([0-9a-f]{16})ull, "(\w+)", HUD_CLASS_(\w+)\}', text)
+    assert [(name, int(sig, 16), cls.lower().replace("_", "-")) for sig, name, cls in sigs] == [
+        (name, sig, cls) for name, _, sig, cls in hud_layouts.table()
+    ]
 
 
 def test_anchors_name_only_hud_and_menu_layouts():

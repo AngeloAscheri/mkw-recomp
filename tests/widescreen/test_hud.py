@@ -8,7 +8,7 @@ import sys
 
 import pytest
 
-from test_aspect import LIBM, ROOT, function
+from test_aspect import LIBM, ROOT
 
 sys.path.insert(0, str(ROOT / "recomp"))
 import hud_layouts  # noqa: E402

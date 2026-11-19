@@ -12,6 +12,7 @@ import pytest
 from test_aspect import LIBM, ROOT, function
 
 sys.path.insert(0, str(ROOT / "recomp"))
+import hud_layouts  # noqa: E402
 import patches  # noqa: E402
 
 PANE_SITES = {0x2F65C4: 0x9454090B, 0x17EC8E8: 0x94003042, 0x17F9724: 0x97FFFCB3}  # bl main+0x17f89f0
@@ -77,7 +78,8 @@ static const char *cfg_value(const char *key) { (void)key; return getenv("HUD") 
 static int race_scene_on(void) { return getenv("RACE") != 0; }
 """
     # the pane-matrix hook with everything it calls: the masks, the prompts and the screen-edge HUD
-    code += '#include "core/boot/hud_layouts.h"\n'
+    # inline here; build.py writes it to build/obj/rt/hud_layouts.h for the runtime
+    code += hud_layouts.header_text().replace("#pragma once\n", "")
     code += 'static const char *cfg_get(const char *key) { (void)key; return NULL; }\n'
     code += source[source.index("#define UI_MASK_REST") : source.index("static void host_ui_proj(Cpu *c)")]
     code += "\n".join(function(source, name) for name in ("is_16x9", "ui_full_screen", "aspect_ui_fit", "ui_tall_backdrop", "host_ui_proj"))
