@@ -266,10 +266,10 @@ typedef enum {
     // no GPU here can run the game (launcher.cpp gpu_bad, vk_gpu_check.h): the warning, then one line per GPU: OLD "%s:
     // ... %s ..." (name, what its driver offers), EXT "%s ... %s ... %s" (name, what it offers, the missing extension),
     // QUEUE and SKIPPED "%s" (name), SOFTWARE "... %s ..." (the CPU renderer's name); NO_DRIVER with no Vulkan at all;
-    // HELP what to install
+    // HELP what to install (HELP_WIN on Windows, where Mesa and the Linux releases mean nothing)
     UI_LAUNCH_GPU_NONE, UI_LAUNCH_GPU_OLD, UI_LAUNCH_GPU_EXT, UI_LAUNCH_GPU_QUEUE, UI_LAUNCH_GPU_SKIPPED,
-    UI_LAUNCH_GPU_SOFTWARE, UI_LAUNCH_GPU_NO_DRIVER, UI_LAUNCH_GPU_HELP,
-    UI_MENU_LAST_ID = UI_LAUNCH_GPU_HELP,
+    UI_LAUNCH_GPU_SOFTWARE, UI_LAUNCH_GPU_NO_DRIVER, UI_LAUNCH_GPU_HELP, UI_LAUNCH_GPU_HELP_WIN,
+    UI_MENU_LAST_ID = UI_LAUNCH_GPU_HELP_WIN,
     UI_TEXT_COUNT
 } UiTextId;
 

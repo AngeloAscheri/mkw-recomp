@@ -2868,36 +2868,36 @@ msgstr ""
 
 msgctxt "UI_LAUNCH_GPU_NONE"
 msgid "No graphics card here can run the game"
-msgstr ""
+msgstr "Aucune carte graphique de cet ordinateur ne peut faire tourner le jeu"
 
 #. printf format: keep every %... conversion, in the same order.
 msgctxt "UI_LAUNCH_GPU_OLD"
 msgid "%s: its driver offers %s, and the game needs Vulkan 1.3"
-msgstr ""
+msgstr "%s : son pilote offre %s, et le jeu a besoin de Vulkan 1.3"
 
 #. printf format: keep every %... conversion, in the same order.
 msgctxt "UI_LAUNCH_GPU_EXT"
 msgid "%s (%s): its driver lacks %s, which the game needs"
-msgstr ""
+msgstr "%s (%s) : il manque à son pilote %s, dont le jeu a besoin"
 
 #. printf format: keep every %... conversion, in the same order.
 msgctxt "UI_LAUNCH_GPU_QUEUE"
 msgid "%s: it has no queue that does both graphics and compute"
-msgstr ""
+msgstr "%s : elle n'a aucune file qui fasse à la fois le graphisme et le calcul"
 
 #. printf format: keep every %... conversion, in the same order.
 msgctxt "UI_LAUNCH_GPU_SKIPPED"
 msgid "%s: not the one chosen in Settings, Screen, Graphics card"
-msgstr ""
+msgstr "%s : ce n'est pas celle choisie dans Paramètres, Écran, Carte graphique"
 
 #. printf format: keep every %... conversion, in the same order.
 msgctxt "UI_LAUNCH_GPU_SOFTWARE"
 msgid "%s draws on the processor, not on a graphics card: far too slow to play"
-msgstr ""
+msgstr "%s dessine avec le processeur, pas avec une carte graphique : bien trop lent pour jouer"
 
 msgctxt "UI_LAUNCH_GPU_NO_DRIVER"
 msgid "No Vulkan driver was found."
-msgstr ""
+msgstr "Aucun pilote Vulkan n'a été trouvé."
 
 msgctxt "UI_LAUNCH_GPU_HELP"
 msgid ""
@@ -2905,3 +2905,18 @@ msgid ""
 "Ubuntu 20.04 ship; on NVIDIA, its driver 510 or newer. Some older graphics cards cannot have it "
 "at all. The setup can run now: the game starts once the driver is updated."
 msgstr ""
+"Le jeu a besoin de Vulkan 1.3. Sur AMD et Intel, c'est Mesa 22.0 ou plus récent, plus récent que "
+"ce que livrent Debian 11 et Ubuntu 20.04 ; sur NVIDIA, son pilote 510 ou plus récent. Certaines "
+"cartes graphiques anciennes ne peuvent pas l'avoir. La préparation peut se faire dès maintenant : "
+"le jeu démarrera une fois le pilote mis à jour."
+
+msgctxt "UI_LAUNCH_GPU_HELP_WIN"
+msgid ""
+"The game needs Vulkan 1.3: install the latest driver from your graphics card's maker (AMD, Intel "
+"or NVIDIA; on NVIDIA, 510 or newer). Some older graphics cards cannot have it at all. The setup "
+"can run now: the game starts once the driver is updated."
+msgstr ""
+"Le jeu a besoin de Vulkan 1.3 : installez le pilote le plus récent du fabricant de votre carte "
+"graphique (AMD, Intel ou NVIDIA ; sur NVIDIA, 510 ou plus récent). Certaines cartes graphiques "
+"anciennes ne peuvent pas l'avoir. La préparation peut se faire dès maintenant : le jeu démarrera "
+"une fois le pilote mis à jour."

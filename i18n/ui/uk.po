@@ -2848,36 +2848,36 @@ msgstr ""
 
 msgctxt "UI_LAUNCH_GPU_NONE"
 msgid "No graphics card here can run the game"
-msgstr ""
+msgstr "Жодна відеокарта цього комп'ютера не може запустити гру"
 
 #. printf format: keep every %... conversion, in the same order.
 msgctxt "UI_LAUNCH_GPU_OLD"
 msgid "%s: its driver offers %s, and the game needs Vulkan 1.3"
-msgstr ""
+msgstr "%s: її драйвер пропонує %s, а грі потрібен Vulkan 1.3"
 
 #. printf format: keep every %... conversion, in the same order.
 msgctxt "UI_LAUNCH_GPU_EXT"
 msgid "%s (%s): its driver lacks %s, which the game needs"
-msgstr ""
+msgstr "%s (%s): її драйверу бракує %s, яке потрібне грі"
 
 #. printf format: keep every %... conversion, in the same order.
 msgctxt "UI_LAUNCH_GPU_QUEUE"
 msgid "%s: it has no queue that does both graphics and compute"
-msgstr ""
+msgstr "%s: у неї немає черги, що виконує одночасно графіку та обчислення"
 
 #. printf format: keep every %... conversion, in the same order.
 msgctxt "UI_LAUNCH_GPU_SKIPPED"
 msgid "%s: not the one chosen in Settings, Screen, Graphics card"
-msgstr ""
+msgstr "%s: це не та, що вибрана в Налаштування, Екран, Відеокарта"
 
 #. printf format: keep every %... conversion, in the same order.
 msgctxt "UI_LAUNCH_GPU_SOFTWARE"
 msgid "%s draws on the processor, not on a graphics card: far too slow to play"
-msgstr ""
+msgstr "%s малює процесором, а не відеокартою: надто повільно для гри"
 
 msgctxt "UI_LAUNCH_GPU_NO_DRIVER"
 msgid "No Vulkan driver was found."
-msgstr ""
+msgstr "Драйвер Vulkan не знайдено."
 
 msgctxt "UI_LAUNCH_GPU_HELP"
 msgid ""
@@ -2885,3 +2885,16 @@ msgid ""
 "Ubuntu 20.04 ship; on NVIDIA, its driver 510 or newer. Some older graphics cards cannot have it "
 "at all. The setup can run now: the game starts once the driver is updated."
 msgstr ""
+"Грі потрібен Vulkan 1.3. Для AMD та Intel це Mesa 22.0 або новіша, новіша, ніж у Debian 11 та "
+"Ubuntu 20.04; для NVIDIA — драйвер 510 або новіший. Деякі старі відеокарти не підтримують його "
+"взагалі. Налаштування можна виконати вже зараз: гра запуститься, щойно драйвер буде оновлено."
+
+msgctxt "UI_LAUNCH_GPU_HELP_WIN"
+msgid ""
+"The game needs Vulkan 1.3: install the latest driver from your graphics card's maker (AMD, Intel "
+"or NVIDIA; on NVIDIA, 510 or newer). Some older graphics cards cannot have it at all. The setup "
+"can run now: the game starts once the driver is updated."
+msgstr ""
+"Грі потрібен Vulkan 1.3: встановіть найновіший драйвер від виробника вашої відеокарти (AMD, Intel "
+"або NVIDIA; для NVIDIA — 510 або новіший). Деякі старі відеокарти не підтримують його взагалі. "
+"Налаштування можна виконати вже зараз: гра запуститься, щойно драйвер буде оновлено."

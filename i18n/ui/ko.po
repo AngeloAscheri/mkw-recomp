@@ -2759,36 +2759,36 @@ msgstr ""
 
 msgctxt "UI_LAUNCH_GPU_NONE"
 msgid "No graphics card here can run the game"
-msgstr ""
+msgstr "이 PC의 그래픽 카드로는 게임을 실행할 수 없습니다"
 
 #. printf format: keep every %... conversion, in the same order.
 msgctxt "UI_LAUNCH_GPU_OLD"
 msgid "%s: its driver offers %s, and the game needs Vulkan 1.3"
-msgstr ""
+msgstr "%s: 드라이버가 %s을(를) 제공하지만 게임에는 Vulkan 1.3이 필요합니다"
 
 #. printf format: keep every %... conversion, in the same order.
 msgctxt "UI_LAUNCH_GPU_EXT"
 msgid "%s (%s): its driver lacks %s, which the game needs"
-msgstr ""
+msgstr "%s (%s): 드라이버에 게임에 필요한 %s이(가) 없습니다"
 
 #. printf format: keep every %... conversion, in the same order.
 msgctxt "UI_LAUNCH_GPU_QUEUE"
 msgid "%s: it has no queue that does both graphics and compute"
-msgstr ""
+msgstr "%s: 그래픽과 연산을 동시에 처리하는 큐가 없습니다"
 
 #. printf format: keep every %... conversion, in the same order.
 msgctxt "UI_LAUNCH_GPU_SKIPPED"
 msgid "%s: not the one chosen in Settings, Screen, Graphics card"
-msgstr ""
+msgstr "%s: 설정 > 화면 > 그래픽 카드에서 선택한 카드가 아닙니다"
 
 #. printf format: keep every %... conversion, in the same order.
 msgctxt "UI_LAUNCH_GPU_SOFTWARE"
 msgid "%s draws on the processor, not on a graphics card: far too slow to play"
-msgstr ""
+msgstr "%s은(는) 그래픽 카드가 아니라 프로세서로 그립니다: 플레이하기에는 너무 느립니다"
 
 msgctxt "UI_LAUNCH_GPU_NO_DRIVER"
 msgid "No Vulkan driver was found."
-msgstr ""
+msgstr "Vulkan 드라이버를 찾지 못했습니다."
 
 msgctxt "UI_LAUNCH_GPU_HELP"
 msgid ""
@@ -2796,3 +2796,14 @@ msgid ""
 "Ubuntu 20.04 ship; on NVIDIA, its driver 510 or newer. Some older graphics cards cannot have it "
 "at all. The setup can run now: the game starts once the driver is updated."
 msgstr ""
+"게임에는 Vulkan 1.3이 필요합니다. AMD와 Intel에서는 Mesa 22.0 이상으로, Debian 11과 Ubuntu 20.04에 포함된 것보다 새 버전입니다. "
+"NVIDIA에서는 드라이버 510 이상입니다. 일부 오래된 그래픽 카드는 아예 지원하지 않습니다. 설정은 지금 진행할 수 있으며, 드라이버를 업데이트하면 게임이 시작됩니다."
+
+msgctxt "UI_LAUNCH_GPU_HELP_WIN"
+msgid ""
+"The game needs Vulkan 1.3: install the latest driver from your graphics card's maker (AMD, Intel "
+"or NVIDIA; on NVIDIA, 510 or newer). Some older graphics cards cannot have it at all. The setup "
+"can run now: the game starts once the driver is updated."
+msgstr ""
+"게임에는 Vulkan 1.3이 필요합니다. 그래픽 카드 제조사(AMD, Intel 또는 NVIDIA)의 최신 드라이버를 설치하세요(NVIDIA는 510 이상). 일부 오래된 "
+"그래픽 카드는 아예 지원하지 않습니다. 설정은 지금 진행할 수 있으며, 드라이버를 업데이트하면 게임이 시작됩니다."

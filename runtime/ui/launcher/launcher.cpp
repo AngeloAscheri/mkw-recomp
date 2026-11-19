@@ -827,7 +827,11 @@ static void gpu_card(float w) {
         ImGui::Bullet();
         ImGui::TextWrapped("%s", line);
     }
+#ifdef _WIN32
+    if (driver) ImGui::TextWrapped("%s", menu_text(UI_LAUNCH_GPU_HELP_WIN));
+#else
     if (driver) ImGui::TextWrapped("%s", menu_text(UI_LAUNCH_GPU_HELP));
+#endif
     ImGui::PopTextWrapPos();
     card_end(LOOK_WARN, with_alpha(LOOK_WARN, 22));
 }

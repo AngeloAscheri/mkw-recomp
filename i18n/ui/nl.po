@@ -2858,36 +2858,36 @@ msgstr ""
 
 msgctxt "UI_LAUNCH_GPU_NONE"
 msgid "No graphics card here can run the game"
-msgstr ""
+msgstr "Geen enkele grafische kaart in deze computer kan het spel draaien"
 
 #. printf format: keep every %... conversion, in the same order.
 msgctxt "UI_LAUNCH_GPU_OLD"
 msgid "%s: its driver offers %s, and the game needs Vulkan 1.3"
-msgstr ""
+msgstr "%s: het stuurprogramma biedt %s, en het spel heeft Vulkan 1.3 nodig"
 
 #. printf format: keep every %... conversion, in the same order.
 msgctxt "UI_LAUNCH_GPU_EXT"
 msgid "%s (%s): its driver lacks %s, which the game needs"
-msgstr ""
+msgstr "%s (%s): het stuurprogramma mist %s, dat het spel nodig heeft"
 
 #. printf format: keep every %... conversion, in the same order.
 msgctxt "UI_LAUNCH_GPU_QUEUE"
 msgid "%s: it has no queue that does both graphics and compute"
-msgstr ""
+msgstr "%s: er is geen wachtrij die tegelijk graphics en rekenwerk doet"
 
 #. printf format: keep every %... conversion, in the same order.
 msgctxt "UI_LAUNCH_GPU_SKIPPED"
 msgid "%s: not the one chosen in Settings, Screen, Graphics card"
-msgstr ""
+msgstr "%s: niet de kaart gekozen in Instellingen, Scherm, Grafische kaart"
 
 #. printf format: keep every %... conversion, in the same order.
 msgctxt "UI_LAUNCH_GPU_SOFTWARE"
 msgid "%s draws on the processor, not on a graphics card: far too slow to play"
-msgstr ""
+msgstr "%s tekent met de processor, niet met een grafische kaart: veel te traag om te spelen"
 
 msgctxt "UI_LAUNCH_GPU_NO_DRIVER"
 msgid "No Vulkan driver was found."
-msgstr ""
+msgstr "Er is geen Vulkan-stuurprogramma gevonden."
 
 msgctxt "UI_LAUNCH_GPU_HELP"
 msgid ""
@@ -2895,3 +2895,18 @@ msgid ""
 "Ubuntu 20.04 ship; on NVIDIA, its driver 510 or newer. Some older graphics cards cannot have it "
 "at all. The setup can run now: the game starts once the driver is updated."
 msgstr ""
+"Het spel heeft Vulkan 1.3 nodig. Op AMD en Intel is dat Mesa 22.0 of nieuwer, nieuwer dan wat "
+"Debian 11 en Ubuntu 20.04 meeleveren; op NVIDIA het stuurprogramma 510 of nieuwer. Sommige oudere "
+"grafische kaarten kunnen het helemaal niet krijgen. De installatie kan nu al: het spel start "
+"zodra het stuurprogramma is bijgewerkt."
+
+msgctxt "UI_LAUNCH_GPU_HELP_WIN"
+msgid ""
+"The game needs Vulkan 1.3: install the latest driver from your graphics card's maker (AMD, Intel "
+"or NVIDIA; on NVIDIA, 510 or newer). Some older graphics cards cannot have it at all. The setup "
+"can run now: the game starts once the driver is updated."
+msgstr ""
+"Het spel heeft Vulkan 1.3 nodig: installeer het nieuwste stuurprogramma van de maker van je "
+"grafische kaart (AMD, Intel of NVIDIA; op NVIDIA 510 of nieuwer). Sommige oudere grafische "
+"kaarten kunnen het helemaal niet krijgen. De installatie kan nu al: het spel start zodra het "
+"stuurprogramma is bijgewerkt."

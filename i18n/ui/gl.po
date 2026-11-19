@@ -2844,36 +2844,36 @@ msgstr ""
 
 msgctxt "UI_LAUNCH_GPU_NONE"
 msgid "No graphics card here can run the game"
-msgstr ""
+msgstr "Ningunha tarxeta gráfica deste equipo pode executar o xogo"
 
 #. printf format: keep every %... conversion, in the same order.
 msgctxt "UI_LAUNCH_GPU_OLD"
 msgid "%s: its driver offers %s, and the game needs Vulkan 1.3"
-msgstr ""
+msgstr "%s: o seu controlador ofrece %s, e o xogo necesita Vulkan 1.3"
 
 #. printf format: keep every %... conversion, in the same order.
 msgctxt "UI_LAUNCH_GPU_EXT"
 msgid "%s (%s): its driver lacks %s, which the game needs"
-msgstr ""
+msgstr "%s (%s): ao seu controlador fáltalle %s, que o xogo necesita"
 
 #. printf format: keep every %... conversion, in the same order.
 msgctxt "UI_LAUNCH_GPU_QUEUE"
 msgid "%s: it has no queue that does both graphics and compute"
-msgstr ""
+msgstr "%s: non ten ningunha cola que faga á vez gráficos e cálculo"
 
 #. printf format: keep every %... conversion, in the same order.
 msgctxt "UI_LAUNCH_GPU_SKIPPED"
 msgid "%s: not the one chosen in Settings, Screen, Graphics card"
-msgstr ""
+msgstr "%s: non é a escollida en Configuración, Pantalla, Tarxeta gráfica"
 
 #. printf format: keep every %... conversion, in the same order.
 msgctxt "UI_LAUNCH_GPU_SOFTWARE"
 msgid "%s draws on the processor, not on a graphics card: far too slow to play"
-msgstr ""
+msgstr "%s debuxa co procesador, non cunha tarxeta gráfica: é demasiado lento para xogar"
 
 msgctxt "UI_LAUNCH_GPU_NO_DRIVER"
 msgid "No Vulkan driver was found."
-msgstr ""
+msgstr "Non se atopou ningún controlador de Vulkan."
 
 msgctxt "UI_LAUNCH_GPU_HELP"
 msgid ""
@@ -2881,3 +2881,18 @@ msgid ""
 "Ubuntu 20.04 ship; on NVIDIA, its driver 510 or newer. Some older graphics cards cannot have it "
 "at all. The setup can run now: the game starts once the driver is updated."
 msgstr ""
+"O xogo necesita Vulkan 1.3. En AMD e Intel iso é Mesa 22.0 ou posterior, máis recente que o que "
+"traen Debian 11 e Ubuntu 20.04; en NVIDIA, o seu controlador 510 ou posterior. Algunhas tarxetas "
+"gráficas antigas non poden telo. A preparación pódese facer xa: o xogo arrincará cando o "
+"controlador estea actualizado."
+
+msgctxt "UI_LAUNCH_GPU_HELP_WIN"
+msgid ""
+"The game needs Vulkan 1.3: install the latest driver from your graphics card's maker (AMD, Intel "
+"or NVIDIA; on NVIDIA, 510 or newer). Some older graphics cards cannot have it at all. The setup "
+"can run now: the game starts once the driver is updated."
+msgstr ""
+"O xogo necesita Vulkan 1.3: instala o controlador máis recente do fabricante da túa tarxeta "
+"gráfica (AMD, Intel ou NVIDIA; en NVIDIA, o 510 ou posterior). Algunhas tarxetas gráficas antigas "
+"non poden telo. A preparación pódese facer xa: o xogo arrincará cando o controlador estea "
+"actualizado."
