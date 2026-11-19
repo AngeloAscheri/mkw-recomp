@@ -452,6 +452,39 @@ def test_copy_removes_other_versions_files(tmp_path: Path) -> None:
     assert (dst / "UI/Product_180.sarc.zs").is_file()
 
 
+def test_copy_keeps_installed_files_when_source_scan_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import gamecopy
+
+    src, dst = tmp_path / "dump", tmp_path / "install"
+    blocked = src / "sub"
+    installed = dst / "sub/file.bin"
+    blocked.mkdir(parents=True)
+    installed.parent.mkdir(parents=True)
+    (blocked / "file.bin").write_bytes(b"new version")
+    installed.write_bytes(b"old version")
+    stale = dst / "stale.bin"
+    stale.write_bytes(b"stale")
+    scandir = os.scandir
+
+    def fail_subdirectory(path):
+        if Path(path) == blocked:
+            raise PermissionError("can't scan source subdirectory")
+        return scandir(path)
+
+    with monkeypatch.context() as fault:
+        fault.setattr(os, "scandir", fail_subdirectory)
+        with pytest.raises(PermissionError, match="can't scan source subdirectory"):
+            gamecopy.copy_tree(src, dst, 1, "1.8.0", verify_existing=True)
+
+    assert installed.read_bytes() == b"old version"
+    assert stale.is_file()
+    gamecopy.copy_tree(src, dst, 1, "1.8.0", verify_existing=True)
+    assert installed.read_bytes() == b"new version"
+    assert not stale.exists()
+
+
 @pytest.fixture
 def loose_romfs_setup(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
