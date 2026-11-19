@@ -19,6 +19,10 @@ A fix for the Linux AppImage: 0.1.14's setup stopped at `check` for every player
   (#251, #506) now writes them only after two minutes without an event, not every two minutes from the start (a
   12-minute setup carried ~1 000 lines of them, which read like an error).
 
+### Tested
+
+TODO
+
 ## 0.1.14
 
 Races at 60 fps on AMD cards under Linux (42.6 to 16.9 ms a frame on an RX 6700 XT), trees and bushes that no longer
