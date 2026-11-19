@@ -2864,3 +2864,47 @@ msgstr "Buscando tu copia en los sitios habituales..."
 msgctxt "UI_LAUNCH_FOUND_FOLDER"
 msgid "folder"
 msgstr "carpeta"
+
+msgctxt "UI_LAUNCH_GPU_NONE"
+msgid "No graphics card here can run the game"
+msgstr "Ninguna tarjeta gráfica de este equipo puede ejecutar el juego"
+
+#. printf format: keep every %... conversion, in the same order.
+msgctxt "UI_LAUNCH_GPU_OLD"
+msgid "%s: its driver offers %s, and the game needs Vulkan 1.3"
+msgstr "%s: su controlador ofrece %s, y el juego necesita Vulkan 1.3"
+
+#. printf format: keep every %... conversion, in the same order.
+msgctxt "UI_LAUNCH_GPU_EXT"
+msgid "%s (%s): its driver lacks %s, which the game needs"
+msgstr "%s (%s): a su controlador le falta %s, que el juego necesita"
+
+#. printf format: keep every %... conversion, in the same order.
+msgctxt "UI_LAUNCH_GPU_QUEUE"
+msgid "%s: it has no queue that does both graphics and compute"
+msgstr "%s: no tiene una cola que haga a la vez gráficos y cómputo"
+
+#. printf format: keep every %... conversion, in the same order.
+msgctxt "UI_LAUNCH_GPU_SKIPPED"
+msgid "%s: not the one chosen in Settings, Screen, Graphics card"
+msgstr "%s: no es la elegida en Configuración, Pantalla, Tarjeta gráfica"
+
+#. printf format: keep every %... conversion, in the same order.
+msgctxt "UI_LAUNCH_GPU_SOFTWARE"
+msgid "%s draws on the processor, not on a graphics card: far too slow to play"
+msgstr "%s dibuja con el procesador, no con una tarjeta gráfica: es demasiado lento para jugar"
+
+msgctxt "UI_LAUNCH_GPU_NO_DRIVER"
+msgid "No Vulkan driver was found."
+msgstr "No se ha encontrado ningún controlador de Vulkan."
+
+msgctxt "UI_LAUNCH_GPU_HELP"
+msgid ""
+"The game needs Vulkan 1.3. On AMD and Intel that is Mesa 22.0 or newer, newer than Debian 11 and "
+"Ubuntu 20.04 ship; on NVIDIA, its driver 510 or newer. Some older graphics cards cannot have it "
+"at all. The setup can run now: the game starts once the driver is updated."
+msgstr ""
+"El juego necesita Vulkan 1.3. En AMD e Intel eso es Mesa 22.0 o posterior, más reciente que el "
+"que traen Debian 11 y Ubuntu 20.04; en NVIDIA, su controlador 510 o posterior. Algunas tarjetas "
+"gráficas antiguas no pueden tenerlo. La preparación puede hacerse ya: el juego arrancará cuando "
+"el controlador esté actualizado."

@@ -263,7 +263,13 @@ typedef enum {
     // the setup's copies found in the usual places (launcher.cpp found_copies): the list's title, the line while it
     // looks, and the kind of a loose copy
     UI_LAUNCH_FOUND, UI_LAUNCH_FOUND_SEARCHING, UI_LAUNCH_FOUND_FOLDER,
-    UI_MENU_LAST_ID = UI_LAUNCH_FOUND_FOLDER,
+    // no GPU here can run the game (launcher.cpp gpu_bad, vk_gpu_check.h): the warning, then one line per GPU: OLD "%s:
+    // ... %s ..." (name, what its driver offers), EXT "%s ... %s ... %s" (name, what it offers, the missing extension),
+    // QUEUE and SKIPPED "%s" (name), SOFTWARE "... %s ..." (the CPU renderer's name); NO_DRIVER with no Vulkan at all;
+    // HELP what to install
+    UI_LAUNCH_GPU_NONE, UI_LAUNCH_GPU_OLD, UI_LAUNCH_GPU_EXT, UI_LAUNCH_GPU_QUEUE, UI_LAUNCH_GPU_SKIPPED,
+    UI_LAUNCH_GPU_SOFTWARE, UI_LAUNCH_GPU_NO_DRIVER, UI_LAUNCH_GPU_HELP,
+    UI_MENU_LAST_ID = UI_LAUNCH_GPU_HELP,
     UI_TEXT_COUNT
 } UiTextId;
 
