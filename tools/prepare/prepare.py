@@ -212,7 +212,7 @@ GENERATOR = [
     *sorted((ROOT / "recomp").glob("*.py")),
     *sorted((ROOT / "recomp").glob("patches-mkw*.txt")),
 ]  # each version's table
-COMPILER = [*GENERATOR, ROOT / "tools/build/build.py", Path(__file__).with_name("gamecode.py")]
+COMPILER = [*GENERATOR, ROOT / "tools/build/build.py", ROOT / "tools/prepare/gamecode.py"]
 
 
 def warm(game: Path, work: Path, runtime: Path | None = None, out: Path | None = None) -> None:
