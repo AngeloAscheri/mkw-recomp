@@ -783,8 +783,10 @@ msgstr ""
 
 msgctxt "UI_MENU_SHORTCUT_STEAM_NOTE"
 msgid ""
-"Note: If using the Guide button, we recommend disabling 'Guide button focuses Steam' in Steam "
-"(Settings -> Controller -> Advanced Settings) so Steam doesn't open over the game."
+"Note: If using the Guide button, turn off 'Guide button focuses Steam' in Steam (Settings -> "
+"Controller -> Advanced Settings).\n\n"
+"On Windows, also turn off 'Allow your controller to open Game Bar' (Settings -> Gaming -> Game "
+"Bar)."
 msgstr ""
 
 msgctxt "UI_BINDS_HELP"
