@@ -26,8 +26,11 @@ static uint32_t knob_ms(const char *name, uint32_t def) {
     return e && *e ? (uint32_t)strtoul(e, NULL, 10) : def;
 }
 
+// MKW_MEM_SPILL_ANY=1 (diagnosis): every lazy pool, CPU-accessible ones too, to measure what the game reads back.
+static int spill_any;
+
 static int eligible(const PoolRec *r) {
-    return r->kind == POOL_IMPORT && r->lazy && (r->flags & NVN_MEMORY_POOL_FLAGS_CPU_NO_ACCESS);
+    return r->kind == POOL_IMPORT && r->lazy && (spill_any || (r->flags & NVN_MEMORY_POOL_FLAGS_CPU_NO_ACCESS));
 }
 
 // One step of the pool keyed key at [lo, hi): spilled only if the pool is still there and still eligible.
@@ -49,6 +52,7 @@ static void sweep_main(void *arg) {
     int cap = 0;
     int64_t last[5] = {0};
     uint32_t sweep_ms = knob_ms("MKW_MEM_SPILL_SWEEP_MS", 5000), age_ms = knob_ms("MKW_MEM_SPILL_AGE_MS", 10000);
+    __atomic_store_n(&spill_any, (int)knob_ms("MKW_MEM_SPILL_ANY", 0) != 0, __ATOMIC_RELAXED);
     for (;;) {
         plat_sleep_ms(sweep_ms);
         uint32_t now = plat_now_ms();

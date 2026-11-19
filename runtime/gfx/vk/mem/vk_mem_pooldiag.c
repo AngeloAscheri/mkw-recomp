@@ -34,7 +34,7 @@ void vk_pool_diag_note(uint32_t flags, int what, uint64_t bytes) {
 
 void vk_pool_diag_log(uint64_t frame) {
     if (!vk_pool_diag_on()) return;
-    typedef struct { uint32_t flags; uint64_t n, bytes, shadowed, nshadow; int64_t resident; } Group;
+    typedef struct { uint32_t flags; uint64_t n, bytes, shadowed, nshadow, nlazy; int64_t resident, lazy_resident; } Group;
     Group g[32];
     int ng = 0;
     plat_mutex_lock_shared(&pool_lock);
@@ -43,19 +43,22 @@ void vk_pool_diag_log(uint64_t frame) {
         if (r->kind != POOL_IMPORT) continue;
         int j = 0;
         while (j < ng && g[j].flags != r->flags) j++;
-        if (j == ng && ng < 32) g[ng++] = (Group){r->flags, 0, 0, 0, 0, 0};
+        if (j == ng && ng < 32) g[ng++] = (Group){r->flags, 0, 0, 0, 0, 0, 0, 0};
         if (j == ng) continue;
         g[j].n++, g[j].bytes += r->size;
         if (r->smap) g[j].nshadow++, g[j].shadowed += r->import_hi - r->import_lo;
         uint64_t lo = r->lo & ~0xfffull, hi = (r->lo + r->size + 0xfff) & ~0xfffull;
         int64_t in = plat_mem_resident((const void *)(uintptr_t)lo, hi - lo);
         if (in > 0) g[j].resident += in;
+        if (r->lazy) g[j].nlazy++, g[j].lazy_resident += in > 0 ? in : 0;   // no GPU storage yet: what a spill could take
     }
     plat_mutex_unlock_shared(&pool_lock);
     for (int j = 0; j < ng; j++)
-        rt_log("mem: pools %#x at frame %llu: %llu pools %.1f MiB, %llu shadowed %.1f MiB, game's pages in RAM %.1f MiB",
+        rt_log("mem: pools %#x at frame %llu: %llu pools %.1f MiB, %llu shadowed %.1f MiB, game's pages in RAM %.1f MiB; "
+               "%llu never resolved by the GPU (lazy), %.1f MiB of them in RAM",
                g[j].flags, (unsigned long long)frame, (unsigned long long)g[j].n, g[j].bytes / 1048576.0,
-               (unsigned long long)g[j].nshadow, g[j].shadowed / 1048576.0, g[j].resident / 1048576.0);
+               (unsigned long long)g[j].nshadow, g[j].shadowed / 1048576.0, g[j].resident / 1048576.0,
+               (unsigned long long)g[j].nlazy, g[j].lazy_resident / 1048576.0);
     noacc_log();
 }
 
