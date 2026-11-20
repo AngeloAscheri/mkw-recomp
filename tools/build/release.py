@@ -175,6 +175,7 @@ def windows(dist: Path, version: str) -> Path:
             if p.is_file():
                 z.write(p, top / p.relative_to(dist))
         z.write(ROOT / "LICENSE", top / "licenses/mkw-recomp-LICENSE")
+        z.write(ROOT / "tools/build/recomplauncher.json", top / "recomplauncher.json")  # RecompLauncher's setup file (#706)
         # the libraries in mkw.exe and beside it (tools/build/windeps.py keeps each package's licence files)
         for p in sorted((ROOT / "build/win/deps/share/licenses").rglob("*")):
             if p.is_file():
