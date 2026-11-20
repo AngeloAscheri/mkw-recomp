@@ -148,8 +148,13 @@ jobs:
         run: uv run tools/build/dist.py --target windows
       - name: Zip
         run: |
-          uv run tools/build/release.py --target windows --version "${GITHUB_REF_NAME#v}"
-          uv run tools/build/release.py --target windows --cpu noavx2 --version "${GITHUB_REF_NAME#v}"
+          # the two zips are independent and deflate-bound: one process each (in series the step took 2x)
+          uv run tools/build/release.py --target windows --version "${GITHUB_REF_NAME#v}" & a=$!
+          uv run tools/build/release.py --target windows --cpu noavx2 --version "${GITHUB_REF_NAME#v}" & b=$!
+          ra=0; rb=0
+          wait $a || ra=$?
+          wait $b || rb=$?
+          exit $((ra | rb))
       - uses: actions/upload-artifact@v7
         with:
           name: windows
