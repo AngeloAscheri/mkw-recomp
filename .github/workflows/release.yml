@@ -129,6 +129,7 @@ jobs:
         with:
           path: build/dist/dl
           key: dist-dl-windows-${{ hashFiles('tools/build/dist.py') }}
+          restore-keys: dist-dl-windows-   # a stale cache still has the downloads: each is checked by sha256 before use
       - name: llvm-mingw and the Windows libraries
         run: uv run tools/build/windeps.py
       - name: mkw.exe
