@@ -685,6 +685,16 @@ msgid ""
 "Applies at the next start."
 msgstr ""
 
+msgctxt "UI_MENU_LAN_NET"
+msgid "LAN network"
+msgstr ""
+
+msgctxt "UI_MENU_LAN_NET_DESC"
+msgid ""
+"The network LAN play uses, for ZeroTier, N2N, Tailscale or a VPN: pick the one the other players are on. "
+"Automatic picks the best network by itself. Applies at the next start."
+msgstr ""
+
 msgctxt "UI_MENU_VOLUME"
 msgid "Volume"
 msgstr ""

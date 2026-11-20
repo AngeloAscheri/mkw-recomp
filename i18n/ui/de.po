@@ -776,6 +776,18 @@ msgstr ""
 "Netzwerk zu fahren (UDP-Ports 49152 und 35000). Es erreicht nur Adressen im lokalen Netzwerk, nie "
 "das Internet. Gilt ab dem nächsten Start."
 
+msgctxt "UI_MENU_LAN_NET"
+msgid "LAN network"
+msgstr "LAN-Netzwerk"
+
+msgctxt "UI_MENU_LAN_NET_DESC"
+msgid ""
+"The network LAN play uses, for ZeroTier, N2N, Tailscale or a VPN: pick the one the other players "
+"are on. Automatic picks the best network by itself. Applies at the next start."
+msgstr ""
+"Das Netzwerk für LAN-Spiele, z. B. ZeroTier, N2N, Tailscale oder VPN: wähle das der anderen "
+"Spieler. Automatisch wählt das beste. Gilt ab dem nächsten Start."
+
 msgctxt "UI_MENU_VOLUME"
 msgid "Volume"
 msgstr "Lautstärke"

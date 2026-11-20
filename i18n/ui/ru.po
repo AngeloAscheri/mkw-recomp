@@ -763,6 +763,18 @@ msgstr ""
 "локальной сети (UDP-порты 49152 и 35000). Обращается только к адресам локальной сети, никогда к "
 "интернету. Применяется при следующем запуске."
 
+msgctxt "UI_MENU_LAN_NET"
+msgid "LAN network"
+msgstr "Сеть для LAN"
+
+msgctxt "UI_MENU_LAN_NET_DESC"
+msgid ""
+"The network LAN play uses, for ZeroTier, N2N, Tailscale or a VPN: pick the one the other players "
+"are on. Automatic picks the best network by itself. Applies at the next start."
+msgstr ""
+"Сеть для игры по LAN: для ZeroTier, N2N, Tailscale или VPN выберите ту, где находятся другие "
+"игроки. «Автоматически» выбирает лучшую. Применяется при следующем запуске."
+
 msgctxt "UI_MENU_VOLUME"
 msgid "Volume"
 msgstr "Громкость"

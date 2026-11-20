@@ -773,6 +773,18 @@ msgstr ""
 "lasterketak egiteko (49152 eta 35000 UDP atakak). Sare lokaleko helbideetara bakarrik iristen da, "
 "inoiz ez internetera. Hurrengo abiaraztean aplikatzen da."
 
+msgctxt "UI_MENU_LAN_NET"
+msgid "LAN network"
+msgstr "LAN sarea"
+
+msgctxt "UI_MENU_LAN_NET_DESC"
+msgid ""
+"The network LAN play uses, for ZeroTier, N2N, Tailscale or a VPN: pick the one the other players "
+"are on. Automatic picks the best network by itself. Applies at the next start."
+msgstr ""
+"LAN jokoak erabiltzen duen sarea, ZeroTier, N2N, Tailscale edo VPN baterako: aukeratu beste "
+"jokalarien sarea. Automatikoak onena aukeratzen du. Hurrengo hasieran aplikatzen da."
+
 msgctxt "UI_MENU_VOLUME"
 msgid "Volume"
 msgstr "Bolumena"

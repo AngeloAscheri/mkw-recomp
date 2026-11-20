@@ -748,6 +748,18 @@ msgstr ""
 "เพื่อแข่งกับพีซีเครื่องอื่นในเครือข่ายภายในเดียวกัน (พอร์ต UDP 49152 และ 35000) "
 "เชื่อมต่อได้เฉพาะที่อยู่ในเครือข่ายภายใน ไม่ออกอินเทอร์เน็ต มีผลเมื่อเริ่มครั้งหน้า"
 
+msgctxt "UI_MENU_LAN_NET"
+msgid "LAN network"
+msgstr "เครือข่าย LAN"
+
+msgctxt "UI_MENU_LAN_NET_DESC"
+msgid ""
+"The network LAN play uses, for ZeroTier, N2N, Tailscale or a VPN: pick the one the other players "
+"are on. Automatic picks the best network by itself. Applies at the next start."
+msgstr ""
+"เครือข่ายที่ใช้เล่น LAN สำหรับ ZeroTier, N2N, Tailscale หรือ VPN: "
+"เลือกเครือข่ายเดียวกับผู้เล่นคนอื่น อัตโนมัติจะเลือกอันที่ดีที่สุด มีผลเมื่อเริ่มเกมครั้งถัดไป"
+
 msgctxt "UI_MENU_VOLUME"
 msgid "Volume"
 msgstr "ระดับเสียง"

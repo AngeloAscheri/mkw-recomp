@@ -708,6 +708,17 @@ msgid ""
 msgstr ""
 "タイトルメニューのローカル通信がLANプレイになり、同じローカルネットワーク上の他のPCとレースできます(UDPポート49152と35000)。ローカルネットワークのアドレスにのみ接続し、インターネットには接続しません。次回の起動から反映されます。"
 
+msgctxt "UI_MENU_LAN_NET"
+msgid "LAN network"
+msgstr "LANのネットワーク"
+
+msgctxt "UI_MENU_LAN_NET_DESC"
+msgid ""
+"The network LAN play uses, for ZeroTier, N2N, Tailscale or a VPN: pick the one the other players "
+"are on. Automatic picks the best network by itself. Applies at the next start."
+msgstr ""
+"LANプレイで使うネットワークです。ZeroTier、N2N、Tailscale、VPNを使う場合は、他のプレイヤーと同じものを選びます。自動では最適なものを選びます。次回の起動から反映されます。"
+
 msgctxt "UI_MENU_VOLUME"
 msgid "Volume"
 msgstr "音量"

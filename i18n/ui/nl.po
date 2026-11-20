@@ -770,6 +770,18 @@ msgstr ""
 "netwerk (UDP-poorten 49152 en 35000). Het bereikt alleen adressen in het lokale netwerk, nooit "
 "het internet. Geldt bij de volgende start."
 
+msgctxt "UI_MENU_LAN_NET"
+msgid "LAN network"
+msgstr "LAN-netwerk"
+
+msgctxt "UI_MENU_LAN_NET_DESC"
+msgid ""
+"The network LAN play uses, for ZeroTier, N2N, Tailscale or a VPN: pick the one the other players "
+"are on. Automatic picks the best network by itself. Applies at the next start."
+msgstr ""
+"Het netwerk voor LAN-spel, voor ZeroTier, N2N, Tailscale of een VPN: kies dat van de andere "
+"spelers. Automatisch kiest het beste. Geldt vanaf de volgende start."
+
 msgctxt "UI_MENU_VOLUME"
 msgid "Volume"
 msgstr "Volume"

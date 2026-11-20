@@ -765,6 +765,18 @@ msgstr ""
 "w tej samej sieci lokalnej (porty UDP 49152 i 35000). Łączy się tylko z adresami sieci lokalnej, "
 "nigdy z internetem. Działa od następnego uruchomienia."
 
+msgctxt "UI_MENU_LAN_NET"
+msgid "LAN network"
+msgstr "Sieć LAN"
+
+msgctxt "UI_MENU_LAN_NET_DESC"
+msgid ""
+"The network LAN play uses, for ZeroTier, N2N, Tailscale or a VPN: pick the one the other players "
+"are on. Automatic picks the best network by itself. Applies at the next start."
+msgstr ""
+"Sieć używana w grze LAN, np. ZeroTier, N2N, Tailscale lub VPN: wybierz tę, w której są inni "
+"gracze. Automatycznie wybiera najlepszą. Zadziała po następnym uruchomieniu."
+
 msgctxt "UI_MENU_VOLUME"
 msgid "Volume"
 msgstr "Głośność"

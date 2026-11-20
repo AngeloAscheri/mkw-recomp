@@ -122,6 +122,7 @@ static const CfgMeta metas[] = {
     {"LANG", "", "ja|en-US|fr|de|it|es|zh-CN|ko|nl|pt|ru|zh-TW|en-GB|fr-CA|es-419|zh-Hans|zh-Hant|pt-BR|pl|th|ca|gl|eu", RESTART},
     {"OPERATION_MODE", "docked", "docked|handheld", RESTART},
     {"LAN", "0", "0|1", RESTART},   // LAN play (sdk/ov/ov_socket.c), off until played between two PCs (#144)
+    {"LAN_IP", "", NULL, RESTART},   // the address LAN play uses; unset: the best interface (ov_lanaddr.c); the Network row (#707)
     // Graphics: the console's look by default
     {"QUALITY", "console", "low|medium|console|high|ultra|custom", RESTART},   // the menu's presets; nothing reads it
     {"ANISO", "game", "game|2|4|8|16", RESTART}, {"TEX_QUALITY", "full", "full|half|quarter", RESTART},
