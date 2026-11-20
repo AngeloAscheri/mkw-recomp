@@ -884,6 +884,18 @@ msgctxt "UI_MENU_PAD_LAYOUT_IN_USE"
 msgid "in use: %s"
 msgstr "erabiltzen: %s"
 
+msgctxt "UI_MENU_KEYBOARD_MOUSE"
+msgid "Keyboard and mouse"
+msgstr "Teklatua eta sagua"
+
+msgctxt "UI_MENU_KEYBOARD_MOUSE_DESC"
+msgid ""
+"Off: the game ignores the keyboard and the mouse (controllers only) and the mouse cursor stays "
+"free. Esc still opens this menu."
+msgstr ""
+"Desaktibatuta: jokoak teklatua eta sagua ez ditu kontuan hartzen (agintea soilik) eta kurtsorea "
+"aske geratzen da. Esc-k menu hau irekitzen jarraitzen du."
+
 msgctxt "UI_MENU_MOUSE_SENS"
 msgid "Mouse camera sensitivity"
 msgstr "Saguaren kamera-sentsibilitatea"

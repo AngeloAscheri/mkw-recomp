@@ -876,6 +876,18 @@ msgctxt "UI_MENU_PAD_LAYOUT_IN_USE"
 msgid "in use: %s"
 msgstr "używane: %s"
 
+msgctxt "UI_MENU_KEYBOARD_MOUSE"
+msgid "Keyboard and mouse"
+msgstr "Klawiatura i mysz"
+
+msgctxt "UI_MENU_KEYBOARD_MOUSE_DESC"
+msgid ""
+"Off: the game ignores the keyboard and the mouse (controllers only) and the mouse cursor stays "
+"free. Esc still opens this menu."
+msgstr ""
+"Wył.: gra ignoruje klawiaturę i mysz (tylko kontrolery), a kursor myszy pozostaje wolny. Esc "
+"nadal otwiera to menu."
+
 msgctxt "UI_MENU_MOUSE_SENS"
 msgid "Mouse camera sensitivity"
 msgstr "Czułość kamery myszą"
