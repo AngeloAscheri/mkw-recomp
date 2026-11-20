@@ -67,7 +67,7 @@ updates in `.nup` by @anarqz, blurred NSFW mods on GameBanana by @SavageCore. Th
 
 ### Tested
 
-PENDING
+TODO
 
 ## 0.1.15
 
