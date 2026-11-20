@@ -67,7 +67,12 @@ updates in `.nup` by @anarqz, blurred NSFW mods on GameBanana by @SavageCore. Th
 
 ### Tested
 
-TODO
+From the packages Actions built for this tag, before publishing:
+
+- The whole setup from the Linux AppImage through its `setup/` link, as the start screen runs it (12 threads, game
+  1.0.0), in about 9 minutes; its warm-up built all 13 630 shader libraries and compute pipelines (761 compute) with
+  none failed.
+- The whole setup from the Windows zip (6-thread Windows PC, game 1.0.0) in about 19 minutes.
 
 ## 0.1.15
 
