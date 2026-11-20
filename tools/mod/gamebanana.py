@@ -29,11 +29,15 @@ Usage: gamebanana.py --cache DIR browse [--page N] [--sort downloads|new|likes]
 import argparse
 import hashlib
 import html
+import http.client
 import json
 import os
+import queue
 import re
+import socket
 import sys
 import tempfile
+import threading
 import time
 import urllib.parse
 import urllib.request
@@ -44,6 +48,76 @@ API = "https://gamebanana.com/apiv11"
 USER_AGENT = "mkw-recomp (+https://github.com/adriadam10/mkw-recomp)"
 TTL, PER_MINUTE, PER_PAGE = 600, 60, 20
 SORTS = {"downloads": "Generic_MostDownloaded", "new": "Generic_Newest", "likes": "Generic_MostLiked"}
+
+
+def _race_create_connection(address, timeout=socket._GLOBAL_DEFAULT_TIMEOUT, source_address=None):
+    """socket.create_connection with every resolved address at once, staggered (Happy Eyeballs): CPython tries them
+    one after another with the full timeout each, which stalls for tens of seconds when IPv6 is blackholed but IPv4
+    answers (or the reverse). The first connection wins and the losers are closed; when all fail, the error comes
+    as soon as the last one has."""
+    host, port = address
+    addrs = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
+    if len(addrs) < 2:
+        return socket.create_connection(address, timeout, source_address)
+    results: queue.Queue = queue.Queue()
+    lock = threading.Lock()
+    won = []
+
+    def attempt(family, kind, proto, addr):
+        sock = None
+        try:
+            sock = socket.socket(family, kind, proto)
+            if timeout is not socket._GLOBAL_DEFAULT_TIMEOUT:
+                sock.settimeout(timeout)
+            if source_address:
+                sock.bind(source_address)
+            sock.connect(addr)
+        except OSError as e:
+            if sock:
+                sock.close()
+            results.put(e)
+            return
+        with lock:
+            first = not won
+            won.append(sock)
+        if first:
+            results.put(sock)
+        else:
+            sock.close()
+
+    deadline = None if timeout in (None, socket._GLOBAL_DEFAULT_TIMEOUT) else time.monotonic() + timeout
+    started = failed = 0
+    last: OSError | None = None
+    while failed < len(addrs):
+        if started < len(addrs):
+            family, kind, proto, _, addr = addrs[started]
+            threading.Thread(target=attempt, args=(family, kind, proto, addr), daemon=True).start()
+            started += 1
+        wait = 0.25 if started < len(addrs) else None
+        if wait is None and deadline is not None:
+            wait = max(deadline - time.monotonic(), 0)
+        try:
+            got = results.get(timeout=wait)
+        except queue.Empty:
+            if started < len(addrs):
+                continue
+            raise TimeoutError(f"connecting to {host}:{port} timed out") from last
+        if isinstance(got, OSError):
+            failed, last = failed + 1, got
+            continue
+        return got
+    raise last or OSError(f"no address of {host}:{port} answered")
+
+
+_orig_init = http.client.HTTPConnection.__init__
+
+
+def _init(self, *args, **kwargs):
+    _orig_init(self, *args, **kwargs)
+    self._create_connection = _race_create_connection   # connect() keeps its TCP_NODELAY and its proxy tunnel
+
+
+http.client.HTTPConnection.__init__ = _init
 
 
 def field(v) -> str:
