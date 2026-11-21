@@ -62,6 +62,10 @@ The menu, start screen and setup texts are in `i18n/` as gettext `.po` files, on
 [i18n/README.md](i18n/README.md)). The first versions of most languages are machine-assisted: corrections from native
 speakers are very welcome, edited in Poedit or any text editor and sent as a pull request.
 
+A pull request that adds or changes a text edits only the English: `i18n/ui/mkw.pot` and `runtime/gfx/nvn/host/ui_text.h`.
+Leave the `<lang>.po` files alone: every `.po` ends in the same place, so two such pull requests always conflict.
+The maintainers run `uv run tools/i18n/catalog.py update` and add the translations when merging.
+
 ## Pull requests
 
 The [pull request template](.github/pull_request_template.md) is the checklist for these rules.
