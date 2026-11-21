@@ -515,8 +515,8 @@ static int create_device(void) {
     const char *lim = cfg_get("MKW_GPU_MEM_LIMIT");
     char lim_ram[24];
     VkPhysicalDeviceIDProperties id = {.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES};
-    VkPhysicalDeviceProperties2 p2 = {.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2, .pNext = &id};
-    vkGetPhysicalDeviceProperties2(g_vk.phys, &p2);
+    VkPhysicalDeviceProperties2 pid = {.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2, .pNext = &id};
+    vkGetPhysicalDeviceProperties2(g_vk.phys, &pid);
     // Always asked, also on a discrete GPU: it tells the platform layer which adapter plat_gpu_process_vram_mib reads.
     uint64_t carve = plat_gpu_vram_mib(dp.vendorID, dp.deviceID, id.deviceLUIDValid ? id.deviceLUID : NULL);
     if (!lim && dp.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU) {
