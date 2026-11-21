@@ -25,7 +25,7 @@ what already shipped is in the [CHANGELOG](../../CHANGELOG.md).
 
 - A race frame is a chain: the game's frame, then the Vulkan back end records its big submit, then the GPU runs it. Recording is on the critical path, so it needs less CPU.
 - Done: recording overlapped with the game, submits on their own thread, AMD GPU clocks held on Linux, waits by address, hybrid-CPU core placement, the shadow write-back compared with AVX2.
-- Next: recording in parallel (the texture lock has to be split first), the fence's completion work, the kernel's global lock, Windows hybrid-CPU placement, profile-guided optimization of the game thread ([#722](https://github.com/adriadam10/mkw-recomp/pull/722)).
+- Next: recording in parallel (the texture lock has to be split first), the fence's completion work, the kernel's global lock, Windows hybrid-CPU placement. Profile-guided optimization of the game's code was tried ([#722](https://github.com/adriadam10/mkw-recomp/pull/722)) and gained nothing measurable on a Radeon 660M.
 
 ## 5. Loading and the player's side
 
