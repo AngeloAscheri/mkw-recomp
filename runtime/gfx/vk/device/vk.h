@@ -311,6 +311,7 @@ void vram_log_now(void);                                  // the "mem: vram" rep
 // block of each memory type in use ahead of the render thread.
 const VmaDeviceMemoryCallbacks *vk_headroom_callbacks(void);
 void vk_headroom_start(void);
+void vk_tex_pool_stats(uint64_t *block_bytes, uint64_t *alloc_bytes);   // the pool's blocks and allocations (vk_tex_image.c)
 void vk_tex_pool_start(void);   // MKW_VK_TEX_POOL_MIN: texture memory made at start (vk_tex_image.c)
 void vk_tex_pool_stop(void);    // after image destruction, before destroying the VMA allocator
 void vk_headroom_stop(void);   // before vmaDestroyAllocator

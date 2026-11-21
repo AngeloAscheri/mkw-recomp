@@ -207,6 +207,10 @@ void vram_log(uint64_t frame) {
            t.big_bytes / M);
     // A second line, so the first keeps its shape for what parses it: sampled images by format class and the share not
     // looked up for 64 / 512 / 4096 submits (epoch = submits so far; the frame above gives submits per frame).
+    uint64_t pool_blocks, pool_allocs;
+    vk_tex_pool_stats(&pool_blocks, &pool_allocs);
+    rt_log("mem: vram texture pool: blocks %.0f MiB, allocated %.0f MiB, empty %.0f MiB", pool_blocks / M, pool_allocs / M,
+           (pool_blocks - pool_allocs) / M);
     rt_log("mem: vram textures frame %llu epoch %u: BC1 %llu %.0f MiB, BC7 %llu %.0f MiB, other block %llu %.0f MiB, "
            "uncompressed %llu %.0f MiB; not looked up for >64 submits %llu %.0f MiB, >512 %llu %.0f MiB, >4096 %llu %.0f MiB",
            (unsigned long long)frame, t.epoch, (unsigned long long)t.cls_n[0], t.cls_bytes[0] / M,
