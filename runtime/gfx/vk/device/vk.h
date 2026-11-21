@@ -550,6 +550,7 @@ typedef struct {
     // uncompressed), and the part of it not looked up for more than 64 / 512 / 4096 queue submits (the line gives the
     // epoch too, so submits per frame can be read). VRAM plan, 21/11/2026.
     uint64_t cls_bytes[4], cls_n[4], idle_bytes[3], idle_n[3];
+    uint64_t size_bytes[3], size_n[3];   // sampled images by longest side: <512, 512-1023, >=1024
     uint32_t epoch;
 } VkTexCensus;
 void vk_texture_census(VkTexCensus *s);

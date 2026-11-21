@@ -211,6 +211,14 @@ void vram_log(uint64_t frame) {
     vk_tex_pool_stats(&pool_blocks, &pool_allocs);
     rt_log("mem: vram texture pool: blocks %.0f MiB, allocated %.0f MiB, empty %.0f MiB", pool_blocks / M, pool_allocs / M,
            (pool_blocks - pool_allocs) / M);
+    // The OS's count for this process (Windows) against VMA's blocks: the difference is memory the runtime does not
+    // see (driver pipelines, swapchain, its own overhead). 0 where the OS gives no per-process figure.
+    uint64_t os_mib = plat_gpu_process_vram_mib();
+    rt_log("mem: vram os: process dedicated %llu MiB, vma device-local blocks %.0f MiB, not in VMA %.0f MiB; sampled "
+           "images by longest side: <512 %llu %.0f MiB, 512-1023 %llu %.0f MiB, >=1024 %llu %.0f MiB",
+           (unsigned long long)os_mib, block_bytes / M, os_mib ? os_mib - block_bytes / M : 0.0,
+           (unsigned long long)t.size_n[0], t.size_bytes[0] / M, (unsigned long long)t.size_n[1], t.size_bytes[1] / M,
+           (unsigned long long)t.size_n[2], t.size_bytes[2] / M);
     rt_log("mem: vram textures frame %llu epoch %u: BC1 %llu %.0f MiB, BC7 %llu %.0f MiB, other block %llu %.0f MiB, "
            "uncompressed %llu %.0f MiB; not looked up for >64 submits %llu %.0f MiB, >512 %llu %.0f MiB, >4096 %llu %.0f MiB",
            (unsigned long long)frame, t.epoch, (unsigned long long)t.cls_n[0], t.cls_bytes[0] / M,

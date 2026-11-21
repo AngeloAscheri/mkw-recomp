@@ -191,6 +191,9 @@ void vk_texture_census(VkTexCensus *s) {
                         : vf == VK_FORMAT_BC7_UNORM_BLOCK || vf == VK_FORMAT_BC7_SRGB_BLOCK ? 1
                         : vf >= VK_FORMAT_BC2_UNORM_BLOCK && vf <= VK_FORMAT_BC6H_SFLOAT_BLOCK ? 2 : 3;
                 s->cls_bytes[k] += bytes, s->cls_n[k]++;
+                uint32_t side = e->t.d.width > e->t.d.height ? e->t.d.width : e->t.d.height;
+                int z = side < 512 ? 0 : side < 1024 ? 1 : 2;
+                s->size_bytes[z] += bytes, s->size_n[z]++;
                 uint32_t idle = submit_epoch - e->seen;
                 for (int j = 0; j < 3; j++)
                     if (idle > (64u << (3 * j))) s->idle_bytes[j] += bytes, s->idle_n[j]++;
