@@ -1,5 +1,8 @@
 # Contributing
 
+Not sure where to help? [docs/project/roadmap.md](docs/project/roadmap.md) lists the open work in priority order, and
+the issues labelled `good first issue` are the small ones.
+
 ## Rules of the project
 
 - **Recompilation, not emulation.** No CPU interpreter or JIT, and no GPU emulation below NVN2 (Ampere command

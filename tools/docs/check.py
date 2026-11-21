@@ -122,6 +122,20 @@ def check_readme() -> list[str]:
     return []
 
 
+def check_roadmap() -> list[str]:
+    """roadmap.md is a cog block of roadmap.toml, and the TOML must not lag the code by over a week (roadmap.py)."""
+    cog, out = Cog(), io.StringIO()
+    cog.set_output(stdout=out, stderr=out)
+    path = ROOT / "docs/project/roadmap.md"
+    errors = []
+    if cog.main(["cog", "--check", "-I", str(ROOT / "tools" / "docs"), str(path)]) != 0:
+        errors.append("docs/project/roadmap.md: generated block out of date; run `uv run cog -r -I tools/docs docs/project/roadmap.md`")
+    r = subprocess.run([sys.executable, str(ROOT / "tools/docs/roadmap.py"), "--check"], capture_output=True, text=True)
+    if r.returncode:
+        errors.append(r.stderr.strip().removeprefix("docs: "))
+    return errors
+
+
 def check_progress(staged: set[str]) -> list[str]:
     spirv = ROOT / "build" / "spirv"
     # Docs and licences under sm86/ cannot change which programs translate (PR #529 note).
@@ -160,7 +174,7 @@ def note_translations() -> None:
 def main() -> int:
     files = git("ls-files", "-z")
     staged = set(git("diff", "--cached", "--name-only", "--diff-filter=AM"))
-    errors = check_folders(tree(files)) + check_links(files) + check_progress(staged) + check_readme() + check_perf_table()
+    errors = check_folders(tree(files)) + check_links(files) + check_progress(staged) + check_readme() + check_perf_table() + check_roadmap()
     for e in errors:
         print(f"docs: {e}", file=sys.stderr)
     note_translations()
