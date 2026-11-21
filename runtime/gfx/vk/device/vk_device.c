@@ -500,6 +500,8 @@ static int create_device(void) {
     if (g_vk.has_occupancy && !c->occ.computeOccupancyPriority) g_vk.has_occupancy = 0;
     if (g_vk.has_present_wait && (!c->pwait.presentWait || !g_vk.has_present_id)) g_vk.has_present_wait = 0;
     g_vk.has_buffer_device_address = c->f12.bufferDeviceAddress;
+    g_vk.has_8bit_storage = c->f12.storageBuffer8BitAccess;
+    g_vk.has_ssbo_nonuniform = c->f12.shaderStorageBufferArrayNonUniformIndexing && c->f12.descriptorBindingPartiallyBound;
     g_vk.has_placed = has_placed && c->placed.memoryMapPlaced && c->placed.memoryUnmapReserve;
     c->placed.memoryMapRangePlaced = VK_FALSE;   // whole allocations only
     g_vk.has_astc_ldr = h->textureCompressionASTC_LDR;
