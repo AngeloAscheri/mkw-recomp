@@ -54,6 +54,10 @@
   one; `uv run tools/docs/check.py` (run by the pre-commit and the CI) checks it.
 - Settings the player sees have a row in the settings table (`runtime/core/base/cfg.c`), with the console's value as
   default; `tools/git/cfg_rows.py` checks it.
+- Check input where it enters (environment variables, files, names): a bad value logs a warning and falls back to the
+  default, never changes meaning silently (`atoi("off")` is 0); size buffers from the longest accepted input.
+- A step that is optional must not make the whole run fail: warn and go on.
+- Before pushing: `ruff check`, a build without warnings and `uv run tools/docs/check.py` pass.
 - Commits follow [Conventional Commits](https://www.conventionalcommits.org/) (`fix(sm86): ...`), in English.
 
 ## Translations
