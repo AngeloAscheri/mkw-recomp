@@ -545,6 +545,11 @@ typedef struct {
     uint64_t live, released, own_live, own_released, bytes_live, bytes_released;
     uint64_t astc_bytes, target_bytes, big_bytes, astc_n, target_n, astc_rgba_bytes;   // astc_rgba: decoded to RGBA8, not BC7   // live own memory: ASTC decoded, render targets
                                                                       // (attachment usage), single images over 64 MiB
+    // Own memory of the images that are not render targets, by Vulkan format class (BC1, BC7, other block formats,
+    // uncompressed), and the part of it not looked up for more than 64 / 512 / 4096 queue submits (the line gives the
+    // epoch too, so submits per frame can be read). VRAM plan, 21/11/2026.
+    uint64_t cls_bytes[4], cls_n[4], idle_bytes[3], idle_n[3];
+    uint32_t epoch;
 } VkTexCensus;
 void vk_texture_census(VkTexCensus *s);
 void vk_texture_shutdown(void);                     // vk_mem_shutdown calls it

@@ -205,6 +205,14 @@ void vram_log(uint64_t frame) {
            s_live_bytes / M, (long long)phys_backed_n, phys_backed_bytes / M, (long long)phys_failed_n,
            (unsigned long long)t.astc_n, t.astc_bytes / M, t.astc_rgba_bytes / M, (unsigned long long)t.target_n, t.target_bytes / M,
            t.big_bytes / M);
+    // A second line, so the first keeps its shape for what parses it: sampled images by format class and the share not
+    // looked up for 64 / 512 / 4096 submits (epoch = submits so far; the frame above gives submits per frame).
+    rt_log("mem: vram textures frame %llu epoch %u: BC1 %llu %.0f MiB, BC7 %llu %.0f MiB, other block %llu %.0f MiB, "
+           "uncompressed %llu %.0f MiB; not looked up for >64 submits %llu %.0f MiB, >512 %llu %.0f MiB, >4096 %llu %.0f MiB",
+           (unsigned long long)frame, t.epoch, (unsigned long long)t.cls_n[0], t.cls_bytes[0] / M,
+           (unsigned long long)t.cls_n[1], t.cls_bytes[1] / M, (unsigned long long)t.cls_n[2], t.cls_bytes[2] / M,
+           (unsigned long long)t.cls_n[3], t.cls_bytes[3] / M, (unsigned long long)t.idle_n[0], t.idle_bytes[0] / M,
+           (unsigned long long)t.idle_n[1], t.idle_bytes[1] / M, (unsigned long long)t.idle_n[2], t.idle_bytes[2] / M);
 }
 
 // MKW_MEMORY and the knobs of every part of the memory layer, once the device class is known.
