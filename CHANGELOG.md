@@ -61,7 +61,11 @@ low, and a long list of setup, mod and launcher fixes from outside contributors.
 
 ### Tested
 
-From the packages Actions built for this tag, before publishing: see below once run.
+From the packages Actions built for this tag, before publishing:
+
+- The whole setup from the Linux AppImage through its `setup/` link (12 threads, game 1.0.0) in about 12 minutes; its
+  warm-up built all 13 630 shader libraries and compute pipelines (761 compute) with none failed.
+- The whole setup from the Windows zip (Windows PC, game 1.0.0) in about 19 minutes.
 
 ## 0.1.16
 
