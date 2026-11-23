@@ -15,6 +15,8 @@
 // Context fields (main+0x1cadc0 and main+0x1ca6d8): [+0x00] job capacity, [+0x08] jobs (0x38 bytes each), [+0x10] edge
 // capacity, [+0x20] pointer capacity, [+0xa0] jobs used, [+0xa4] edges used, [+0xa8] pointer slots used.
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "cpu/cpu.h"
 #include "cpu/dispatch.h"
@@ -26,6 +28,10 @@
 #define GRAPH_RESET_HOST 0xda0   // the three resets (main+0x1ca6d8), before them
 #define RING_W10_HOST 0xd90      // main+0x68a88's ring checks: fill w9 against capacity - 6 in w10
 #define RING_W3_HOST 0xd80       // main+0x1cab40's: fill w2 against capacity - 6 in w3
+#define RING_W11_HOST 0xd70      // the worker's (main+0x663e0) pushes to ring 3: fill w10, capacity - 6 in w11
+#define STALL_NS 3000000000ull   // a graph unchanged this long after its build is reported as stalled
+#define STALL_LINES 160
+#define PRED_MAX 4
 #define RING_DROP_LINES 40
 #define GUEST_MAIN 0x7000000000ull   // main's base (recomp/layout.py)
 #define GRAPH_CTXS 32
@@ -41,6 +47,10 @@ typedef struct {
 static GraphSeen seen[GRAPH_CTXS];
 static uint8_t seen_lock;
 static int reset_lines;
+static uint64_t last_ctx, last_build_ns;   // the latest graph built, for the stall report
+static uint32_t last_built_jobs;           // its job count when built: jobs past it were added while it ran
+static uint8_t watch_started;
+static void stall_watch(void *arg);
 
 static uint32_t rd32(uint64_t a) { return *(const volatile uint32_t *)(uintptr_t)a; }
 static uint64_t rd64(uint64_t a) { return *(const volatile uint64_t *)(uintptr_t)a; }
@@ -80,6 +90,10 @@ static void check_built(uint64_t ctx, uint64_t lr) {
     uint32_t roots[3], caps[3];
     int callbacks = count_roots(ctx, roots, caps);
     int over = jobs > jcap || edges > ecap || ptrs > pcap || callbacks < 0;
+    __atomic_store_n(&last_ctx, ctx, __ATOMIC_RELAXED);
+    __atomic_store_n(&last_built_jobs, jobs, __ATOMIC_RELAXED);
+    __atomic_store_n(&last_build_ns, plat_now_ns(), __ATOMIC_RELEASE);
+    if (!__atomic_test_and_set(&watch_started, __ATOMIC_RELAXED)) plat_thread_spawn(stall_watch, 0, "graphchk", 0);
     lock();
     GraphSeen *s = 0;
     for (int i = 0; i < GRAPH_CTXS && !s; i++)
@@ -88,10 +102,10 @@ static void check_built(uint64_t ctx, uint64_t lr) {
     if (high) s->jobs = jobs, s->edges = edges, s->ptrs = ptrs;
     unlock();
     if (high || over)
-        rt_log("graphchk: ctx %#llx from main+%#llx: jobs %u/%u edges %u/%u ptrs %u/%u roots %u/%u %u/%u %u/%u%s "
-               "(60 Hz ticks %llu)",
+        rt_log("graphchk: ctx %#llx from main+%#llx: jobs %u/%u edges %u/%u ptrs %u/%u roots %u/%u %u/%u %u/%u "
+               "ring3 cap %u%s (60 Hz ticks %llu)",
                (unsigned long long)ctx, (unsigned long long)(lr - GUEST_MAIN), jobs, jcap, edges, ecap, ptrs, pcap,
-               roots[0], caps[0], roots[1], caps[1], roots[2], caps[2],
+               roots[0], caps[0], roots[1], caps[1], roots[2], caps[2], rd32(ctx + 0x58),
                callbacks < 0 ? " DROP" : over ? " OVERFLOW" : " new high", (unsigned long long)frame_step_ticks());
 }
 
@@ -150,10 +164,91 @@ static uint32_t ring_check(uint32_t cap, uint32_t fill, uint64_t lr) {
 
 static void host_ring_w10(Cpu *c) { c->x[10] = ring_check((uint32_t)c->x[10], (uint32_t)c->x[9], c->x[30]); }
 static void host_ring_w3(Cpu *c) { c->x[3] = ring_check((uint32_t)c->x[3], (uint32_t)c->x[2], c->x[30]); }
+static void host_ring_w11(Cpu *c) { c->x[11] = ring_check((uint32_t)c->x[11], (uint32_t)c->x[10], c->x[30]); }
+
+// The stall report. Job state ([job+0x28], main+0x663e0 and main+0x68a88): bits 0-15 dependencies left, 16-22
+// instances not started, 23-29 instances running, 30 done, 31 set by a callback job ([job+0x30]) that runs. A job's
+// successors are a list: sentinel at job+0x10, first node [job+0x18], node = {job, next}. A finishing job releases
+// them only when it was the last running instance and (bit 31 or no instance left to start), so a predecessor with
+// its done bit can still hold a successor; every job not done is logged with its predecessors' states to tell which.
+static int rd64_safe(uint64_t a, uint64_t *v) { return plat_mem_read(a, v, 8); }
+
+static void report_stall(uint64_t ctx) {
+    uint64_t base = rd64(ctx + 8);
+    uint32_t n = rd32(ctx + 0xa0), cap = rd32(ctx);
+    if (n > cap) n = cap;
+    if (!base || !n || !plat_mem_readable(base, (uint64_t)n * JOB_SIZE)) return;
+    uint32_t (*pred)[PRED_MAX] = calloc(n, sizeof *pred);
+    uint8_t *npred = calloc(n, 1), *nopen = calloc(n, 1);   // predecessors, and those not done
+    if (!pred || !npred || !nopen) { free(pred); free(npred); free(nopen); return; }
+    for (uint32_t i = 0; i < n; i++) {
+        uint64_t job = base + (uint64_t)i * JOB_SIZE, sent = job + 0x10, node = rd64(job + 0x18);
+        for (int k = 0; node && node != sent && k < 4096; k++) {
+            uint64_t s, next;
+            if (!rd64_safe(node, &s) || !rd64_safe(node + 8, &next)) break;
+            if (s >= base && s < base + (uint64_t)n * JOB_SIZE) {
+                uint32_t j = (uint32_t)((s - base) / JOB_SIZE);
+                if (npred[j] < PRED_MAX) pred[j][npred[j]] = i;
+                if (npred[j] < 255) npred[j]++;
+                if (!(rd32(job + 0x28) & JOB_DONE) && nopen[j] < 255) nopen[j]++;
+            }
+            node = next;
+        }
+    }
+    uint32_t open = 0, waiting = 0, lines = 0;
+    for (uint32_t i = 0; i < n; i++) {
+        uint32_t st = rd32(base + (uint64_t)i * JOB_SIZE + 0x28);
+        open += !(st & JOB_DONE), waiting += !(st & JOB_DONE) && (st & 0xffff);
+    }
+    if (!waiting) goto out;   // skipped jobs never get the done bit; a graph is stuck only with a job left waiting
+    uint32_t built = __atomic_load_n(&last_built_jobs, __ATOMIC_RELAXED);
+    rt_log("graphchk: STALL ctx %#llx: %u of %u jobs not done (%u when built); rings head-tail %u-%u %u-%u %u-%u %u-%u",
+           (unsigned long long)ctx, open, n, built, rd32(ctx + 0x50), rd32(ctx + 0x54), rd32(ctx + 0x68), rd32(ctx + 0x6c),
+           rd32(ctx + 0x80), rd32(ctx + 0x84), rd32(ctx + 0x98), rd32(ctx + 0x9c));
+    // The frontier only: a job waiting on more dependencies than it has predecessors not done (an edge nobody will
+    // release), or one with none left that no ring holds (the rings are empty in a stall); "+" marks a job added
+    // after the build. Owner: [job+0] (a tagged pointer) and its vtable.
+    // Two passes, the waiting ones first: jobs skipped by their callback never get the done bit either.
+    for (uint32_t pass = 0, i = 0; pass < 2 && lines < STALL_LINES; i = i + 1 < n ? i + 1 : (pass++, 0)) {
+        uint64_t job = base + (uint64_t)i * JOB_SIZE;
+        uint32_t st = rd32(job + 0x28), deps = st & 0xffff;
+        if ((st & JOB_DONE) || (pass == 0 ? deps <= nopen[i] : deps != 0)) continue;
+        char preds[160];
+        int len = 0;
+        for (int k = 0; k < npred[i] && k < PRED_MAX; k++)
+            len += snprintf(preds + len, sizeof preds - len, " %u%s:%#x", pred[i][k], pred[i][k] >= built ? "+" : "",
+                            rd32(base + (uint64_t)pred[i][k] * JOB_SIZE + 0x28));
+        preds[len] = 0;
+        uint64_t owner = rd64(job), vt = 0;
+        if (!(owner & 1) && owner) rd64_safe(owner, &vt);
+        rt_log("graphchk: STALL job %u%s state %#x class %d kind %#x callback %#llx owner %#llx vt main+%#llx "
+               "preds %u (%u not done)%s", i, i >= built ? "+" : "", st,
+               *(const volatile int16_t *)(uintptr_t)(job + 0xa), rd32(job + 0xc), (unsigned long long)rd64(job + 0x30),
+               (unsigned long long)owner, (unsigned long long)(vt - GUEST_MAIN), npred[i], nopen[i], preds);
+        lines++;
+    }
+out:
+    free(pred);
+    free(npred);
+    free(nopen);
+}
+
+static void stall_watch(void *arg) {
+    (void)arg;
+    uint64_t reported = 0;
+    for (;;) {
+        plat_sleep_ns(500000000ull);
+        uint64_t t = __atomic_load_n(&last_build_ns, __ATOMIC_ACQUIRE), ctx = __atomic_load_n(&last_ctx, __ATOMIC_RELAXED);
+        if (!t || t == reported || plat_now_ns() - t < STALL_NS) continue;
+        reported = t;
+        report_stall(ctx);
+    }
+}
 
 void graphchk_hosts(uint64_t patch_page) {
     rt_register_host(patch_page + RING_W10_HOST, host_ring_w10);
     rt_register_host(patch_page + RING_W3_HOST, host_ring_w3);
+    rt_register_host(patch_page + RING_W11_HOST, host_ring_w11);
     rt_register_host(patch_page + GRAPH_BUILT_HOST, host_graph_built);
     rt_register_host(patch_page + GRAPH_BUILT2_HOST, host_graph_built2);
     rt_register_host(patch_page + GRAPH_RESET_HOST, host_graph_reset);

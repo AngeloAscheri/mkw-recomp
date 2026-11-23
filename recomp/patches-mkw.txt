@@ -253,3 +253,8 @@ site graphchk main 68ca0 5100194a 94cea03c     # the same, ring 1
 site graphchk main 1cabf0 51001863 94c91864    # sub w3, w3, #6 (ring 1) -> bl host_ring_w3 (+ 0xd80)
 site graphchk main 1cac50 51001863 94c9184c    # the same, ring 0
 site graphchk main 1caca0 51001863 94c91838    # the same, ring 2
+# Ring 3 ([ctx+0x58]): main+0x663e0, the worker, pushes there a job with instances left to start, with the same drop
+# when full. It saves x30.
+site graphchk main 66b5c 5100196b 94cea885     # sub w11, w11, #6 (ring 3) -> bl host_ring_w11 (+ 0xd70)
+site graphchk main 66cc4 5100196b 94cea82b     # the same
+site graphchk main 67ec8 5100196b 94cea3aa     # the same
