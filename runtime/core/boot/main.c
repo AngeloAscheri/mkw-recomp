@@ -165,8 +165,12 @@ static void log_open(int game, const char *own) {
     // commit no release has tells a report from a build with local changes (#88 on 11/11/2026: a log line of a
     // transcoder that is in no commit)
     rt_log("log: %s (MKW Recomp %s)", g_log_path, rt_port_version);
-    int ss = plat_shadow_stack();   // Windows 0xC0000409/0xD exits: is hardware stack protection on (platform.h)
-    if (ss >= 0) rt_log("host: hardware stack protection %s for this process", ss ? "ON" : "off");
+    unsigned ssf = 0;   // Windows 0xC0000409/0xD exits: is hardware stack protection on (platform.h)
+    int ss = plat_shadow_stack(&ssf);
+    if (ss == 0)
+        rt_log("host: hardware stack protection %s for this process (flags 0x%x: strict %u, context IP check %u)",
+               ssf & 1 ? "ON" : "off", ssf, (ssf >> 4) & 1, (ssf >> 2) & 1);
+    else if (ss > 0) rt_log("host: hardware stack protection unknown (GetProcessMitigationPolicy error %d)", ss);
 }
 
 static void parse_trace(void) {

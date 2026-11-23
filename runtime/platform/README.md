@@ -12,6 +12,7 @@
 | `win32.c`, `win32_int.h` | Windows: threads, preemption (SuspendThread), fibers, clock, locks; the header is what the `win32_*.c` parts share |
 | `win32_fs.c` | Windows: files and file system (UTF-16 paths) |
 | `win32_mem.c` | Windows: virtual memory and write watching (`MEM_WRITE_WATCH`) |
+| `plat_jmp.h`, `win32_jmp.c` | Non-local jumps (a guest thread's exit, a guest longjmp into a live setjmp owner): on Windows our own `plat_setjmp`/`plat_longjmp` instead of ucrtbase's, whose `longjmp` fast-failed with 0xC0000409/0xD at the first thread exit on some Windows 11 machines; glibc's on Linux |
 | `win32_sys.c` | Windows: process, local IPC (named pipes), desktop and libraries |
 | `win32_load.c` | Windows: machine load (CPU, PDH for temperature and GPU) and desktop shortcut |
 | `common.c`, `fp_x86.h` | Common parts, including absolute high-resolution pacing deadlines, and x86 floating point control |

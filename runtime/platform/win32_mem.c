@@ -201,13 +201,16 @@ void plat_crash_hook(void (*fn)(const PlatCrash *c)) {
 
 // Exit 0xC0000409 with data 0xD (FAST_FAIL_INVALID_SET_OF_CONTEXT) after "fs mount save" on several Windows machines
 // leaves no FATAL line (a fast fail skips every handler). Whether hardware stack protection is on for this process
-// (PROCESS_MITIGATION_USER_SHADOW_STACK_POLICY, class 19, first flag = enabled) goes in the log so a report says it.
-int plat_shadow_stack(void) {
-    typedef BOOL(WINAPI * GetPol)(HANDLE, int, PVOID, SIZE_T);
+// (ProcessUserShadowStackPolicy: enabled, strict mode, SetContext IP validation) goes in the log so a report says it.
+// v0.1.17 asked class 19 (ProcessSEHOPPolicy is 18, the shadow stack's is 15) with 8 bytes, failed and logged nothing.
+int plat_shadow_stack(unsigned *flags) {
+    typedef BOOL(WINAPI * GetPol)(HANDLE, PROCESS_MITIGATION_POLICY, PVOID, SIZE_T);
     GetPol get = (GetPol)(void *)GetProcAddress(GetModuleHandleA("kernel32.dll"), "GetProcessMitigationPolicy");
-    DWORD flags[2] = {0, 0};
-    if (!get || !get(GetCurrentProcess(), 19, flags, sizeof flags)) return -1;
-    return flags[0] & 1;
+    if (!get) return 1;   // before Windows 8: no such policy
+    PROCESS_MITIGATION_USER_SHADOW_STACK_POLICY pol = {0};
+    if (!get(GetCurrentProcess(), ProcessUserShadowStackPolicy, &pol, sizeof pol)) return (int)GetLastError();
+    *flags = pol.Flags;
+    return 0;
 }
 
 // A fresh process gets a fresh layout: Windows places DLLs, heaps and thread stacks at random addresses. The parent
