@@ -258,3 +258,13 @@ site graphchk main 1caca0 51001863 94c91838    # the same, ring 2
 site graphchk main 66b5c 5100196b 94cea885     # sub w11, w11, #6 (ring 3) -> bl host_ring_w11 (+ 0xd70)
 site graphchk main 66cc4 5100196b 94cea82b     # the same
 site graphchk main 67ec8 5100196b 94cea3aa     # the same
+# Late edges (graphchk_edge.c): the predecessor's state right after an edge is pushed onto it, in the add-edge leaf
+# main+0x22612cc (it does not save x30, but the lifted ret is a C return, so the bl's x30 is never used) and in
+# main+0x13e480's loop (it saves x30).
+site graphchk main 2261324 b9402849 9446be8f   # ldr w9, [x2, #0x28] -> bl host_edge (+ 0xd60)
+site graphchk main 13e5ac b9400200 94cb49e9    # ldr w0, [x16] -> bl host_edge2 (+ 0xd50)
+# Decrements from 0 (graphchk_edge.c): the job's count right before each decrement, in the finishing job's walk
+# (main+0x663e0), the dispatch's walk of an empty job (main+0x68a88) and the gate main+0x1c7d14; all three save x30.
+site graphchk main 664d8 b9402829 94ceaa1a    # ldr w9, [x1, #0x28] -> bl host_dec_walk (+ 0xd40)
+site graphchk main 68c3c b9402829 94cea03d    # ldr w9, [x1, #0x28] -> bl host_dec_empty (+ 0xd30)
+site graphchk main 1c7d48 b9402829 94c923f6   # ldr w9, [x1, #0x28] -> bl host_dec_gate (+ 0xd20)

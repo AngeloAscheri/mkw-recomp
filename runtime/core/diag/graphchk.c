@@ -60,6 +60,17 @@ static void lock(void) {
 }
 static void unlock(void) { __atomic_clear(&seen_lock, __ATOMIC_RELEASE); }
 
+// The context built so far whose job array holds job, with its index there (graphchk_edge.c); 0 when none does.
+uint64_t graphchk_ctx_of(uint64_t job, uint32_t *index) {
+    for (int i = 0; i < GRAPH_CTXS; i++) {
+        uint64_t ctx = __atomic_load_n(&seen[i].ctx, __ATOMIC_RELAXED), base;
+        if (!ctx) break;
+        if (!plat_mem_read(ctx + 8, &base, 8) || job < base || (job - base) % JOB_SIZE) continue;
+        if ((job - base) / JOB_SIZE < rd32(ctx)) return *index = (uint32_t)((job - base) / JOB_SIZE), ctx;
+    }
+    return 0;
+}
+
 // main+0x1ca878 starts a graph by pushing its root jobs (no pending dependency) with main+0x1cab40 into one of three
 // rings of the context, and drops a job without a word when its ring holds capacity - 6 already: that job never runs
 // and every job after it waits forever. Ring of a root: a callback ([job+0x30]) runs it first; else [job+0xa] == 0 and
@@ -173,6 +184,10 @@ static void host_ring_w11(Cpu *c) { c->x[11] = ring_check((uint32_t)c->x[11], (u
 // its done bit can still hold a successor; every job not done is logged with its predecessors' states to tell which.
 static int rd64_safe(uint64_t a, uint64_t *v) { return plat_mem_read(a, v, 8); }
 
+int graphchk_edge_note(uint64_t job, char *buf, int size);   // graphchk_edge.c: the job's last late edge
+void graphchk_edge_counts(void);
+void graphchk_edge_hosts(uint64_t patch_page);
+
 static void report_stall(uint64_t ctx) {
     uint64_t base = rd64(ctx + 8);
     uint32_t n = rd32(ctx + 0xa0), cap = rd32(ctx);
@@ -220,13 +235,17 @@ static void report_stall(uint64_t ctx) {
                             rd32(base + (uint64_t)pred[i][k] * JOB_SIZE + 0x28));
         preds[len] = 0;
         uint64_t owner = rd64(job), vt = 0;
-        if (!(owner & 1) && owner) rd64_safe(owner, &vt);
+        if (owner & ~1ull) rd64_safe(owner & ~1ull, &vt);   // a tagged owner (bit 0) points to its object as well
+        char late[400];
+        if (graphchk_edge_note(job, late, sizeof late) <= 0) late[0] = 0;
         rt_log("graphchk: STALL job %u%s state %#x class %d kind %#x callback %#llx owner %#llx vt main+%#llx "
-               "preds %u (%u not done)%s", i, i >= built ? "+" : "", st,
+               "preds %u (%u not done)%s%s", i, i >= built ? "+" : "", st,
                *(const volatile int16_t *)(uintptr_t)(job + 0xa), rd32(job + 0xc), (unsigned long long)rd64(job + 0x30),
-               (unsigned long long)owner, (unsigned long long)(vt - GUEST_MAIN), npred[i], nopen[i], preds);
+               (unsigned long long)owner, (unsigned long long)(vt ? vt - GUEST_MAIN : 0), npred[i], nopen[i], preds,
+               late);
         lines++;
     }
+    graphchk_edge_counts();
 out:
     free(pred);
     free(npred);
@@ -252,4 +271,5 @@ void graphchk_hosts(uint64_t patch_page) {
     rt_register_host(patch_page + GRAPH_BUILT_HOST, host_graph_built);
     rt_register_host(patch_page + GRAPH_BUILT2_HOST, host_graph_built2);
     rt_register_host(patch_page + GRAPH_RESET_HOST, host_graph_reset);
+    graphchk_edge_hosts(patch_page);
 }
