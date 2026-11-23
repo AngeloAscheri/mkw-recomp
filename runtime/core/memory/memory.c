@@ -177,7 +177,8 @@ void mem_freeze_stats(uint64_t *frozen, uint64_t *freezes, uint64_t *fault_thaws
 // and frozen regions never hold one: freeze_locked refuses a region with an inaccessible page. Under frz_lock.
 typedef struct { uint64_t lo, hi; const uint8_t *src; } TrapSrc;
 uint8_t *trapped;                     // one byte per guest page, mapped lazily; frz_lock for writes; 1 a read trap,
-                                      // 2 MKW_EARLY_READ's watch (memory_early.c)
+                                      // 2 MKW_EARLY_READ's watch (memory_early.c); NULL where traps cannot work
+                                      // (mem_trap_init: Windows)
 static TrapSrc *tsrc;                 // frz_lock: where trapped pages take their bytes from
 static int ntsrc, ctsrc;
 static int64_t ntrapped;              // frz_lock: pages trapped now
@@ -212,8 +213,14 @@ static void untrap_range_locked(uint64_t a, uint64_t n) {
 int mem_trap_init(void) {   // memory_int.h
     if (trap_ok < 0) {
         uint8_t probe;
-        trapped = plat_mem_alloc(RT_ADDRESS_LIMIT / PAGE);
-        trap_ok = trapped && plat_mem_poke((uint64_t)(uintptr_t)&probe, &probe, 1);
+        // The map only where traps work. It is one byte per page of the guest range (128 MiB): Linux maps it lazily,
+        // Windows commits it whole (plat_mem_alloc), and there plat_mem_poke cannot write through a protection, so it
+        // was 128 MiB of commit charge never set, only read as zeros by the thaw faults (census of a 1.8.0 Grand Prix
+        // on Windows, 22/11/2026: 128 MiB committed, under 1 MiB resident; the same title-screen boot with and without
+        // it, 23/11/2026: the allocation gone, private commit less the guest's 11061 -> 10933 MiB). Every reader checks
+        // trap_ok, a count of trapped pages or trapped itself.
+        if (plat_mem_poke((uint64_t)(uintptr_t)&probe, &probe, 1)) trapped = plat_mem_alloc(RT_ADDRESS_LIMIT / PAGE);
+        trap_ok = trapped != NULL;
         rt_log("mem: read traps %s", trap_ok ? "on: GPU writes reach guest memory when the game touches them"
                                              : "unavailable: GPU writes are copied back at the fence");
     }
@@ -409,9 +416,10 @@ static void commit(uint64_t a, uint64_t n, const char *what) {
 // mem_commit_range). MKW_LAZY_COMMIT=0 commits as before.
 #define LAZY_CHUNK (2ull << 20)
 static int lazy;
+static uint64_t runtime_top;   // lock: the lowest of the runtime's own regions (mem_runtime_alloc), 0 before the first
 
 // lock held: commits the still-reserved pages of [a, a+n) that the game owns (its heap below heap_size, the mapped
-// pages of the alias region).
+// pages of the alias region) or the runtime gave it (its own regions, up to the heap block's cap).
 static void owned_commit_locked(uint64_t a, uint64_t n) {
     uint64_t e = a + n, lo, hi, end;
     lo = a > L.heap.base ? a : L.heap.base, hi = e < L.heap.base + heap_size ? e : L.heap.base + heap_size;
@@ -426,6 +434,10 @@ static void owned_commit_locked(uint64_t a, uint64_t n) {
             if (plat_mem_state(x, q, &end) == PLAT_MEM_RESERVED) commit(x, end - x, "physical memory");
         p = q;
     }
+    if (!runtime_top) return;
+    lo = a > runtime_top ? a : runtime_top, hi = e < L.heap.base + HEAP_CAP ? e : L.heap.base + HEAP_CAP;
+    for (uint64_t x = lo; x < hi; x = end)
+        if (plat_mem_state(x, hi, &end) == PLAT_MEM_RESERVED) commit(x, end - x, "the runtime's region");
 }
 
 // The platform's lazy hook (plat_mem_lazy_hook), for reads and writes: 1 when the page at a was owned and is now
@@ -452,11 +464,12 @@ void mem_commit_range(uint64_t a, uint64_t n) {
 // ---- the runtime's own regions (mem_runtime_alloc)
 // Memory the runtime gives the game beyond what the game sized itself (the render-buffer pool for larger targets,
 // patches.c): at the top of the heap block, above the application pool the game's heap can reach (SetHeapSize refuses
-// more), inside the same watched reservation, so the back end's write-watch works there as on the heap. Committed
-// now, also on Windows: the lazy commit only serves the game's own pages (owned_commit_locked). QueryMemory reports
-// it free: the game never asks there.
-static uint64_t runtime_top;
-
+// more), inside the same watched reservation, so the back end's write-watch works there as on the heap. With the lazy
+// commit (Windows) it stays reserved and is committed 2 MiB at a time on first access, as the game's own pages
+// (owned_commit_locked): 1.8.0's render-buffer pool is 184 MiB at 1440 lines, a margin for photo mode's targets, and
+// about 0.6 GB at 2160, where part of it holds the scene's own; its render targets are the GPU's (memwatch --regions at
+// the title, 1440 lines, 23/11/2026: 184 MiB committed and none of it resident, 4 MiB committed with this). Elsewhere
+// it is committed now. QueryMemory reports it free: the game never asks there.
 uint64_t mem_runtime_alloc(uint64_t size, const char *what) {
     size = align_up(size, LAZY_CHUNK);
     plat_mutex_lock(&lock);
@@ -467,7 +480,7 @@ uint64_t mem_runtime_alloc(uint64_t size, const char *what) {
         rt_log("mem: no room above the game's heap for %s (%#llx bytes)", what, (unsigned long long)size);
         return 0;
     }
-    commit(a, size, what);
+    if (!lazy) commit(a, size, what);
     char name[64];
     snprintf(name, sizeof name, "mkw rt %s", what);
     plat_mem_name((void *)(uintptr_t)a, size, name);
