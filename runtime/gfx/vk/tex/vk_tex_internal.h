@@ -126,6 +126,9 @@ void rel_append(Tex *e);
 void rel_unlink(Tex *e);
 void sweep_released(void);
 
+// vk_tex_pressure.c: idle recreatable textures out when VMA's blocks near the live VRAM budget (MKW_TEX_PRESSURE)
+void tex_pressure(void);   // each submit, the texture lock held
+
 // vk_tex_upload.c: uploads and the freshness checks
 void make_fresh(Tex *e);
 void make_fresh_snap(Tex *e);
