@@ -72,7 +72,11 @@ play (#481), please help us measure it:** play a long session with `tex_pressure
 
 ### Tested
 
-From the packages Actions built for this tag, before publishing: see below once run.
+From the packages Actions built for this tag, before publishing:
+
+- The whole setup from the Linux AppImage (game 1.0.0) ran every step (generate, compile, shaders, warm-up) and ended
+  OK.
+- The whole setup from the Windows zip (Windows PC, game 1.0.0) ran every step and ended OK.
 
 ## 0.1.17
 
