@@ -263,6 +263,7 @@ static const CfgRow rows[] = {
     K("GLYPH_DUMP"),
     K("GPL_DRAW_BUILD"),
     K("GPU"),
+    K("GPU_CLOCKS"),
     K("GPU_CRUMBS"),
     K("GPU_CRUMBS_DRAW"),
     K("GPU_MEM_LIMIT"),
