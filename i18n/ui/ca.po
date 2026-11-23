@@ -586,6 +586,18 @@ msgctxt "UI_MENU_NOT_AVAILABLE"
 msgid "Not available on this PC: the game's own picture stays."
 msgstr "No disponible en aquest PC: es manté la imatge original del joc."
 
+msgctxt "UI_MENU_LIB_FETCHING"
+msgid "Downloading %s from its official source: %d %%"
+msgstr "S'està baixant %s de la seva font oficial: %d %%"
+
+msgctxt "UI_MENU_LIB_FAILED"
+msgid "Could not download %s (%s). Pick it again to try once more."
+msgstr "No s'ha pogut baixar %s (%s). Torna a triar-lo per tornar-ho a provar."
+
+msgctxt "UI_MENU_LIB_READY"
+msgid "%s downloaded: it works after a restart."
+msgstr "%s baixat: funciona després de reiniciar."
+
 msgctxt "UI_MENU_TEMPORAL_DESC"
 msgid ""
 "Renders the race at a lower resolution and rebuilds it from several frames: NVIDIA DLSS (RTX "

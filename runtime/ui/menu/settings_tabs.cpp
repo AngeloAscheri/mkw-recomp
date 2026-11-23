@@ -13,6 +13,7 @@
 #include "ui/menu/option_rows.h"
 #include "ui/glyphs/glyphs.h"
 #include "ui/menu/settings_tabs.h"
+#include "ui/launcher/libs_fetch.h"
 #include "plugin/plugin.h"
 
 extern "C" {
@@ -35,6 +36,7 @@ static char g_gpu_names[MAX_GPUS][VK_MAX_PHYSICAL_DEVICE_NAME_SIZE];
 static int g_gpu_n = -1;   // -1: not listed yet
 static uint32_t g_gpu_vram_mb[MAX_GPUS];   // the largest device-local heap, for Auto-set
 static bool g_gpu_discrete[MAX_GPUS];
+static bool g_gpu_nvidia[MAX_GPUS];   // DLSS's files are downloaded only for an NVIDIA card (its licence: theirs only)
 
 // The Vulkan devices in vkEnumeratePhysicalDevices order, which MKW_GPU_INDEX counts in (vk_device.c pick_device).
 void settings_list_gpus(VkInstance inst) {
@@ -54,6 +56,7 @@ void settings_list_gpus(VkInstance inst) {
                 vram = mp.memoryHeaps[h].size;
         g_gpu_vram_mb[i] = (uint32_t)(vram >> 20);
         g_gpu_discrete[i] = p.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
+        g_gpu_nvidia[i] = p.vendorID == 0x10DE;
     }
     g_gpu_n = (int)n;
 }
@@ -277,12 +280,17 @@ enum { NAUTO = sizeof kAutoKeys / sizeof *kAutoKeys };
 static char g_auto_before[NAUTO][32];   // the rows' values before Auto-set ("" unset)
 static bool g_auto_done;
 
-static void auto_set(void) {
+// The card the game runs on: MKW_GPU_INDEX, else the first dedicated one, as the device pick prefers; 0 without a list
+static int gpu_index(void) {
     const char *pick = cfg_get("MKW_GPU_INDEX");
     int gi = pick && *pick ? atoi(pick) : -1;
     for (int i = 0; gi < 0 && i < g_gpu_n; i++)
-        if (g_gpu_discrete[i]) gi = i;   // automatic: the first dedicated card, as the device pick prefers
-    if (gi < 0 || gi >= g_gpu_n) gi = 0;
+        if (g_gpu_discrete[i]) gi = i;
+    return gi < 0 || gi >= g_gpu_n ? 0 : gi;
+}
+
+static void auto_set(void) {
+    int gi = gpu_index();
     // the game's window when there is one (the in-game menu), else the primary display (the start screen has no game
     // window: gfx_window_monitor_size says nothing there)
     int mw = 0, mh = 0;
@@ -334,6 +342,46 @@ static void engine_note(int state) {
     else if (state == 2) opt_text(UI_MENU_NOT_AVAILABLE, true);
 }
 
+// The libraries the upscaler and frame generation engine picked now need (tools/prepare/libs.tsv's features), fetched
+// beside the program when that pick changes (ui/launcher/libs_fetch.cpp): players had to download and copy them by
+// hand. Windows only, where the runtime loads them; DLSS only for an NVIDIA card, its licence's condition.
+static void libs_sync(void) {
+#ifdef _WIN32
+    bool nv = g_gpu_n <= 0 || g_gpu_nvidia[gpu_index()];   // no list yet: the runtime still says when it cannot run
+    const char *t = cfg_value("MKW_TEMPORAL"), *e = cfg_value("MKW_FG_ENGINE");
+    bool fg = strcmp(cfg_value("MKW_FRAMEGEN"), "off") != 0;
+    char want[64] = "";
+    auto add = [&](const char *f) { snprintf(want + strlen(want), sizeof want - strlen(want), "%s%s", *want ? "," : "", f); };
+    if (nv && !strcmp(t, "dlss")) add("dlss");
+    if (!strcmp(t, "fsr3")) add("fsr3");
+    if (fg && nv && !strcmp(e, "dlss")) add("dlssg");
+    if (fg && !strcmp(e, "fsr3")) add("fsr3,fsr3fg");
+    static char last[64];
+    if (!strcmp(want, last)) return;
+    snprintf(last, sizeof last, "%s", want);
+    if (*want) libs_fetch_start(want);
+#endif
+}
+
+// engine_note, or what the download of feature (name: the engine's) is doing: its progress, its failure, or that the
+// files it brought load at the next start (an engine that found none at start says "not available" until then)
+static void libs_note(const char *feature, const char *name, int state) {
+    LibsState s = libs_state();
+    char text[512];
+    bool mine = state != 0 && strstr(s.features, feature);
+    if (mine && s.running) {
+        int pct = s.total > 0 ? (int)(s.done * 100 / s.total) : 0;
+        snprintf(text, sizeof text, menu_text(UI_MENU_LIB_FETCHING), name, pct);
+        opt_text(text);
+    } else if (mine && s.finished < 0) {
+        snprintf(text, sizeof text, menu_text(UI_MENU_LIB_FAILED), name, s.error);
+        opt_text(text, true);
+    } else if (mine && s.fetched > 0) {
+        snprintf(text, sizeof text, menu_text(UI_MENU_LIB_READY), name);
+        opt_text(text, true);
+    } else engine_note(state);
+}
+
 static void tab_graphics(float scale) {
     opt_begin("##graphics", scale);
     static bool auto_test = getenv("MKW_LAUNCHER_AUTOSET") != nullptr;   // (test) once, as the button does
@@ -376,7 +424,9 @@ static void tab_graphics(float scale) {
         static const char *const vals[] = {"off", "dlss", "fsr3"};
         const char *names[3] = {menu_text(UI_MENU_PERF_OFF), "NVIDIA DLSS", "AMD FSR 3.1"};
         opt_choice_list("MKW_TEMPORAL", UI_MENU_TEMPORAL, vals, names, 3, UI_MENU_TEMPORAL_DESC);
-        engine_note(vk_tmp_menu_state("MKW_TEMPORAL"));
+        libs_sync();
+        bool dlss = !strcmp(cfg_value("MKW_TEMPORAL"), "dlss");
+        libs_note(dlss ? "dlss" : "fsr3", names[dlss ? 1 : 2], vk_tmp_menu_state("MKW_TEMPORAL"));
         static const char *const qv[] = {"native", "quality", "balanced", "performance", "ultra"};
         const char *qn[5] = {menu_text(UI_MENU_TQ_NATIVE), menu_text(UI_MENU_TQ_QUALITY), menu_text(UI_MENU_TQ_BALANCED),
                               menu_text(UI_MENU_TQ_PERFORMANCE), menu_text(UI_MENU_TQ_ULTRA)};
@@ -412,7 +462,9 @@ static void tab_graphics(float scale) {
         static const char *const vals[] = {"flow", "dlss", "fsr3"};
         const char *names[3] = {"MKW Recomp", "NVIDIA DLSS", "AMD FSR 3.1"};
         opt_choice_list("MKW_FG_ENGINE", UI_MENU_FG_ENGINE, vals, names, 3, UI_MENU_FG_ENGINE_DESC);
-        engine_note(vk_tmp_menu_state("MKW_FG_ENGINE"));
+        libs_sync();
+        bool dlss = !strcmp(cfg_value("MKW_FG_ENGINE"), "dlss");
+        libs_note(dlss ? "dlssg" : "fsr3fg", names[dlss ? 1 : 2], vk_tmp_menu_state("MKW_FG_ENGINE"));
     }
     {   // NVIDIA Reflex (gfx/vk/device/vk_reflex_frame.c), live
         static const char *const vals[] = {"off", "on", "boost"};

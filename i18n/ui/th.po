@@ -575,6 +575,18 @@ msgctxt "UI_MENU_NOT_AVAILABLE"
 msgid "Not available on this PC: the game's own picture stays."
 msgstr "ใช้ไม่ได้บนพีซีเครื่องนี้: ภาพเดิมของเกมยังคงอยู่"
 
+msgctxt "UI_MENU_LIB_FETCHING"
+msgid "Downloading %s from its official source: %d %%"
+msgstr "กำลังดาวน์โหลด %s จากแหล่งทางการ: %d %%"
+
+msgctxt "UI_MENU_LIB_FAILED"
+msgid "Could not download %s (%s). Pick it again to try once more."
+msgstr "ดาวน์โหลด %s ไม่สำเร็จ (%s) เลือกอีกครั้งเพื่อลองใหม่"
+
+msgctxt "UI_MENU_LIB_READY"
+msgid "%s downloaded: it works after a restart."
+msgstr "ดาวน์โหลด %s แล้ว: ใช้งานได้หลังรีสตาร์ต"
+
 msgctxt "UI_MENU_TEMPORAL_DESC"
 msgid ""
 "Renders the race at a lower resolution and rebuilds it from several frames: NVIDIA DLSS (RTX "

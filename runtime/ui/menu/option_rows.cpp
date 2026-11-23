@@ -328,10 +328,12 @@ void opt_group(UiTextId title) {
     ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(g_look->group), "%s", menu_text(title));
 }
 
-void opt_text(UiTextId text, bool warn) {
+void opt_text(UiTextId text, bool warn) { opt_text(menu_text(text), warn); }
+
+void opt_text(const char *text, bool warn) {
     ImGui::PushTextWrapPos(0);
-    if (warn) ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(g_look->warn), "%s", menu_text(text));
-    else ImGui::TextUnformatted(menu_text(text));
+    if (warn) ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(g_look->warn), "%s", text);
+    else ImGui::TextUnformatted(text);
     ImGui::PopTextWrapPos();
 }
 

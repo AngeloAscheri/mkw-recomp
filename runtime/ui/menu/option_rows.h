@@ -59,6 +59,7 @@ void opt_indent(bool on);
 // Page text that is not a row: a group heading in the accent colour, a wrapped paragraph (warn: the warning colour).
 void opt_group(UiTextId title);
 void opt_text(UiTextId text, bool warn = false);
+void opt_text(const char *text, bool warn = false);   // already formatted (a menu_text with its values put in)
 
 // The return value of every row: true when it changed the setting this frame.
 // inverted: the row shows "on" while the key is 0 (a setting whose key names the opposite).

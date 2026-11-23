@@ -557,6 +557,18 @@ msgctxt "UI_MENU_NOT_AVAILABLE"
 msgid "Not available on this PC: the game's own picture stays."
 msgstr "이 PC에서는 사용할 수 없습니다: 게임 본래 화면이 유지됩니다."
 
+msgctxt "UI_MENU_LIB_FETCHING"
+msgid "Downloading %s from its official source: %d %%"
+msgstr "%s을(를) 공식 배포처에서 다운로드하는 중: %d %%"
+
+msgctxt "UI_MENU_LIB_FAILED"
+msgid "Could not download %s (%s). Pick it again to try once more."
+msgstr "%s을(를) 다운로드하지 못했습니다(%s). 다시 선택하면 한 번 더 시도합니다."
+
+msgctxt "UI_MENU_LIB_READY"
+msgid "%s downloaded: it works after a restart."
+msgstr "%s 다운로드 완료: 다시 시작하면 적용됩니다."
+
 msgctxt "UI_MENU_TEMPORAL_DESC"
 msgid ""
 "Renders the race at a lower resolution and rebuilds it from several frames: NVIDIA DLSS (RTX "

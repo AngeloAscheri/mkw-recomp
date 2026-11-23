@@ -43,6 +43,9 @@ typedef enum {
     UI_MENU_REFLEX_BOOST,
     UI_MENU_TEMPORAL, UI_MENU_TEMPORAL_DESC,     // values: off (the game's own), DLSS, FSR 3.1
     UI_MENU_NOT_AVAILABLE,                       // note under the upscaler, frame generation engine and Reflex rows
+    UI_MENU_LIB_FETCHING,                        // the same rows while their library downloads: %s name, %d percent
+    UI_MENU_LIB_FAILED,                          // the download failed: %s name, %s libs.py's message
+    UI_MENU_LIB_READY,                           // downloaded by this run: %s name
     UI_MENU_TEMPORAL_QUALITY, UI_MENU_TEMPORAL_QUALITY_DESC,
     UI_MENU_TQ_NATIVE, UI_MENU_TQ_QUALITY, UI_MENU_TQ_BALANCED, UI_MENU_TQ_PERFORMANCE, UI_MENU_TQ_ULTRA,
     UI_MENU_DLSS_PRESET, UI_MENU_DLSS_PRESET_DESC, UI_MENU_DLSS_PRESET_DEFAULT,
