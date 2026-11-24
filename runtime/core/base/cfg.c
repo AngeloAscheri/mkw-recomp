@@ -146,7 +146,6 @@ static const CfgRow rows[] = {
     S("GPL", "performance", "1", "0|1", RESTART),
     // textures and memory
     S("ASTC", "performance", "auto", "auto|gpu|native|cpu", RESTART),
-    S("DESWIZZLE", "performance", "auto", "auto|gpu|cpu|check", RESTART),
     S("MEMORY", "performance", "auto", "auto|import|mirror|verify", RESTART),
     S("TEX_ALIAS", "performance", "1", "0|1", RESTART),
     S("ZSTD_NATIVE", NULL, "1", "0|1", RESTART),
