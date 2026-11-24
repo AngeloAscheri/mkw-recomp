@@ -212,6 +212,7 @@ void vram_log(uint64_t frame) {
     vk_tex_pool_stats(&pool_blocks, &pool_allocs);
     rt_log("mem: vram texture pool: blocks %.0f MiB, allocated %.0f MiB, empty %.0f MiB", pool_blocks / M, pool_allocs / M,
            (pool_blocks - pool_allocs) / M);
+    vk_pool_census_log();
     // The OS's count for this process (Windows) against VMA's blocks: the difference is memory the runtime does not
     // see (driver pipelines, swapchain, its own overhead). 0 where the OS gives no per-process figure.
     uint64_t os_mib = plat_gpu_process_vram_mib();
@@ -262,6 +263,7 @@ static void mirror_mode(int discrete) {
     mirror_gap = g && *g ? atoi(g) : 2;
     if (mirror_gap < 0) mirror_gap = 0;
     mirror_cpu_gen = rt_knob("MIRROR_CPU_GEN", "1");
+    mirror_iw = rt_knob("MIRROR_IMPORTED_WRITES", "1");
     shadow_cpu_gen = rt_knob("SHADOW_CPU_GEN", "1");
     // Submissions a region stays unwritten before it is frozen. 60 rather than 300: in a fight 100 of the 257 MiB
     // queried a frame lay in regions idle for 30-299 submissions, and a thaw by a write costs about 60 us.
