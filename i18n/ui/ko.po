@@ -145,7 +145,7 @@ msgstr "타임 어택"
 
 msgctxt "UI_MENU_QUICK_RACE_GP"
 msgid "Grand Prix"
-msgstr ""
+msgstr "그랑프리"
 
 msgctxt "UI_MENU_QUICK_RACE_FREE"
 msgid "Free roam"
@@ -153,23 +153,25 @@ msgstr "프리 런"
 
 msgctxt "UI_MENU_CLASSIC_GP"
 msgid "Classic Grand Prix"
-msgstr ""
+msgstr "클래식 그랑프리"
 
 msgctxt "UI_MENU_CLASSIC_GP_DESC"
 msgid ""
 "Grand Prix races take place on each course instead of the road to it. Knockout Tour is unchanged. "
 "Changes take several seconds and affect races started afterward."
 msgstr ""
+"그랑프리 레이스는 코스로 가는 길이 아니라 각 코스에서 진행됩니다. Knockout Tour는 바뀌지 않습니다. 변경에는 몇 초가 걸리며 이후에 시작한 레이스에 적용됩니다."
 
 msgctxt "UI_MENU_CLASSIC_VS"
 msgid "Classic VS races"
-msgstr ""
+msgstr "클래식 VS 레이스"
 
 msgctxt "UI_MENU_CLASSIC_VS_DESC"
 msgid ""
 "VS races after the first take place on the next course instead of the road to it, whatever the "
 "course rule. Changes take several seconds and affect races started afterward."
 msgstr ""
+"첫 레이스 이후의 VS 레이스는 코스 규칙과 관계없이 코스로 가는 길이 아니라 다음 코스에서 진행됩니다. 변경에는 몇 초가 걸리며 이후에 시작한 레이스에 적용됩니다."
 
 msgctxt "UI_MENU_ANISO"
 msgid "Texture filtering"
@@ -995,13 +997,15 @@ msgstr "Bluetooth로 Joy-Con 2와 Pro 컨트롤러 2를 사용합니다. 페어�
 
 msgctxt "UI_MENU_DSU"
 msgid "Motion from a DSU server"
-msgstr ""
+msgstr "DSU 서버의 모션"
 
 msgctxt "UI_MENU_DSU_DESC"
 msgid ""
 "The gyro of a controller that gives none to the game, such as one in XInput mode, read from a "
 "Cemuhook / DSU server (DS4Windows, BetterJoy...) at 127.0.0.1:26760 (dsu_server in mkw.ini)."
 msgstr ""
+"XInput 모드처럼 게임에 자이로를 전달하지 않는 컨트롤러의 자이로를 127.0.0.1:26760의 Cemuhook / DSU 서버(DS4Windows, "
+"BetterJoy...)에서 읽어옵니다(mkw.ini의 dsu_server)."
 
 msgctxt "UI_MENU_STICK_DEADZONE"
 msgid "Stick dead zone"
@@ -2959,13 +2963,13 @@ msgstr "시작할 때 GitHub에서 이 포트의 새 릴리스를 확인하고 �
 
 msgctxt "UI_MENU_DISCORD"
 msgid "Discord status"
-msgstr ""
+msgstr "Discord 상태"
 
 msgctxt "UI_MENU_DISCORD_DESC"
 msgid ""
 "While the game runs, your Discord profile shows that you are playing, for how long, and whether "
 "you are racing or in the menus. Your Discord friends see it too."
-msgstr ""
+msgstr "게임이 실행되는 동안 Discord 프로필에 플레이 중이라는 것, 플레이 시간, 레이스 중인지 메뉴에 있는지가 표시됩니다. Discord 친구에게도 보입니다."
 
 msgctxt "UI_LAUNCH_PLAYERS"
 msgid "Profiles"
@@ -3011,11 +3015,11 @@ msgctxt "UI_SETUP_ERR_SPACE"
 msgid ""
 "not enough free space: the setup needs %s. Free some space, or choose \"Use it where it is\" for "
 "the RomFS, which needs no copy"
-msgstr ""
+msgstr "여유 공간이 부족합니다: 설정에 %s이(가) 필요합니다. 공간을 확보하거나, 복사가 필요 없는 RomFS는 “현재 위치에서 사용”을 선택하세요"
 
 msgctxt "UI_MENU_START_SCREEN"
 msgid "Start screen"
-msgstr ""
+msgstr "시작 화면"
 
 msgctxt "UI_MENU_START_SCREEN_DESC"
 msgid ""
@@ -3023,37 +3027,39 @@ msgid ""
 "It still opens when the game files need setting up, after an error, or when you hold View / "
 "Select (Minus) at start."
 msgstr ""
+"“자동”은 게임이 Steam의 Big Picture나 게이밍 모드에서 시작될 때 콘솔처럼 이 화면을 건너뜁니다. 게임 파일을 설정해야 할 때, 오류가 난 뒤, 또는 시작할 때 "
+"View / Select(마이너스)를 누르고 있으면 그래도 열립니다."
 
 msgctxt "UI_MENU_START_ALWAYS"
 msgid "Always"
-msgstr ""
+msgstr "항상"
 
 msgctxt "UI_MENU_START_SKIP"
 msgid "Skip"
-msgstr ""
+msgstr "건너뛰기"
 
 msgctxt "UI_LAUNCH_FILES_GONE"
 msgid "Game files not found"
-msgstr ""
+msgstr "게임 파일을 찾을 수 없습니다"
 
 #. printf format: keep every %... conversion, in the same order.
 msgctxt "UI_LAUNCH_FILES_GONE_HELP"
 msgid ""
 "The setup left the game files at %s and they are not there now. If they are on a card or a drive, "
 "connect it; if you moved them, set the game up again below and pick where they are now."
-msgstr ""
+msgstr "설정이 게임 파일을 %s에 두었지만 지금은 그곳에 없습니다. 카드나 드라이브에 있다면 연결하세요. 옮겼다면 아래에서 게임을 다시 설정하고 현재 위치를 선택하세요."
 
 msgctxt "UI_LAUNCH_FOUND"
 msgid "Found on this device"
-msgstr ""
+msgstr "이 기기에서 찾음"
 
 msgctxt "UI_LAUNCH_FOUND_SEARCHING"
 msgid "Looking for your copy in the usual places..."
-msgstr ""
+msgstr "일반적인 위치에서 사본을 찾는 중..."
 
 msgctxt "UI_LAUNCH_FOUND_FOLDER"
 msgid "folder"
-msgstr ""
+msgstr "폴더"
 
 msgctxt "UI_LAUNCH_GPU_NONE"
 msgid "No graphics card here can run the game"

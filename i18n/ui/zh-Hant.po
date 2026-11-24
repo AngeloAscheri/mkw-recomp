@@ -143,7 +143,7 @@ msgstr "計時賽"
 
 msgctxt "UI_MENU_QUICK_RACE_GP"
 msgid "Grand Prix"
-msgstr ""
+msgstr "大獎賽"
 
 msgctxt "UI_MENU_QUICK_RACE_FREE"
 msgid "Free roam"
@@ -151,23 +151,23 @@ msgstr "自由行駛"
 
 msgctxt "UI_MENU_CLASSIC_GP"
 msgid "Classic Grand Prix"
-msgstr ""
+msgstr "經典大獎賽"
 
 msgctxt "UI_MENU_CLASSIC_GP_DESC"
 msgid ""
 "Grand Prix races take place on each course instead of the road to it. Knockout Tour is unchanged. "
 "Changes take several seconds and affect races started afterward."
-msgstr ""
+msgstr "大獎賽的比賽在各個賽道上進行，而不是在通往賽道的路上。Knockout Tour 不變。更改需要幾秒鐘，並影響之後開始的比賽。"
 
 msgctxt "UI_MENU_CLASSIC_VS"
 msgid "Classic VS races"
-msgstr ""
+msgstr "經典 VS 比賽"
 
 msgctxt "UI_MENU_CLASSIC_VS_DESC"
 msgid ""
 "VS races after the first take place on the next course instead of the road to it, whatever the "
 "course rule. Changes take several seconds and affect races started afterward."
-msgstr ""
+msgstr "第一場之後的 VS 比賽在下一個賽道上進行，而不是在通往賽道的路上，無論賽道規則為何。更改需要幾秒鐘，並影響之後開始的比賽。"
 
 msgctxt "UI_MENU_ANISO"
 msgid "Texture filtering"
@@ -956,13 +956,15 @@ msgstr "透過藍牙使用 Joy-Con 2 和 Pro 控制器 2。要配對控制器，
 
 msgctxt "UI_MENU_DSU"
 msgid "Motion from a DSU server"
-msgstr ""
+msgstr "來自 DSU 伺服器的體感"
 
 msgctxt "UI_MENU_DSU_DESC"
 msgid ""
 "The gyro of a controller that gives none to the game, such as one in XInput mode, read from a "
 "Cemuhook / DSU server (DS4Windows, BetterJoy...) at 127.0.0.1:26760 (dsu_server in mkw.ini)."
 msgstr ""
+"不向遊戲提供陀螺儀的控制器（例如 XInput 模式）的陀螺儀，從 127.0.0.1:26760 上的 Cemuhook / DSU 伺服器（DS4Windows、BetterJoy "
+"等）讀取（mkw.ini 中的 dsu_server）。"
 
 msgctxt "UI_MENU_STICK_DEADZONE"
 msgid "Stick dead zone"
@@ -2909,13 +2911,13 @@ msgstr "啟動時向 GitHub 查詢此移植版的新版本，並在開始畫面�
 
 msgctxt "UI_MENU_DISCORD"
 msgid "Discord status"
-msgstr ""
+msgstr "Discord 狀態"
 
 msgctxt "UI_MENU_DISCORD_DESC"
 msgid ""
 "While the game runs, your Discord profile shows that you are playing, for how long, and whether "
 "you are racing or in the menus. Your Discord friends see it too."
-msgstr ""
+msgstr "遊戲執行時，你的 Discord 個人檔案會顯示你正在遊玩、已遊玩多久，以及你在比賽中還是在選單中。你的 Discord 好友也看得到。"
 
 msgctxt "UI_LAUNCH_PLAYERS"
 msgid "Profiles"
@@ -2961,11 +2963,11 @@ msgctxt "UI_SETUP_ERR_SPACE"
 msgid ""
 "not enough free space: the setup needs %s. Free some space, or choose \"Use it where it is\" for "
 "the RomFS, which needs no copy"
-msgstr ""
+msgstr "可用空間不足：設定需要 %s。請釋出空間，或為不需複製的 RomFS 選擇「在原位置使用」"
 
 msgctxt "UI_MENU_START_SCREEN"
 msgid "Start screen"
-msgstr ""
+msgstr "開始畫面"
 
 msgctxt "UI_MENU_START_SCREEN_DESC"
 msgid ""
@@ -2973,37 +2975,38 @@ msgid ""
 "It still opens when the game files need setting up, after an error, or when you hold View / "
 "Select (Minus) at start."
 msgstr ""
+"「自動」會在遊戲從 Steam 的 Big Picture 或遊戲模式啟動時略過它，就像在主機上一樣。當需要設定遊戲檔案、出錯之後，或啟動時按住 View / Select（減號）時，它仍會開啟。"
 
 msgctxt "UI_MENU_START_ALWAYS"
 msgid "Always"
-msgstr ""
+msgstr "總是"
 
 msgctxt "UI_MENU_START_SKIP"
 msgid "Skip"
-msgstr ""
+msgstr "略過"
 
 msgctxt "UI_LAUNCH_FILES_GONE"
 msgid "Game files not found"
-msgstr ""
+msgstr "找不到遊戲檔案"
 
 #. printf format: keep every %... conversion, in the same order.
 msgctxt "UI_LAUNCH_FILES_GONE_HELP"
 msgid ""
 "The setup left the game files at %s and they are not there now. If they are on a card or a drive, "
 "connect it; if you moved them, set the game up again below and pick where they are now."
-msgstr ""
+msgstr "設定曾把遊戲檔案放在 %s，但現在那裡沒有了。如果它們在記憶卡或磁碟機上，請連接；如果你移動了它們，請在下方重新設定遊戲並選擇它們現在的位置。"
 
 msgctxt "UI_LAUNCH_FOUND"
 msgid "Found on this device"
-msgstr ""
+msgstr "在此裝置上找到"
 
 msgctxt "UI_LAUNCH_FOUND_SEARCHING"
 msgid "Looking for your copy in the usual places..."
-msgstr ""
+msgstr "正在常用位置尋找你的副本..."
 
 msgctxt "UI_LAUNCH_FOUND_FOLDER"
 msgid "folder"
-msgstr ""
+msgstr "資料夾"
 
 msgctxt "UI_LAUNCH_GPU_NONE"
 msgid "No graphics card here can run the game"
