@@ -966,6 +966,35 @@ def test_damaged_generated_c_raises_to_regenerate(tmp_path: Path) -> None:
     assert gamecode.compile_one(["cc"], [], src, out, stamp, "k") == "" and stamp.read_text() == "k"
 
 
+def test_nul_report_says_where_the_bytes_are(tmp_path: Path) -> None:
+    src = tmp_path / "main_0203.c"
+    src.write_bytes(b"typedef uint6\0_t x;\n")
+    assert "1 NUL in 20 bytes, the first at 13" in gamecode.nul_report(src)
+
+
+def test_gen_refuses_text_with_a_nul_and_reads_back_what_it_wrote(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    # #434: the NUL is told apart by where it appears: in the text before the write, or in the file after it
+    import gen
+
+    with pytest.raises(gen.CorruptText, match="NUL byte at 5"):
+        gen.write_if_changed(tmp_path / "a.c", "uint6\0_t")
+    assert not (tmp_path / "a.c").exists()
+
+    orig, flips = Path.read_bytes, []
+
+    def flaky(self: Path) -> bytes:  # the first read back of the temporary file has a zeroed byte
+        data = orig(self)
+        if self.name.startswith(".") and not flips:
+            flips.append(1)
+            return data[:3] + b"\0" + data[4:]
+        return data
+
+    monkeypatch.setattr(Path, "read_bytes", flaky)
+    assert gen.write_if_changed(tmp_path / "b.c", "int x = 1;\n") is True
+    assert flips and (tmp_path / "b.c").read_bytes() == b"int x = 1;\n"
+    assert gen.write_if_changed(tmp_path / "b.c", "int x = 1;\n") is False  # unchanged: not rewritten
+
+
 def test_space_checked_before_copying(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """gamecopy.check_space: a drive with less free than the setup needs fails with code "space" (the start screen's
     translated text) and what is needed and free; enough passes; what a cut copy left is not needed again."""

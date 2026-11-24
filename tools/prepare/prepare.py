@@ -563,12 +563,15 @@ def main() -> None:
             elif step == "compile":
                 try:
                     compile_game(game, game / "exefs", work, cc, args.target, jobs, dest)
-                except DamagedSource as e:  # once: a second damaged write is the disk or the memory, not chance
-                    print(f"{e}: generating again", file=sys.stderr)
+                except DamagedSource as e:
+                    # Once, with a quarter of the jobs: the damage moved to another file on a second try with 16 jobs
+                    # (main_0107.c, then main_0304.c) and went away with --jobs 4 (Discord help, 22/11/2026; #434)
+                    retry_gen, retry_jobs = max(1, gen_jobs // 4), max(1, jobs // 4)
+                    print(f"{e}: generating again with {retry_gen} jobs, compiling with {retry_jobs}", file=sys.stderr)
                     emit("step", "generate")
-                    generate(game / "exefs", work, gen_jobs, version, image)
+                    generate(game / "exefs", work, retry_gen, version, image)
                     emit("step", "compile")
-                    compile_game(game, game / "exefs", work, cc, args.target, jobs, dest)
+                    compile_game(game, game / "exefs", work, cc, args.target, retry_jobs, dest)
             elif step == "shaders":
                 beside.join(show=True)
             elif step == "warm":
