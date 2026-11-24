@@ -546,18 +546,44 @@ void input_menu(int open) {
     ikb_cursor_update();
 }
 
-// 1 while flag (g_block, g_menu) blocks the game's input; state 2 ends at the first poll with nothing held.
-static int blocked(volatile int32_t *flag, uint64_t buttons) {
+// What one flag (g_block, g_menu) does to the game's input. State 1 (open): everything is zeroed, 1 returned. State 2
+// (closed, waiting for the release): only the buttons held at the first poll after the close stay ignored, each until it
+// is let go (and a stick whose direction is among them stays at rest), so the press that closed it does not reach the
+// game while a button or stick stuck down (a drifting stick, a virtual pad) cannot keep the other controls dead for
+// good (#582); the state ends when none is left. Returns 1 only while the whole input is blocked.
+typedef struct { uint64_t held; int armed; } wait_t;
+
+static int gate(volatile int32_t *flag, wait_t *w, uint64_t *buttons, int32_t axes[4]) {
     int32_t k = *flag;
-    return k && !(k == 2 && !buttons && plat_cas32(flag, 0, 2) == 2);
+    if (k != 2) {
+        w->armed = 0;
+        return k == 1;
+    }
+    if (!w->armed) w->held = *buttons, w->armed = 1;
+    else w->held &= *buttons;
+    if (!w->held) {
+        plat_cas32(flag, 0, 2);
+        w->armed = 0;
+        return 0;
+    }
+    *buttons &= ~w->held;
+    if (w->held & 0xfull << B_SL_LEFT) axes[0] = axes[1] = 0;
+    if (w->held & 0xfull << B_SR_LEFT) axes[2] = axes[3] = 0;
+    return 0;
 }
 
 void input_poll(uint64_t *buttons, int32_t *lx, int32_t *ly, int32_t *rx, int32_t *ry) {
+    static wait_t text_wait, menu_wait;
     lat_input_read();   // MKW_LATENCY: the first read of each frame
     poll_merged(buttons, lx, ly, rx, ry);
-    int text = blocked(&g_block, *buttons), menu = blocked(&g_menu, *buttons);
-    if (!text && !menu) return;
-    *buttons = 0; *lx = *ly = *rx = *ry = 0;
+    int32_t axes[4] = {*lx, *ly, *rx, *ry};
+    int text = gate(&g_block, &text_wait, buttons, axes);
+    int menu = gate(&g_menu, &menu_wait, buttons, axes);
+    if (text || menu) {
+        *buttons = 0;
+        axes[0] = axes[1] = axes[2] = axes[3] = 0;
+    }
+    *lx = axes[0]; *ly = axes[1]; *rx = axes[2]; *ry = axes[3];
 }
 
 void input_poll_ui(uint64_t *buttons, int32_t *lx, int32_t *ly, int32_t *rx, int32_t *ry) {
