@@ -256,6 +256,10 @@ static void window_main(void *arg) {
     // play with the game on a TV while the PC is used for something else). The keyboard and mouse stay gated on the
     // focus in input.c, where ikb_foreground() decides; the gamepad is read whatever the focus says.
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
+    // SDL's HIDAPI driver joins a left and a right Joy-Con into one Pro-like pad (its default); MKW_JOYCON_COMBINE=0
+    // keeps them apart, each a mini-gamepad, so two players can share the pair (discord help, discussion #814).
+    const char *joycon = cfg_get("MKW_JOYCON_COMBINE");
+    if (joycon && !strcmp(joycon, "0")) SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_COMBINE_JOY_CONS, "0");
     const char *steam_drv = steam_video_driver();   // started by Steam on a Wayland desktop, SDR: XWayland
     if (steam_drv) SDL_SetHint(SDL_HINT_VIDEO_DRIVER, steam_drv);
     g_video_ok = SDL_Init(SDL_INIT_VIDEO);

@@ -112,6 +112,7 @@ static const CfgRow rows[] = {
     S("RENHDRUM", "input", "0", "0|1", RESTART),   // Windows: renhdrum.dll beside the exe plays player 1's gamepad (renhdrum_host.h)
     S("PAD_LAYOUT", "input", "auto", "auto|nintendo|xbox", LIVE),
     S("PAD_P2", "input", "0", "0|1", LIVE),
+    S("JOYCON_COMBINE", "input", "1", "0|1", RESTART),   // 0: a left and a right Joy-Con stay two mini-gamepads, one each for two players (SDL joins them by default)
     S("BUTTON_ICONS", "input", "auto", "auto|nintendo|xbox|playstation|keyboard", LIVE),
     S("MENU_SHORTCUT", "input", "minus_plus", "minus_plus|guide", LIVE),
     S("KEYBOARD_MOUSE", "input", "1", "0|1", LIVE),   // the Controls row that turns the keyboard and mouse off for the game (#663)
@@ -145,6 +146,7 @@ static const CfgRow rows[] = {
     S("GPL", "performance", "1", "0|1", RESTART),
     // textures and memory
     S("ASTC", "performance", "auto", "auto|gpu|native|cpu", RESTART),
+    S("DESWIZZLE", "performance", "auto", "auto|gpu|cpu|check", RESTART),
     S("MEMORY", "performance", "auto", "auto|import|mirror|verify", RESTART),
     S("TEX_ALIAS", "performance", "1", "0|1", RESTART),
     S("ZSTD_NATIVE", NULL, "1", "0|1", RESTART),

@@ -999,6 +999,17 @@ msgctxt "UI_MENU_DSU"
 msgid "Motion from a DSU server"
 msgstr "DSUサーバーからのモーション"
 
+msgctxt "UI_MENU_JOYCON_COMBINE"
+msgid "Join left and right Joy-Con"
+msgstr "左右のJoy-Conを1つにまとめる"
+
+msgctxt "UI_MENU_JOYCON_COMBINE_DESC"
+msgid ""
+"On: a left and a right Joy-Con paired together act as one controller. Off: each Joy-Con stays its "
+"own small controller, so two players can share the pair. Applies at the next start."
+msgstr ""
+"オン：ペアリングした左右のJoy-Conを1つのコントローラーとして扱います。オフ：Joy-Conを1本ずつ別のコントローラーとして扱い、2人でペアを分け合えます。次回の起動から反映されます。"
+
 msgctxt "UI_MENU_DSU_DESC"
 msgid ""
 "The gyro of a controller that gives none to the game, such as one in XInput mode, read from a "
