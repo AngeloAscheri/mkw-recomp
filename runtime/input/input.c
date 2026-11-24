@@ -417,6 +417,43 @@ static int pad_read(uint64_t *b, int32_t sl[2], int32_t sr[2]) {
     return 1;
 }
 
+// The hacks' pairs on player 1's controller (input_hack_gate), under lock: the latches, the keys down at the last
+// poll and when that was.
+static int hack_latch[3];
+static volatile int32_t hack_keys;
+static uint64_t hack_seen_ns;
+
+static void hack_listening(int on[3]) {
+    const char *t = cfg_value("MKW_TURBO");
+    on[HACK_KEY_TURBO] = !strcmp(t, "hold") || !strcmp(t, "toggle");
+    on[HACK_KEY_FREEZE] = on[HACK_KEY_STEP] = cfg_bool("MKW_FREEZE_KEYS");
+}
+
+// `b` is the controller's own buttons, never the merged input: a keyboard key, a script or a recording mapped to Minus+ZR
+// does not fire a hack. With the menu open nothing listens: the latches clear and the menu keeps every button.
+static void hack_gate(uint64_t *b) {
+    int on[3] = {0, 0, 0};
+    if (!menu_is_open()) hack_listening(on);
+    plat_xchg32(&hack_keys, (int32_t)input_hack_gate(hack_latch, b, on));
+    hack_seen_ns = plat_now_ns();
+}
+
+// A frozen game (core/hacks/freeze.c) waits in its present and polls no more: after 100 ms without a poll the pad is
+// read here, so its pair can start the game again. The pad alone then: the keyboard has its F keys.
+int input_pad_hack(int which) {
+    if ((unsigned)which >= 3) return 0;
+    plat_mutex_lock(&lock);
+    if (state == 1 && plat_now_ns() - hack_seen_ns > 100000000ull) {
+        uint64_t b = 0;
+        int32_t sl[2], sr[2];
+        if (pad_read(&b, sl, sr)) hack_gate(&b);
+        else plat_xchg32(&hack_keys, 0), hack_seen_ns = plat_now_ns();
+    }
+    int down = (hack_keys >> which) & 1;
+    plat_mutex_unlock(&lock);
+    return down;
+}
+
 static void poll_merged(uint64_t *buttons, int32_t *lx, int32_t *ly, int32_t *rx, int32_t *ry) {
     uint64_t b = 0;
     int32_t sl[2] = {0, 0}, sr[2] = {0, 0};
@@ -428,7 +465,9 @@ static void poll_merged(uint64_t *buttons, int32_t *lx, int32_t *ly, int32_t *rx
         int32_t pl[2] = {0, 0}, pr[2] = {0, 0};
         if (state == 1) {
             pad_read(&pb, pl, pr);
-            b = pb, sl[0] = pl[0], sl[1] = pl[1], sr[0] = pr[0], sr[1] = pr[1];
+            uint64_t pg = pb;   // the pad's buttons less a hack pair (input_hack_gate); pb stays whole for the icons below
+            hack_gate(&pg);
+            b = pg,sl[0] = pl[0], sl[1] = pl[1], sr[0] = pr[0], sr[1] = pr[1];
         }
         uint64_t kb = 0;
         if (ikb_foreground() && kbm_get()) {
