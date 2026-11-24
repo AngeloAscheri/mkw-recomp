@@ -28,19 +28,22 @@ stall_check() {
     timeout 120 uv run tools/run/stacks.py --host --save "build/run/$n-stall.txt" > "build/run/$n-stall-stacks.txt" 2>&1 || true
     echo "watch: $n STALLED at frame $f for 60 s (stacks: build/run/$n-stall-stacks.txt, raw build/run/$n-stall.txt)"
 }
-# Black check (WATCH_BLACK=0: off): every 30 s a shot of the game's image; brightest pixel at most 10 in 4 shots in a
-# row while the frame moves on prints one BLACK line (the game runs but draws nothing: the window looks black).
+# Black check (WATCH_BLACK=0: off): every 30 s the window's image (ctl screen: the swapchain, after frame generation,
+# which our mkw.ini has on); brightest pixel at most 10 in 4 in a row while the frame moves on prints one BLACK line,
+# with the game's own image (ctl shot) to tell whether the game or the presentation (framegen, HUD, upscale) is black.
 black=0 blacked=0
 black_check() {
     [ "${WATCH_BLACK:-1}" = 1 ] && [ "$blacked" = 0 ] && [ "$stalled" = 0 ] && [ "$same" = 0 ] && [ "$last" -gt 0 ] || return 0
-    local png="$PWD/build/run/$n-watch.png" l
-    rm -f "$png" "${png%.png}-s.png"
-    timeout 20 tools/run/ctl.sh "$n" shot "$png" > /dev/null 2>&1 || return 0
+    local png="$PWD/build/run/$n-watch.png" shot="$PWD/build/run/$n-watch-game.png" l g=?
+    rm -f "$png" "$shot" "${shot%.png}-s.png"
+    timeout 20 tools/run/ctl.sh "$n" screen "$png" > /dev/null 2>&1 || return 0
+    for _ in $(seq 10); do [ -s "$png" ] && break; sleep 1; done   # written at the next present
     l=$(uv run -q tools/imagen/maxlum.py "$png" 2>/dev/null) || return 0
     if [ "$l" -le 10 ]; then black=$((black + 1)); else black=0; fi
     [ "$black" -ge 4 ] || return 0
     blacked=1
-    echo "watch: $n BLACK at frame $last: the game's image has stayed black for 2 min while frames advance ($png)"
+    timeout 20 tools/run/ctl.sh "$n" shot "$shot" > /dev/null 2>&1 && g=$(uv run -q tools/imagen/maxlum.py "$shot" 2>/dev/null)
+    echo "watch: $n BLACK at frame $last: the window has stayed black for 2 min while frames advance; game image max $g of 255 ($png, $shot)"
 }
 pos=0
 while :; do
