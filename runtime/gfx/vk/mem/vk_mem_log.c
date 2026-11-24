@@ -62,12 +62,20 @@ void vk_mem_replay_log(uint64_t frames) {
     zc_log(frames);
 }
 
+// Asked for where pool_lock is held (lazy_back's failed shadow or chunk): vram_log takes tex_lock, and an image's
+// creation holds tex_lock while it resolves pools under pool_lock, so the report waits for the next present (mir2,
+// 24/11/2026: the game froze at frame 1188 right after a failed shadow allocation).
+static int vram_log_wanted;
+void vram_log_later(void) { __atomic_store_n(&vram_log_wanted, 1, __ATOMIC_RELAXED); }
+
 void vk_mem_census(uint64_t frame) {
     static uint64_t window_start;
     mem_early_log(frame);   // MKW_EARLY_READ
     if (frame % 300 == 0) vk_pool_diag_log(frame);   // MKW_MEM_POOL_LABELS
     uint64_t every = vram_every();
-    if (((rt_trace & RT_TRACE_PERF) && frame % 150 == 0) || (every && frame % every == 0)) vram_log(frame);
+    if (((rt_trace & RT_TRACE_PERF) && frame % 150 == 0) || (every && frame % every == 0) ||
+        __atomic_exchange_n(&vram_log_wanted, 0, __ATOMIC_RELAXED))
+        vram_log(frame);
     if (vk_dirty_census && !vk_mirror_on) dirty_frame(frame);
     if ((rt_trace & RT_TRACE_PERF) ? frame % 60 == 0 : frame == 600 || frame == 1800)
         mirror_log(frame), shadow_log(frame), zc_log(frame);   // mirror_log also logs the write-watch line
@@ -263,7 +271,6 @@ static void mirror_mode(int discrete) {
     mirror_gap = g && *g ? atoi(g) : 2;
     if (mirror_gap < 0) mirror_gap = 0;
     mirror_cpu_gen = rt_knob("MIRROR_CPU_GEN", "1");
-    mirror_iw = rt_knob("MIRROR_IMPORTED_WRITES", "1");
     shadow_cpu_gen = rt_knob("SHADOW_CPU_GEN", "1");
     // Submissions a region stays unwritten before it is frozen. 60 rather than 300: in a fight 100 of the 257 MiB
     // queried a frame lay in regions idle for 30-299 submissions, and a thaw by a write costs about 60 us.
