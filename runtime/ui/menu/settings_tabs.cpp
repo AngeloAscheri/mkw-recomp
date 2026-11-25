@@ -120,6 +120,7 @@ static void row_game_lang(void) {
         // ours, rebuilt over the game's Spanish and British English (tools/i18n/game_texts.py)
         {"ca", UI_MENU_LANGNAME_CA}, {"gl", UI_MENU_LANGNAME_GL}, {"eu", UI_MENU_LANGNAME_EU},
         {"tr", UI_MENU_LANGNAME_TR}, {"vi", UI_MENU_LANGNAME_VI}, {"uk", UI_MENU_LANGNAME_UK},
+        {"id", UI_MENU_LANGNAME_ID},
         // added by updates (Polish 1.5.0, Thai 1.7.0): listed only when this copy of the game ships them
         {"pl", UI_MENU_LANGNAME_PL}, {"th", UI_MENU_LANGNAME_TH},
     };
@@ -606,7 +607,7 @@ static void tab_general(float scale) {
         UI_MENU_LANGNAME_PT, UI_MENU_LANGNAME_PT_BR, UI_MENU_LANGNAME_RU, UI_MENU_LANGNAME_ZH_HANS,
         UI_MENU_LANGNAME_ZH_HANT, UI_MENU_LANGNAME_KO, UI_MENU_LANGNAME_ES_419, UI_MENU_LANGNAME_CA,
         UI_MENU_LANGNAME_GL, UI_MENU_LANGNAME_EU, UI_MENU_LANGNAME_PL, UI_MENU_LANGNAME_TR, UI_MENU_LANGNAME_UK,
-        UI_MENU_LANGNAME_TH, UI_MENU_LANGNAME_VI,
+        UI_MENU_LANGNAME_TH, UI_MENU_LANGNAME_VI, UI_MENU_LANGNAME_ID,
     };
     opt_choice("MKW_MENU_LANG", UI_MENU_MENU_LANG, langs, sizeof langs / sizeof *langs, UI_MENU_MENU_LANG_DESC);
     opt_toggle("MKW_LAN", UI_MENU_LAN, UI_MENU_LAN_DESC);   // sdk/ov/ov_socket.c, the lan set of recomp/patches-mkw.txt

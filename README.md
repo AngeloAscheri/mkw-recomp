@@ -128,7 +128,8 @@ Beyond the console, all optional and off (or at the console's value) by default:
   where they are). While the game uses the network, as in a LAN race, it runs on out of focus and silent instead, as on
   the console.
 - **Hacks**: turbo (F2), skip movies, unlock everything, fixed randomness, straight to time trial or free roam.
-- **Languages**: menus in 21 languages; the game also in Catalan, Galician, Basque, Turkish, Vietnamese and Ukrainian.
+- **Languages**: menus in 23 languages; the game also in Catalan, Galician, Basque, Turkish, Vietnamese, Ukrainian and
+  Indonesian.
 - **Tools**: performance overlay and a one-click system info for bug reports.
 
 ### Switch 2 controllers over USB on Windows

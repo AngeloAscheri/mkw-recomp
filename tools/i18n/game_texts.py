@@ -36,8 +36,8 @@ ROOT = Path(__file__).resolve().parents[2]
 TRANSLATIONS = ROOT / "i18n" / "game"
 BASE_TSV = TRANSLATIONS / "base"  # <lang>.tsv; the <version>/ folders beside it hold what each update reworded
 # The game language each translation replaces (the one the game is told): Spain's languages over its Spanish, Turkish
-# over the British English (discussion #593), Vietnamese (#873) and Ukrainian too
-BASE = {"ca": "EUes", "gl": "EUes", "eu": "EUes", "tr": "EUen", "vi": "EUen", "uk": "EUen"}
+# over the British English (discussion #593), Vietnamese (#873), Ukrainian and Indonesian too
+BASE = {"ca": "EUes", "gl": "EUes", "eu": "EUes", "tr": "EUen", "vi": "EUen", "uk": "EUen", "id": "EUen"}
 TAG = re.compile(r"\{(0[EF](?: [0-9A-F]{4})*)\}")
 
 
