@@ -9,3 +9,4 @@ use in [../README.md](../README.md)). The texts an update reworded keep here the
 | `gl.tsv` | Galician |
 | `eu.tsv` | Basque |
 | `tr.tsv` | Turkish (over the British English) |
+| `vi.tsv` | Vietnamese (over the British English) |
