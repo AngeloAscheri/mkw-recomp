@@ -3,8 +3,8 @@
 | File | What | Usage |
 |---|---|---|
 | `game_texts.py` | The game's own texts of one `romfs/Mals` folder (SARC of MSBT) as label and text lines: the vocabulary a translation reuses | `uv run tools/i18n/game_texts.py EUde [-o DIR]` |
-| `game_fonts.py` | The game's fonts with the letters a translation needs and they lack (Turkish ğ Ğ ş Ş İ, Vietnamese ă đ ơ ư and those with two marks), composed from their own marks into the translation's RomFS overlay; `game_texts.py build` and the setup call it | `uv run tools/i18n/game_fonts.py missing\|build tr` |
-| `game_fonts_vi.py` | The Vietnamese letters `game_fonts.py` composes: where each mark goes | imported by `game_fonts.py` |
+| `game_fonts.py` | The game's fonts with the letters a translation needs and they lack (Turkish ğ Ğ ş Ş İ, Vietnamese ă đ ơ ư and those with two marks, Ukrainian ґ є і ї), composed from their own letters and marks into the translation's RomFS overlay; `game_texts.py build` and the setup call it | `uv run tools/i18n/game_fonts.py missing\|build tr` |
+| `game_fonts_vi.py`, `game_fonts_uk.py` | The Vietnamese and Ukrainian letters `game_fonts.py` composes: where each mark goes, which letter is another's shape | imported by `game_fonts.py` |
 | `glyph_shapes.py` | Glyph outlines as shapes to move, scale and add to a font, for `game_fonts.py` and its recipes | imported |
 | `catalog.py` | The menu's text catalogs (`i18n/ui/mkw.pot`, `i18n/ui/<lang>.po`): merges the English template into every translation (changed English marked fuzzy), shows how far each language is, and generates the C arrays `build.py` compiles | `uv run tools/i18n/catalog.py update\|status\|gen DIR` |
 | `fill.py` | Writes new or changed menu texts in every language from a JSON table `{msgctxt: {lang: text}}`: only empty or fuzzy entries (a fuzzy one loses its flag), never a checked translation | `uv run tools/i18n/fill.py TABLE.json` after `catalog.py update` |

@@ -119,7 +119,7 @@ static void row_game_lang(void) {
         {"zh-CN", UI_MENU_LANGNAME_ZH_HANS}, {"zh-TW", UI_MENU_LANGNAME_ZH_HANT}, {"ko", UI_MENU_LANGNAME_KO},
         // ours, rebuilt over the game's Spanish and British English (tools/i18n/game_texts.py)
         {"ca", UI_MENU_LANGNAME_CA}, {"gl", UI_MENU_LANGNAME_GL}, {"eu", UI_MENU_LANGNAME_EU},
-        {"tr", UI_MENU_LANGNAME_TR}, {"vi", UI_MENU_LANGNAME_VI},
+        {"tr", UI_MENU_LANGNAME_TR}, {"vi", UI_MENU_LANGNAME_VI}, {"uk", UI_MENU_LANGNAME_UK},
         // added by updates (Polish 1.5.0, Thai 1.7.0): listed only when this copy of the game ships them
         {"pl", UI_MENU_LANGNAME_PL}, {"th", UI_MENU_LANGNAME_TH},
     };
