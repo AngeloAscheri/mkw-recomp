@@ -112,8 +112,10 @@ To add your machine to the performance list, open a
 Beyond the console, all optional and off (or at the console's value) by default:
 
 - **Display**: any internal resolution, 21:9 / 32:9 / 48:9, AMD FSR 1 scaling, HDR, VSync, mailbox or immediate presentation.
-- **Frame generation**: frames made between the game's (30 fps shown at 60, or 240). Smoother, not faster; fast motion
-  and the minimap can smear.
+- **DLSS and FSR 3.1**: NVIDIA DLSS and AMD FSR 3.1 upscaling (or DLAA at full resolution) and NVIDIA Reflex, in
+  Graphics > Resolution; on Windows their libraries download from NVIDIA's and AMD's own releases when you pick them.
+- **Frame generation**: frames made between the game's (30 fps shown at 60, or 240), by our own engine, DLSS or
+  FSR 3.1. Smoother, not faster; fast motion and the minimap can smear.
 - **Frame rate**: 20 and 15 fps besides 60 and 30; Automatic drops to them when frames take too long, so a slow GPU
   keeps the race at real speed. **Low latency** (on by default) starts each frame as late as the GPU allows.
 - **Graphics**: texture filtering and quality, detail distance, shadow quality.
@@ -126,7 +128,7 @@ Beyond the console, all optional and off (or at the console's value) by default:
   where they are). While the game uses the network, as in a LAN race, it runs on out of focus and silent instead, as on
   the console.
 - **Hacks**: turbo (F2), skip movies, unlock everything, fixed randomness, straight to time trial or free roam.
-- **Languages**: menus in 20 languages; the game also in Catalan, Galician, Basque and Turkish.
+- **Languages**: menus in 21 languages; the game also in Catalan, Galician, Basque and Turkish.
 - **Tools**: performance overlay and a one-click system info for bug reports.
 
 ### Switch 2 controllers over USB on Windows
