@@ -38,9 +38,11 @@ BASE_TSV = TRANSLATIONS / "base"  # <lang>.tsv; the <version>/ folders beside it
 # The game language each translation replaces (the one the game is told): Spain's languages over its Spanish, Turkish
 # over the British English (discussion #593), Vietnamese (#873), Ukrainian, Indonesian and Arabic too
 BASE = {"ca": "EUes", "gl": "EUes", "eu": "EUes", "tr": "EUen", "vi": "EUen", "uk": "EUen", "id": "EUen",
-        "ar": "EUen"}
+        "ar": "EUen", "hi": "EUen"}
 # Written right to left: joined and put in visual order at build (arabic.py), as the game draws one character at a time
 RTL = {"ar"}
+# Shaped by syllable: each written as one private-use character at build (devanagari.py), for the same reason
+SYLLABIC = {"hi"}
 TAG = re.compile(r"\{(0[EF](?: [0-9A-F]{4})*)\}")
 
 
@@ -282,6 +284,10 @@ def build(lang: str, out: Path, romfs: Path | None = None, strict: bool = True, 
         import arabic
 
         texts = {k: arabic.visual(v) for k, v in texts.items()}
+    if lang in SYLLABIC:
+        import devanagari
+
+        texts = {k: devanagari.encode(v) for k, v in texts.items()}
     manifest = []
     for arc in sorted(folder.glob("*.msarc")):
         orig = arc.read_bytes()

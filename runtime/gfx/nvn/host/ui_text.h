@@ -163,8 +163,8 @@ typedef enum {
     // game language added by update 1.7.0 (Polish came in 1.5.0): offered when the RomFS ships its Mals folder
     UI_MENU_LANGNAME_TH,
     // menu languages the game does not ship (its texts rebuilt over the English)
-    UI_MENU_LANGNAME_VI, UI_MENU_LANGNAME_ID, UI_MENU_LANGNAME_AR,
-    UI_MENU_LANGNAME_LAST = UI_MENU_LANGNAME_AR,
+    UI_MENU_LANGNAME_VI, UI_MENU_LANGNAME_ID, UI_MENU_LANGNAME_AR, UI_MENU_LANGNAME_HI,
+    UI_MENU_LANGNAME_LAST = UI_MENU_LANGNAME_HI,
 
     // Advanced
     UI_MENU_ADV_WARNING,
@@ -310,8 +310,8 @@ typedef enum {
 // UTF-8 text for id in the language of ov_language(); English when the catalog has no row for that language.
 const char *ui_text(UiTextId id);
 // The same for an explicit catalog language ("en", "ja", "fr", "de", "it", "es", "nl", "pt", "pt-BR", "ru",
-// "zh-Hans", "zh-Hant", "ko", "es-419", "ca", "gl", "eu", "pl", "tr", "uk", "th", "vi", "id", "ar"); an empty entry
-// gives the English text.
+// "zh-Hans", "zh-Hant", "ko", "es-419", "ca", "gl", "eu", "pl", "tr", "uk", "th", "vi", "id", "ar",
+// "hi"); an empty entry gives the English text.
 const char *ui_text_in(const char *lang, UiTextId id);
 // 1 when the row of lang has its own text for id (no fallback to English), for the probe.
 int ui_text_defined(const char *lang, UiTextId id);

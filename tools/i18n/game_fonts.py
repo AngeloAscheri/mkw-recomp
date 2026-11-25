@@ -9,7 +9,8 @@ every letter, and VDL-LogoG) have ç ö ü ı but not ğ Ğ ş Ş İ, so a Turki
 missing letter is drawn here from the same font: the base letter plus the breve, dot or cedilla the font already has,
 placed where that font places the same kind of mark (the diaeresis of ö/Ö, the cedilla of ç/Ç), so it keeps the font's
 weight and style. Vietnamese (#873) needs ~100 letters (ă đ ơ ư, and those with two marks): see game_fonts_vi.py;
-Ukrainian ґ є і ї: game_fonts_uk.py; Arabic, which the fonts lack entirely: game_fonts_ar.py.
+Ukrainian ґ є і ї: game_fonts_uk.py; Arabic and Hindi, which the fonts lack entirely: game_fonts_ar.py and
+game_fonts_hi.py.
 Nothing of Nintendo's is shipped: the setup composes them from the player's own copy.
 
 Font/<name>.bfotf.zs: zstd of a "bfotf", an OpenType font after an 8-byte header (the magic d9 9b 87 1a, then the
@@ -33,6 +34,7 @@ from fontTools.pens.t2CharStringPen import T2CharStringPen  # noqa: E402
 from fontTools.pens.transformPen import TransformPen
 from fontTools.ttLib import TTFont  # noqa: E402
 from game_fonts_ar import arabic  # noqa: E402
+from game_fonts_hi import hindi  # noqa: E402
 from game_fonts_uk import SAME, ukrainian  # noqa: E402
 from game_fonts_vi import vietnamese  # noqa: E402
 from glyph_shapes import IDENTITY, bounds, contours  # noqa: E402
@@ -115,7 +117,8 @@ def compose(font: TTFont, letters: str) -> list[str]:
             parts = [(base, IDENTITY), (mark, (1, 0, 0, 1, dx, dy))]
             width = glyphs[base].width
         else:
-            made = vietnamese(glyphs, cmap, ch) or ukrainian(glyphs, cmap, ch) or arabic(glyphs, cmap, ch)
+            made = (vietnamese(glyphs, cmap, ch) or ukrainian(glyphs, cmap, ch) or arabic(glyphs, cmap, ch)
+                    or hindi(glyphs, cmap, ch))  # fmt: skip
             if not made:
                 continue
             base, parts, width = made
@@ -169,10 +172,12 @@ def read_font(font_dir: Path, name: str) -> bytes:
 
 
 def missing(font_dir: Path, text: str) -> dict[str, str]:
-    """For each font, the letters of text it lacks (spaces and control characters aside)."""
+    """For each font, the letters of text it lacks (spaces and control characters aside; private-use characters
+    count: the Hindi syllables are written with them, devanagari.py)."""
     import io
+    import unicodedata
 
-    need = {c for c in text if c.isprintable() and not c.isspace()}
+    need = {c for c in text if (c.isprintable() or unicodedata.category(c) == "Co") and not c.isspace()}
     out = {}
     for name in FONTS:
         font = TTFont(io.BytesIO(decrypt(zstd.decompress(read_font(font_dir, name)))), lazy=True)
