@@ -250,6 +250,7 @@ void hostfn_time_report(uint64_t frame);                   // MKW_HOST_TIME=1: h
 void hostfn_time_window(uint64_t frame);                   // the same since the last report, now (seqwatch.c MKW_SEQ_EXIT)
 void seqwatch_frame(uint64_t frame);                       // each present: phases whose update stopped have ended
 int seqwatch_window(void);                                 // MKW_SEQ_EXIT's window is open: no periodic host time report
+void seqwatch_exit(void);                                  // ctl exit: the run ends at its next present, as MKW_SEQ_EXIT
 int64_t seqwatch_since_us(void);                         // since MKW_SEQ_UNTIL's event, -1 before (the A/B world clock)
 int seqwatch_hold(void);                                   // a MKW_SEQ_HOLD node is active: no input script presses
 void seqwatch_movie_end(void);                              // a video reached its end of stream (ov_codec.c)
