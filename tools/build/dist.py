@@ -130,6 +130,7 @@ PINS = {
 # every tool it names is here: until 13/11/2026 none was, and the page failed with "no setup tools" in every package)
 SOURCES = ["recomp", "sm86", "tools/build/build.py", "tools/build/icon.py", "tools/prepare", "tools/mod", "tools/romfs/resolution.py",
            "tools/i18n/catalog.py", "tools/i18n/game_texts.py", "tools/i18n/game_fonts.py", "tools/i18n/game_fonts_vi.py",
+           "tools/i18n/game_fonts_ar.py", "tools/i18n/arabic.py", "runtime/ui/fonts/NotoSansArabic-ExtraBold.ttf",
            "tools/i18n/game_fonts_uk.py", "tools/i18n/glyph_shapes.py", "i18n/game",
            "tools/shaders/extract.py", "tools/shaders/translate.py", "tools/shaders/shaderc_lib.py",
            "tools/shaders/pipeline_pairs.py", "tools/shaders/pack.py", "tools/shaders/renodx.py",

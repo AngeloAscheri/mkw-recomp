@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "ui/menu/menu_look.h"
+#include "ui/menu/ui_bidi.h"
 
 extern "C" {
 #include "platform/platform.h"
@@ -21,8 +22,28 @@ void rt_log(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 static const unsigned char roboto_ttf[] = {
 #embed "../fonts/Roboto-Medium.ttf"
 };
+// Noto Sans Arabic Medium (SIL OFL 1.1, ui/fonts/LICENSE-NotoSansArabic.txt), cut to the joined letters the Arabic
+// catalog is written with (tools/i18n/arabic_font.py); merged into every atlas, as the language lists name Arabic in
+// its own script.
+static const unsigned char arabic_ttf[] = {
+#embed "../fonts/NotoSansArabic-Medium.ttf"
+};
 #pragma clang diagnostic pop
 static_assert(sizeof roboto_ttf > 100000, "Roboto-Medium.ttf not embedded");
+static_assert(sizeof arabic_ttf > 10000, "NotoSansArabic-Medium.ttf not embedded");
+static const ImWchar kArabicRanges[] = {0x060C, 0x060C, 0x061B, 0x061B, 0x061F, 0x061F, 0x0640, 0x0640,
+                                        0x066A, 0x066A, 0xFE70, 0xFEFC, 0};
+
+// Arabic merged into the font just added (the atlas does not own the embedded data). Noto Sans Arabic's em holds its
+// tall ascenders and deep tails, so at Roboto's size its letters looked a third smaller than the Latin beside them:
+// drawn 1.3 times larger, lowered by the ascent that adds.
+static void add_arabic(ImFontAtlas *fa, float px) {
+    ImFontConfig mc;
+    mc.MergeMode = true;
+    mc.FontDataOwnedByAtlas = false;
+    mc.GlyphOffset.y = 0.12f * px;
+    fa->AddFontFromMemoryTTF((void *)arabic_ttf, (int)sizeof arabic_ttf, 1.3f * px, &mc, kArabicRanges);
+}
 
 extern "C" const unsigned char *menu_look_font_data(void) { return roboto_ttf; }   // ui/glyphs/glyphs.c
 
@@ -76,6 +97,8 @@ void menu_look_fonts(float scale) {
     ImFontConfig fc;
     fc.FontDataOwnedByAtlas = false;
     fa->AddFontFromMemoryTTF((void *)roboto_ttf, (int)sizeof roboto_ttf, 26.0f * scale, &fc, kRanges);
+    add_arabic(fa, 26.0f * scale);
+    ui_bidi_install();
     int merged = 0;
     for (int i = 0; i < N; i++) {
         char path[512];
@@ -104,6 +127,7 @@ ImFont *menu_look_font_at(float px) {
     ImFontConfig fc;
     fc.FontDataOwnedByAtlas = false;
     ImFont *font = fa->AddFontFromMemoryTTF((void *)roboto_ttf, (int)sizeof roboto_ttf, px, &fc, kRanges);
+    add_arabic(fa, px);
     for (size_t i = 0; i < sizeof kCjk / sizeof *kCjk; i++) {
         char path[512];
         uint64_t size = 0;

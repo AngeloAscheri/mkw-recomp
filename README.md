@@ -128,8 +128,8 @@ Beyond the console, all optional and off (or at the console's value) by default:
   where they are). While the game uses the network, as in a LAN race, it runs on out of focus and silent instead, as on
   the console.
 - **Hacks**: turbo (F2), skip movies, unlock everything, fixed randomness, straight to time trial or free roam.
-- **Languages**: menus in 23 languages; the game also in Catalan, Galician, Basque, Turkish, Vietnamese, Ukrainian and
-  Indonesian.
+- **Languages**: menus in 24 languages; the game also in Catalan, Galician, Basque, Turkish, Vietnamese, Ukrainian,
+  Indonesian and Arabic.
 - **Tools**: performance overlay and a one-click system info for bug reports.
 
 ### Switch 2 controllers over USB on Windows
@@ -233,8 +233,8 @@ it went in.
 [MIT License](LICENSE). Code taken from other projects keeps its own license next to it (`LICENSE.*` files in
 [recomp/](recomp/), [runtime/](runtime/), [sm86/decode/](sm86/decode/) and
 [runtime/third_party/](runtime/third_party/README.md)): totk-pc-recomp, nvsass-disassembler, Dear ImGui, bc7enc,
-stb_image, AMD FidelityFX FSR 1 and Roboto. Every source, with its license and what was taken (code from MIT projects
-only; from GPL projects, ideas only): [docs/project/research.md](docs/project/research.md#sources).
+stb_image, AMD FidelityFX FSR 1, Roboto and Noto Sans Arabic. Every source, with its license and what was taken (code
+from MIT projects only; from GPL projects, ideas only): [docs/project/research.md](docs/project/research.md#sources).
 
 This product uses **NVIDIA DLSS** (Super Resolution and Frame Generation, NVIDIA DLSS SDK, © NVIDIA Corporation),
 **AMD FidelityFX Super Resolution 3.1** (© Advanced Micro Devices, MIT) and **RenHDrum** (MIT) for HD vibration. They

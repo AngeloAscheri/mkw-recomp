@@ -9,7 +9,7 @@ every letter, and VDL-LogoG) have ç ö ü ı but not ğ Ğ ş Ş İ, so a Turki
 missing letter is drawn here from the same font: the base letter plus the breve, dot or cedilla the font already has,
 placed where that font places the same kind of mark (the diaeresis of ö/Ö, the cedilla of ç/Ç), so it keeps the font's
 weight and style. Vietnamese (#873) needs ~100 letters (ă đ ơ ư, and those with two marks): see game_fonts_vi.py;
-Ukrainian ґ є і ї: game_fonts_uk.py.
+Ukrainian ґ є і ї: game_fonts_uk.py; Arabic, which the fonts lack entirely: game_fonts_ar.py.
 Nothing of Nintendo's is shipped: the setup composes them from the player's own copy.
 
 Font/<name>.bfotf.zs: zstd of a "bfotf", an OpenType font after an 8-byte header (the magic d9 9b 87 1a, then the
@@ -32,6 +32,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fontTools.pens.t2CharStringPen import T2CharStringPen  # noqa: E402
 from fontTools.pens.transformPen import TransformPen
 from fontTools.ttLib import TTFont  # noqa: E402
+from game_fonts_ar import arabic  # noqa: E402
 from game_fonts_uk import SAME, ukrainian  # noqa: E402
 from game_fonts_vi import vietnamese  # noqa: E402
 from glyph_shapes import IDENTITY, bounds, contours  # noqa: E402
@@ -114,7 +115,7 @@ def compose(font: TTFont, letters: str) -> list[str]:
             parts = [(base, IDENTITY), (mark, (1, 0, 0, 1, dx, dy))]
             width = glyphs[base].width
         else:
-            made = vietnamese(glyphs, cmap, ch) or ukrainian(glyphs, cmap, ch)
+            made = vietnamese(glyphs, cmap, ch) or ukrainian(glyphs, cmap, ch) or arabic(glyphs, cmap, ch)
             if not made:
                 continue
             base, parts, width = made
