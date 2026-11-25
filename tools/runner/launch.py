@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import signal as sig
 import subprocess
 import threading
 import time
@@ -31,10 +32,13 @@ def default(env: dict[str, str], key: str, value: str, *, if_empty: bool = True)
 def race_env(env: dict[str, str], kind: str) -> None:
     if kind in ("tt", "gp"):
         # tt: one kart, at the grid 28-30 s after boot; gp: 24 karts, the save's last cup, Smart Steering and
-        # Auto-Accelerate from the save. Both measured from ReadyRace. MKW_SEED fixes the course (the map's first
-        # cursor follows the clock: tt6a/b loaded the same world tiles).
+        # Auto-Accelerate from the save. tt is measured from ReadyRace; gp from the end of its course flyover, as a
+        # race: ReadyRace comes ~24 s before it and the replay of that stretch is 2 ms against 15-23 driving (gpaa1,
+        # gpseq1, 25/11/2026: ReadyRace 42.9 s, WaitIntroMovie 52.7, IsSequenceFlag 66.8). MKW_SEED fixes the course
+        # (the map's first cursor follows the clock: tt6a/b loaded the same world tiles).
         env["MKW_QUICK_RACE"] = kind
-        default(env, "MKW_SEQ_UNTIL", "ReadyRace", if_empty=False)
+        if kind == "tt":
+            default(env, "MKW_SEQ_UNTIL", "ReadyRace", if_empty=False)
         default(env, "MKW_SEED", "1", if_empty=False)
     else:
         default(env, "MKW_INPUT_SCRIPT", "tools/run/press-race.txt")
@@ -154,14 +158,23 @@ def make_plan(name: str, kind: str, seconds: int | None, env: dict[str, str] | N
                 target_ms=float(target) if target else None)
 
 
+# The stop's least pairs (MKW_AB_MIN_PAIRS): the 95 % interval stands on the pairs' spread, and from three pairs that
+# spread is a guess (gpab1, 25/11/2026: stopped at 3 pairs ±0.53 ms, 6 s into a race whose first 17 s were its intro)
+STOP_MIN_PAIRS = 10
+
+
 def ab_stop(plan: Plan, done: threading.Event, every: float = 5.0) -> None:
-    """Sends `ctl exit` once the A/B's 95 % half-width is at most MKW_AB_TARGET ms; MKW_SEQ_EXIT stays the limit."""
+    """Sends `ctl exit` once the A/B's 95 % half-width is at most MKW_AB_TARGET ms on MKW_AB_METRIC (interval, or
+    replay, a wait: abstat.METRICS); MKW_SEQ_EXIT stays the limit."""
+    metric = plan.env.get("MKW_AB_METRIC") or "interval"
+    least = int(plan.env.get("MKW_AB_MIN_PAIRS") or STOP_MIN_PAIRS)
     while not done.wait(every):
         if not plan.run.frames.exists():
             continue
-        v, _ = abstat.analyse([plan.run.frames], plan.settle, plan.target_ms)
-        if v.half_ms is not None and plan.target_ms is not None and v.half_ms <= plan.target_ms:
-            plan.stop_note.append(f"MKW_AB_TARGET {plan.target_ms} ms reached at {v.pairs} pairs (±{v.half_ms:.2f})")
+        v, _ = abstat.analyse([plan.run.frames], plan.settle, plan.target_ms, metric)
+        if v.half_ms is not None and plan.target_ms is not None and v.half_ms <= plan.target_ms and v.pairs >= least:
+            plan.stop_note.append(f"MKW_AB_TARGET {plan.target_ms} ms on {metric} reached at {v.pairs} pairs"
+                                  f" (±{v.half_ms:.2f})")
             try:
                 ctl.send(plan.run, ["exit"], timeout=5)
             except ctl.NotRunning:
@@ -216,8 +229,21 @@ def race(plan: Plan) -> dict:
     if plan.target_ms and plan.env.get("MKW_AB"):
         stopper.start()
     t0 = time.monotonic()
-    with run.log.open("wb") as log:
-        rc = subprocess.run(command(plan), stdout=log, stderr=subprocess.STDOUT, env=plan.env, cwd=ROOT).returncode
+    prev = sig.signal(sig.SIGTERM, _raise_terminated)
+    try:
+        with run.log.open("wb") as log:
+            rc = subprocess.run(command(plan), stdout=log, stderr=subprocess.STDOUT, env=plan.env, cwd=ROOT).returncode
+    except Terminated:
+        # an outer `timeout` or kill: subprocess.run has killed its child; the game itself goes too, and the JSON
+        # still gets its end (gpseq1, 25/11/2026: left "running" by `timeout 200`)
+        rc = -15
+        plan.stop_note.append("run.py got SIGTERM (an outer timeout or kill)")
+        try:
+            ctl.stop(run)
+        except ctl.NotRunning:
+            run.stopped.write_text(time.strftime("%F %T\n"))
+    finally:
+        sig.signal(sig.SIGTERM, prev)
     elapsed = time.monotonic() - t0
     done.set()
     if stopper.is_alive():   # its stop note goes in the JSON
@@ -233,9 +259,37 @@ def race(plan: Plan) -> dict:
         r = subprocess.run(["perf", "report", "-i", str(ROOT / f"scratchpad/{run.name}.perf"), "--stdio",
                             "--no-children", "--sort", "symbol"], capture_output=True, text=True)
         top.write_text("\n".join(ln for ln in r.stdout.splitlines() if ln and not ln.startswith("#")) + "\n")
+    if doc["outcome"] in CLEAN:
+        prune_flight(Path(plan.env.get("MKW_FLIGHT_DIR", "")))
     for ln in report.lines(doc):
         say(ln)
     return doc
+
+
+class Terminated(Exception):
+    pass
+
+
+def _raise_terminated(signum: int, frame: object) -> None:
+    raise Terminated
+
+
+CLEAN = ("exit", "window_closed", "stopped")
+FLIGHT_KEEP_EVERY = 60
+
+
+def prune_flight(root: Path) -> None:
+    """A clean run's flight dumps keep their frames.tsv and one thumbnail a second: the exit dump's 600 thumbnails
+    were ~350 MiB a run (19 runs, ~6 GiB in scratchpad/ by 25/11/2026); a failed run keeps them all."""
+    if not root.name or not root.is_dir():
+        return
+    for png in root.glob("*/f*.png"):
+        try:
+            frame = int(png.stem[1:])
+        except ValueError:
+            continue
+        if frame % FLIGHT_KEEP_EVERY:
+            png.unlink()
 
 
 def live(plan: Plan) -> dict:

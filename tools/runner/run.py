@@ -15,7 +15,8 @@ Usage:
   run.py watch NAME [PATTERN]                      the Monitor of a run: failures, STALLED, BLACK, then its end
   run.py summary NAME [...]                        rewrites and prints NAME.json from the run's files
 Every MKW_* passes through. An A/B: MKW_AB=<s> MKW_<X>=ab, and MKW_AB_TARGET=<ms> stops the race once B - A's 95 %
-half-width is that small (RACE_SECS stays the limit); the verdict is in NAME.json ("ab") and from tools/runner/abstat.py.
+half-width on MKW_AB_METRIC (interval, or replay for a change to the recording's CPU) is that small (RACE_SECS stays
+the limit); the verdict is in NAME.json ("ab", every column in "ab.by_metric") and from tools/runner/abstat.py.
 Under Claude Code a run needs MKW_RUN_WHY (what I expect; what I conclude from each result).
 """
 

@@ -10,6 +10,7 @@ from __future__ import annotations
 import errno
 import os
 import re
+import shutil
 import signal
 import subprocess
 import time
@@ -88,6 +89,8 @@ def wait_shot(path: Path, timeout: float = 60) -> str:
             return f"ctl: timed out waiting for {path}"
         time.sleep(0.1)
     small = path.with_name(path.stem + "-s.png")   # 1280 wide to look at: the shot is the output's size
+    if not shutil.which("ffmpeg"):   # GitHub's runners have none: the shot stays at its size
+        return f"ctl: wrote {path}"
     r = subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(path), "-vf", "scale=1280:-2", str(small)],
                        capture_output=True)
     return f"ctl: wrote {path}" + (f" (to look at: {small})" if r.returncode == 0 else "")

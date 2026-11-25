@@ -8,7 +8,11 @@ pairs: the order A B | B A | A B ... puts a linear trend of the scene once on ea
 the pairs' B - A and only widens their spread. The interval is Student's t at 95 % over the pairs. Several files (a
 plain run and its MKW_AB_INVERT twin, or more) pool their pairs.
 
-Usage: uv run tools/runner/abstat.py build/run/NAME.frames.tsv [...] [--settle N] [--target MS] [--json]
+The frame interval is paced to whole vblanks (33.3, 50, 66.7 ms at 60 Hz), so its block means jump in steps and a
+change smaller than a step shows only as how often the pace drops; --metric picks another column, and the text
+output prints every column's verdict (aa1, 25/11/2026: the same 22 pairs gave ±3.2 ms on the interval, ±1.2 on replay).
+
+Usage: uv run tools/runner/abstat.py build/run/NAME.frames.tsv [...] [--settle N] [--target MS] [--metric COL] [--json]
 """
 
 from __future__ import annotations
@@ -26,6 +30,17 @@ from pathlib import Path
 T95 = [12.706, 4.303, 3.182, 2.776, 2.571, 2.447, 2.365, 2.306, 2.262, 2.228, 2.201, 2.179, 2.160, 2.145, 2.131,
        2.120, 2.110, 2.101, 2.093, 2.086, 2.080, 2.074, 2.069, 2.064, 2.060, 2.056, 2.052, 2.048, 2.045, 2.042]
 MIN_PAIRS = 3   # below this the spread itself is a guess
+# frames.tsv columns in microseconds: the frame interval, the replay thread's recording CPU, and the render thread's waits
+METRICS = ("interval", "replay", "pipe", "tex", "fence", "pace")
+# A block's value is its 20 % trimmed mean: a stutter of a few 200 ms frames in a 1 s block moved its mean by more than
+# the effects measured (gpaa1, A/A in a Grand Prix, 25/11/2026, 1 s blocks: replay ±3.4 ms with the mean, ±0.74 trimmed)
+TRIM = 0.2
+
+
+def trimmed(xs: list[float], cut: float = TRIM) -> float:
+    s = sorted(xs)
+    k = int(len(s) * cut)
+    return statistics.fmean(s[k : len(s) - k] or s)
 
 
 def t95(df: int) -> float:
@@ -37,7 +52,7 @@ class Block:
     index: int        # world clock / period
     side: int         # 0: A, 1: B
     frames: int       # counted, after the settle
-    mean_ms: float    # mean frame interval
+    mean_ms: float    # trimmed mean of the metric (TRIM)
 
 
 @dataclass
@@ -74,7 +89,8 @@ def period_ms(rows: list[dict[str, float]]) -> float | None:
     return None
 
 
-def blocks(rows: list[dict[str, float]], settle: int) -> list[Block]:
+def blocks(rows: list[dict[str, float]], settle: int, metric: str = "interval") -> list[Block]:
+    col = f"{metric}_us"
     period = period_ms(rows)
     if not period:
         return []
@@ -89,7 +105,7 @@ def blocks(rows: list[dict[str, float]], settle: int) -> list[Block]:
         if not kept or span < 0.5 * period:   # the run's last block, cut short
             continue
         side = statistics.mode(int(r["ab"]) for r in kept)
-        out.append(Block(k, side, len(kept), statistics.fmean(r["interval_us"] for r in kept) / 1000))
+        out.append(Block(k, side, len(kept), trimmed([r[col] for r in kept]) / 1000))
     return out
 
 
@@ -115,7 +131,7 @@ def verdict(diffs: list[float], bs: list[Block], target: float | None = None) ->
         return Verdict(0, a_ms, b_ms, math.nan, None, math.nan, False, None,
                        "no A/B pair: MKW_AB off, or the run ended before two blocks")
     d = statistics.fmean(diffs)
-    pct = d / a_ms * 100 if a else math.nan
+    pct = d / a_ms * 100 if a and a_ms else math.nan   # a wait can be 0 on one side
     if n < MIN_PAIRS:
         return Verdict(n, a_ms, b_ms, d, None, pct, False, None,
                        f"B - A {d:+.2f} ms over {n} pair(s): too few to judge (at least {MIN_PAIRS})")
@@ -132,12 +148,13 @@ def verdict(diffs: list[float], bs: list[Block], target: float | None = None) ->
     return Verdict(n, a_ms, b_ms, d, half, pct, sig, need, text)
 
 
-def analyse(paths: list[Path], settle: int = 5, target: float | None = None) -> tuple[Verdict, list[str]]:
+def analyse(paths: list[Path], settle: int = 5, target: float | None = None,
+            metric: str = "interval") -> tuple[Verdict, list[str]]:
     diffs: list[float] = []
     every: list[Block] = []
     lines = []
     for p in paths:
-        bs = blocks(read_rows(p), settle)
+        bs = blocks(read_rows(p), settle, metric)
         ds = pair_diffs(bs)
         diffs += ds
         every += bs
@@ -146,20 +163,31 @@ def analyse(paths: list[Path], settle: int = 5, target: float | None = None) -> 
     return verdict(diffs, every, target), lines
 
 
+def by_metric(paths: list[Path], settle: int = 5, target: float | None = None) -> dict[str, Verdict]:
+    """Every column's verdict: a change can move the replay or a wait without moving the paced interval. Only the
+    chosen metric decides: with six columns at 95 %, one of them reads "significant" by chance in about a quarter of
+    A/A runs (gpaa1: fence "B faster", 25/11/2026)."""
+    return {m: analyse(paths, settle, target, m)[0] for m in METRICS}
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("frames", nargs="+", type=Path, help="NAME.frames.tsv of runs with MKW_AB")
     ap.add_argument("--settle", type=int, default=5, help="frames left out at the start of each block (5)")
     ap.add_argument("--target", type=float, help="the half-width wanted, ms: prints how many pairs it needs")
+    ap.add_argument("--metric", choices=METRICS, default="interval", help="the column judged (interval)")
     ap.add_argument("--json", action="store_true", help="the verdict as JSON")
     args = ap.parse_args()
-    v, lines = analyse(args.frames, args.settle, args.target)
+    v, lines = analyse(args.frames, args.settle, args.target, args.metric)
     if args.json:
         json.dump(asdict(v), sys.stdout, indent=1)
         print()
         return
     print("\n".join(lines))
-    print(f"A {v.a_ms:.2f} ms, B {v.b_ms:.2f} ms per frame; {v.text}")
+    print(f"{args.metric}: A {v.a_ms:.2f} ms, B {v.b_ms:.2f} ms per frame; {v.text}")
+    for m, o in by_metric(args.frames, args.settle, args.target).items():
+        if m != args.metric:
+            print(f"  {m}: A {o.a_ms:.2f}, B {o.b_ms:.2f}; {o.text}")
 
 
 if __name__ == "__main__":

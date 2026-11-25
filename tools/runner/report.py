@@ -8,6 +8,7 @@ that ended without its launcher (a live run).
 from __future__ import annotations
 
 import json
+import math
 import os
 import statistics
 import subprocess
@@ -64,8 +65,17 @@ def frame_stats(path: Path) -> dict | None:
 def ab(path: Path, env: dict[str, str]) -> dict | None:
     if not env.get("MKW_AB") or not path.exists():
         return None
-    v, _ = abstat.analyse([path], target=float(env["MKW_AB_TARGET"]) if env.get("MKW_AB_TARGET") else None)
-    return {k: (round(x, 3) if isinstance(x, float) else x) for k, x in v.__dict__.items()}
+    target = float(env["MKW_AB_TARGET"]) if env.get("MKW_AB_TARGET") else None
+    metric = env.get("MKW_AB_METRIC") or "interval"
+    every = abstat.by_metric([path], target=target)
+
+    def rounded(v: abstat.Verdict) -> dict:
+        # NaN (no pair, or a wait that is 0 on side A) is not JSON: null, so a strict reader takes NAME.json
+        return {k: (None if isinstance(x, float) and math.isnan(x) else round(x, 3) if isinstance(x, float) else x)
+                for k, x in v.__dict__.items()}
+
+    # "metric" is the one that decides (and stops the run); "by_metric" has every column's verdict
+    return {"metric": metric, **rounded(every[metric]), "by_metric": {m: rounded(v) for m, v in every.items()}}
 
 
 def write(run: Run, meta: dict, *, outcome: str | None = None, rc: int | None = None,
@@ -110,7 +120,11 @@ def lines(doc: dict) -> list[str]:
         out.append(f"  race: {race['frames']} frames over {race['world_s']} s, interval median {race['median_ms']} ms,"
                    f" p95 {race['p95_ms']}, p99 {race['p99_ms']}")
     if doc.get("ab"):
-        out.append(f"  A/B: {doc['ab']['text']}")
+        ab_doc = doc["ab"]
+        out.append(f"  A/B ({ab_doc.get('metric', 'interval')}): {ab_doc['text']}")
+        for m, v in ab_doc.get("by_metric", {}).items():
+            if m != ab_doc.get("metric") and v.get("half_ms"):
+                out.append(f"    {m}: {v['text']}")
     if doc.get("stop"):
         out.append(f"  stop: {doc['stop']}")
     out.append(f"  summary: {doc['files']['log'][:-4]}.json")

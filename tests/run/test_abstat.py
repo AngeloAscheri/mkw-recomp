@@ -20,7 +20,7 @@ HEADER = "frame\tworld_ms\tab\tinterval_us\treplay_us\tpipe_us\ttex_us\tfence_us
 
 def series(seconds: float, period_s: float = 2.0, base_ms: float = 33.3, effect_ms: float = 0.0,
            trend_ms_per_s: float = 0.0, ar: float = 0.9, noise_ms: float = 3.0, seed: int = 0,
-           settle_spike_ms: float = 0.0, invert: bool = False, lead_frames: int = 30) -> str:
+           settle_spike_ms: float = 0.0, invert: bool = False, lead_frames: int = 30, spike_frames: int = 3) -> str:
     """Rows the way frames.c writes them: world clock -1 before the race, then MKW_AB's A B B A blocks. The noise is
     AR(1), as a slow stretch of the race lasts many frames."""
     rng = random.Random(seed)
@@ -40,7 +40,7 @@ def series(seconds: float, period_s: float = 2.0, base_ms: float = 33.3, effect_
         last_side = side
         e = ar * e + rng.gauss(0, noise_ms * (1 - ar * ar) ** 0.5)
         ms = base_ms + trend_ms_per_s * world / 1000 + effect_ms * side + e
-        if since_switch < 3:
+        if since_switch < spike_frames:
             ms += settle_spike_ms
         ms = max(ms, 1.0)
         rows.append(f"{frame}\t{world:.1f}\t{side}\t{int(ms * 1000)}\t0\t0\t0\t0\t0\n")
@@ -84,9 +84,10 @@ def test_linear_trend_cancels(tmp_path: Path) -> None:
 
 
 def test_settle_drops_the_switch_transient(tmp_path: Path) -> None:
-    text = series(60, seed=4, noise_ms=0.5, settle_spike_ms=60.0)
+    # 20 frames of transient in a ~60-frame block: longer than the trimmed mean cuts by itself
+    text = series(60, seed=4, noise_ms=0.5, settle_spike_ms=60.0, spike_frames=20)
     kept = run(tmp_path, text, settle=0)
-    dropped = run(tmp_path, text, settle=5)
+    dropped = run(tmp_path, text, settle=20)
     assert dropped.a_ms < kept.a_ms - 0.5   # the spike leaves the block means
 
 
@@ -131,3 +132,30 @@ def test_partial_file_from_a_killed_run(tmp_path: Path) -> None:
     text = series(20, seed=10)
     v = run(tmp_path, text[: len(text) - 17])   # the last row cut mid-line, as a kill leaves it
     assert v.pairs >= 3
+
+
+def test_metric_picks_its_column(tmp_path: Path) -> None:
+    """A change that moves only the replay shows on --metric replay and not on the paced interval."""
+    rows = [HEADER]
+    for i in range(1200):
+        world = i * 50.0
+        side = int(int(world // 2000) % 4 in (1, 2))   # MKW_AB's A B B A
+        rows.append(f"{i}\t{world:.1f}\t{side}\t50000\t{14000 + 2000 * side + (i * 37 % 500)}\t0\t0\t0\t0\n")
+    p = tmp_path / "m.frames.tsv"
+    p.write_text("".join(rows))
+    rep = abstat.analyse([p], metric="replay")[0]
+    assert rep.significant and abs(rep.diff_ms - 2.0) < 0.3
+    assert not abstat.analyse([p])[0].significant
+    assert set(abstat.by_metric([p])) == set(abstat.METRICS)
+
+
+def test_summary_json_is_strict(tmp_path: Path) -> None:
+    """A column that is 0 on both sides (pipe without its trace) gives no percentage: null in NAME.json, never NaN."""
+    import json
+    import report
+
+    p = tmp_path / "z.frames.tsv"
+    p.write_text(series(30, seed=11))
+    doc = report.ab(p, {"MKW_AB": "2", "MKW_AB_METRIC": "replay"})
+    json.dumps(doc, allow_nan=False)
+    assert doc["by_metric"]["pipe"]["pct"] is None

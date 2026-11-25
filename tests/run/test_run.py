@@ -198,3 +198,39 @@ def test_race_sh_wrapper(runenv: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     r = subprocess.run([str(ROOT / "tools/run/race.sh"), "w1"], capture_output=True, text=True, timeout=60)
     assert r.returncode == 0, r.stderr
     assert "w1: exit" in r.stdout
+
+
+def test_sigterm_still_writes_the_end(runenv: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """An outer `timeout` sends SIGTERM to run.py: the game goes and NAME.json gets an end, not "running"."""
+    fake(monkeypatch, fps=100)
+    monkeypatch.setenv("RACE_SECS", "600")
+    p = subprocess.Popen(["python3", str(ROOT / "tools/runner/run.py"), "race", "t1"], env=os.environ.copy(),
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    log = Run("t1").log
+    end = time.monotonic() + 10
+    while "frames: one row" not in (log.read_text() if log.exists() else ""):
+        assert time.monotonic() < end, "the fake runtime did not start"
+        time.sleep(0.05)
+    p.terminate()
+    p.wait(15)
+    doc = json.loads(Run("t1").json.read_text())
+    assert doc["outcome"] == "stopped" and "SIGTERM" in doc["stop"]
+
+
+def test_clean_run_prunes_its_flight_dump(tmp_path: Path) -> None:
+    dump = tmp_path / "flight" / "20261125-000000-f700"
+    dump.mkdir(parents=True)
+    (dump / "frames.tsv").write_text("x\n")
+    for f in range(100, 701):
+        (dump / f"f{f:06d}.png").write_bytes(b"")
+    launch.prune_flight(tmp_path / "flight")
+    kept = sorted(p.name for p in dump.glob("*.png"))
+    assert kept == [f"f{f:06d}.png" for f in range(120, 701, 60)] and (dump / "frames.tsv").exists()
+
+
+def test_shot_without_ffmpeg(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """GitHub's runners have no ffmpeg (CI of af706edd): the shot is written, just not shrunk."""
+    shot = tmp_path / "s.png"
+    shot.write_bytes(b"png")
+    monkeypatch.setenv("PATH", str(tmp_path))
+    assert ctl.wait_shot(shot, timeout=1) == f"ctl: wrote {shot}"
